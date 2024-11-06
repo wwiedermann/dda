@@ -22,10 +22,8 @@
 #'           car.test <- lm(mpg ~ wt + qsec, data = mtcars)
 #'           dda.indep(car.test, pred = "wt", diff = TRUE, data = mtcars)
 #'
-#' @returns An object of class \code{dda.Ind} containing the results of the independence tests.
+#' @returns An object of class \code{ddaindep} containing the results of the independence tests.
 #' @export
-
-setClass("dda.Ind", representation("list"))
 
 dda.indep <- function(formula, pred = NULL, data = list(), nlfun = NULL, hetero = FALSE, hsic.method = "gamma", diff = FALSE, B = 200,
                       boot.type = "perc", conf.level = 0.95, parallelize = FALSE, cores = 1, ...)
@@ -34,9 +32,6 @@ dda.indep <- function(formula, pred = NULL, data = list(), nlfun = NULL, hetero 
   library(lmtest)
   library(energy)
   library(boot)
-
-
-
 
    ### --- helper functions for independence difference statistics
 
@@ -284,15 +279,10 @@ dda.indep <- function(formula, pred = NULL, data = list(), nlfun = NULL, hetero 
 
   response.name <- all.vars(formula(formula))[1]  # get name of response variable
   output <- c(output, list(var.names = c(response.name, pred)))
+  class(output) <- "ddaindep"
+  #new ("ddaindep", output )
 
-  new ("dda.Ind", output )
-}
-
-
-
-setMethod("show", "dda.Ind", function(object){
-
-     varnames <- object$var.names
+  varnames <- output$var.names
 
 	 cat("\n")
      cat("DIRECTION DEPENDENCE ANALYSIS: Independence Properties", "\n", "\n")
@@ -303,21 +293,21 @@ setMethod("show", "dda.Ind", function(object){
 
 	 cat("Omnibus Independence Tests:", "\n")
 
-	 #if(object$hsic.method[1] == "gamma") cat("Hilbert-Schmidt Independence Criterion: Gamma-Approximation", "\n")
-	 #if(object$hsic.method[1] == "boot") cat(paste("Hilbert-Schmidt Independence Criterion: Bootstrap-Approximation", " (", object$hsic.method[2], " resamples)", sep = ""), "\n")
+	 #if(output$hsic.method[1] == "gamma") cat("Hilbert-Schmidt Independence Criterion: Gamma-Approximation", "\n")
+	 #if(output$hsic.method[1] == "boot") cat(paste("Hilbert-Schmidt Independence Criterion: Bootstrap-Approximation", " (", output$hsic.method[2], " resamples)", sep = ""), "\n")
 
-	 cat(paste("HSIC = ", round(object$hsic.yx$statistic, 4), ", p-value = ", round(object$hsic.yx$p.value, 4), sep = ""))
+	 cat(paste("HSIC = ", round(output$hsic.yx$statistic, 4), ", p-value = ", round(output$hsic.yx$p.value, 4), sep = ""))
 	 cat("\n")
-	 #cat(paste("Distance Correlation: Permutation", " (", object$distance_cor.dcor.method, " resamples)", sep = ""), "\n")
-	 cat(paste("dCor = ", round(object$distance_cor.dcor_yx$statistic, 4), ", p-value = ", round(object$distance_cor.dcor_yx$p.value, 4), sep = ""))
+	 #cat(paste("Distance Correlation: Permutation", " (", output$distance_cor.dcor.method, " resamples)", sep = ""), "\n")
+	 cat(paste("dCor = ", round(output$distance_cor.dcor_yx$statistic, 4), ", p-value = ", round(output$distance_cor.dcor_yx$p.value, 4), sep = ""))
      cat("\n", "\n")
 
-	 if(!is.null(object$breusch_pagan)){
+	 if(!is.null(output$breusch_pagan)){
 
 	 cat("Homoscedasticity Tests:", "\n")
 
-	     sigtests1.yx <- rbind( c(object$breusch_pagan[[1]]$statistic, object$breusch_pagan[[1]]$parameter, object$breusch_pagan[[1]]$p.value),
-	                            c(object$breusch_pagan[[2]]$statistic, object$breusch_pagan[[2]]$parameter, object$breusch_pagan[[2]]$p.value)
+	     sigtests1.yx <- rbind( c(output$breusch_pagan[[1]]$statistic, output$breusch_pagan[[1]]$parameter, output$breusch_pagan[[1]]$p.value),
+	                            c(output$breusch_pagan[[2]]$statistic, output$breusch_pagan[[2]]$parameter, output$breusch_pagan[[2]]$p.value)
 	                        )
          sigtests1.yx <- round(sigtests1.yx, 4)
          rownames(sigtests1.yx) <- c("BP-test", "Robust BP-test")
@@ -328,24 +318,24 @@ setMethod("show", "dda.Ind", function(object){
 	 }
 
 
-   if( !is.null(object$nlfun) ){
+   if( !is.null(output$nlfun) ){
 
-	     sigtests2.yx <- rbind(object$nlcor.yx$t1, object$nlcor.yx$t2, object$nlcor.yx$t3)
+	     sigtests2.yx <- rbind(output$nlcor.yx$t1, output$nlcor.yx$t2, output$nlcor.yx$t3)
          sigtests2.yx <- round(sigtests2.yx, 4)
 
-	      if(is.na(suppressWarnings(as.numeric(object$nlcor.yx$func)))){
-	                cat(paste("Non-linear Correlation Tests:", object$nlcor.yx$func, "Transformation"))
+	      if(is.na(suppressWarnings(as.numeric(output$nlcor.yx$func)))){
+	                cat(paste("Non-linear Correlation Tests:", output$nlcor.yx$func, "Transformation"))
 
-			        rownames(sigtests2.yx) <- c(paste("Cor[", object$nlcor.yx$func, "(", "r_", varnames[1], "), ", varnames[2],"]", sep=""),
-	                                            paste("Cor[", "r_", varnames[1], ", ", object$nlcor.yx$func, "(", varnames[2], ")]", sep=""),
-	                                            paste("Cor[", object$nlcor.yx$func, "(", "r_", varnames[1], "), ", object$nlcor.yx$func, "(", varnames[2],")]", sep="")
+			        rownames(sigtests2.yx) <- c(paste("Cor[", output$nlcor.yx$func, "(", "r_", varnames[1], "), ", varnames[2],"]", sep=""),
+	                                            paste("Cor[", "r_", varnames[1], ", ", output$nlcor.yx$func, "(", varnames[2], ")]", sep=""),
+	                                            paste("Cor[", output$nlcor.yx$func, "(", "r_", varnames[1], "), ", output$nlcor.yx$func, "(", varnames[2],")]", sep="")
 							                   )
 		    } else{
-	 	            cat(paste("Non-linear Correlation Tests: Power Transformation using", object$nlcor.yx$func))
+	 	            cat(paste("Non-linear Correlation Tests: Power Transformation using", output$nlcor.yx$func))
 
-				    rownames(sigtests2.yx) <- c(paste("Cor[", "r_", varnames[1], "^", object$nlcor.yx$func, ", ", varnames[2],"]", sep=""),
-	                                            paste("Cor[", "r_", varnames[1], ", ", varnames[2], "^", object$nlcor.yx$func, "]", sep=""),
-	                                            paste("Cor[", "r_", varnames[1], "^", object$nlcor.yx$func, ", ", varnames[2], "^", object$nlcor.yx$func, "]", sep="")
+				    rownames(sigtests2.yx) <- c(paste("Cor[", "r_", varnames[1], "^", output$nlcor.yx$func, ", ", varnames[2],"]", sep=""),
+	                                            paste("Cor[", "r_", varnames[1], ", ", varnames[2], "^", output$nlcor.yx$func, "]", sep=""),
+	                                            paste("Cor[", "r_", varnames[1], "^", output$nlcor.yx$func, ", ", varnames[2], "^", output$nlcor.yx$func, "]", sep="")
 							                   )
 	        }
      cat("\n")
@@ -362,21 +352,21 @@ setMethod("show", "dda.Ind", function(object){
 
 	 cat("Omnibus Independence Tests:", "\n")
 
-	 #if(object$hsic.method[1] == "gamma") cat("Hilbert-Schmidt Independence Criterion: Gamma-Approximation", "\n")
-	 #if(object$hsic.method[1] == "boot") cat(paste("Hilbert-Schmidt Independence Criterion: Bootstrap-Approximation", " (", object$hsic.method[2], " resamples)", sep = ""), "\n")
+	 #if(output$hsic.method[1] == "gamma") cat("Hilbert-Schmidt Independence Criterion: Gamma-Approximation", "\n")
+	 #if(output$hsic.method[1] == "boot") cat(paste("Hilbert-Schmidt Independence Criterion: Bootstrap-Approximation", " (", output$hsic.method[2], " resamples)", sep = ""), "\n")
 
-	 cat(paste("HSIC = ", round(object$hsic.xy$statistic, 4), ", p-value = ", round(object$hsic.xy$p.value, 4), sep = ""))
+	 cat(paste("HSIC = ", round(output$hsic.xy$statistic, 4), ", p-value = ", round(output$hsic.xy$p.value, 4), sep = ""))
 	 cat("\n")
-	 #cat(paste("Distance Correlation: Permutation", " (", object$distance_cor.dcor.method, " resamples)", sep = ""), "\n")
-	 cat(paste("dCor = ", round(object$distance_cor.dcor_xy$statistic, 4), ", p-value = ", round(object$distance_cor.dcor_xy$p.value, 4), sep = ""))
+	 #cat(paste("Distance Correlation: Permutation", " (", output$distance_cor.dcor.method, " resamples)", sep = ""), "\n")
+	 cat(paste("dCor = ", round(output$distance_cor.dcor_xy$statistic, 4), ", p-value = ", round(output$distance_cor.dcor_xy$p.value, 4), sep = ""))
      cat("\n", "\n")
 
-     if(!is.null(object$breusch_pagan)){
+     if(!is.null(output$breusch_pagan)){
 
 	 cat("Homoscedasticity Tests:", "\n")
 
-	     sigtests1.xy <- rbind( c(object$breusch_pagan[[3]]$statistic, object$breusch_pagan[[3]]$parameter, object$breusch_pagan[[3]]$p.value),
-	                            c(object$breusch_pagan[[4]]$statistic, object$breusch_pagan[[4]]$parameter, object$breusch_pagan[[4]]$p.value)
+	     sigtests1.xy <- rbind( c(output$breusch_pagan[[3]]$statistic, output$breusch_pagan[[3]]$parameter, output$breusch_pagan[[3]]$p.value),
+	                            c(output$breusch_pagan[[4]]$statistic, output$breusch_pagan[[4]]$parameter, output$breusch_pagan[[4]]$p.value)
 	                        )
          sigtests1.xy <- round(sigtests1.xy, 4)
          rownames(sigtests1.xy) <- c("BP-test", "Robust BP-test")
@@ -386,24 +376,24 @@ setMethod("show", "dda.Ind", function(object){
 
      }
 
-    if(!is.null(object$nlfun)){
+    if(!is.null(output$nlfun)){
 
-	     sigtests2.xy <- rbind(object$nlcor.xy$t1, object$nlcor.xy$t2, object$nlcor.xy$t3)
+	     sigtests2.xy <- rbind(output$nlcor.xy$t1, output$nlcor.xy$t2, output$nlcor.xy$t3)
          sigtests2.xy <- round(sigtests2.xy, 4)
 
-	      if(is.na(suppressWarnings(as.numeric(object$nlcor.xy$func)))){
-	                cat(paste("Non-linear Correlation Tests:", object$nlcor.xy$func, "Transformation"))
+	      if(is.na(suppressWarnings(as.numeric(output$nlcor.xy$func)))){
+	                cat(paste("Non-linear Correlation Tests:", output$nlcor.xy$func, "Transformation"))
 
-			        rownames(sigtests2.xy) <- c(paste("Cor[", object$nlcor.xy$func, "(", "r_", varnames[2], "), ", varnames[1],"]", sep=""),
-	                                            paste("Cor[", "r_", varnames[2], ", ", object$nlcor.xy$func, "(", varnames[1], ")]", sep=""),
-	                                            paste("Cor[", object$nlcor.xy$func, "(", "r_", varnames[2], "), ", object$nlcor.xy$func, "(", varnames[1],")]", sep="")
+			        rownames(sigtests2.xy) <- c(paste("Cor[", output$nlcor.xy$func, "(", "r_", varnames[2], "), ", varnames[1],"]", sep=""),
+	                                            paste("Cor[", "r_", varnames[2], ", ", output$nlcor.xy$func, "(", varnames[1], ")]", sep=""),
+	                                            paste("Cor[", output$nlcor.xy$func, "(", "r_", varnames[2], "), ", output$nlcor.xy$func, "(", varnames[1],")]", sep="")
 							                   )
 		    } else{
-	 	            cat(paste("Non-linear Correlation Tests: Power Transformation using", object$nlcor.xy$func))
+	 	            cat(paste("Non-linear Correlation Tests: Power Transformation using", output$nlcor.xy$func))
 
-				    rownames(sigtests2.xy) <- c(paste("Cor[", "r_", varnames[2], "^", object$nlcor.xy$func, ", ", varnames[1],"]", sep=""),
-	                                            paste("Cor[", "r_", varnames[2], ", ", varnames[1], "^", object$nlcor.xy$func, "]", sep=""),
-	                                            paste("Cor[", "r_", varnames[2], "^", object$nlcor.xy$func, ", ", varnames[1], "^", object$nlcor.xy$func, "]", sep="")
+				    rownames(sigtests2.xy) <- c(paste("Cor[", "r_", varnames[2], "^", output$nlcor.xy$func, ", ", varnames[1],"]", sep=""),
+	                                            paste("Cor[", "r_", varnames[2], ", ", varnames[1], "^", output$nlcor.xy$func, "]", sep=""),
+	                                            paste("Cor[", "r_", varnames[2], "^", output$nlcor.xy$func, ", ", varnames[1], "^", output$nlcor.xy$func, "]", sep="")
 							                   )
 	        }
      cat("\n")
@@ -415,19 +405,23 @@ setMethod("show", "dda.Ind", function(object){
 	}
 
 
-if(!is.null(object$out.diff)){
+if(!is.null(output$out.diff)){
 
-     ci.level <- as.numeric(object$boot.args[2]) * 100
-     if(object$boot.args[1] == "bca") cat(ci.level, "% ", "BCa Bootstrap CIs for Difference Statistics", " (", object$boot.args[3], " samples):", "\n", sep = "")
-     if(object$boot.args[1] == "perc") cat(ci.level, "% ", "Percentile Bootstrap CIs for Difference Statistics", " (", object$boot.args[3], " samples):", "\n", sep = "")
+     ci.level <- as.numeric(output$boot.args[2]) * 100
+     if(output$boot.args[1] == "bca") cat(ci.level, "% ", "BCa Bootstrap CIs for Difference Statistics", " (", output$boot.args[3], " samples):", "\n", sep = "")
+     if(output$boot.args[1] == "perc") cat(ci.level, "% ", "Percentile Bootstrap CIs for Difference Statistics", " (", output$boot.args[3], " samples):", "\n", sep = "")
 
-	 print.default(format( object$out.diff, digits = max(3L, getOption("digits") - 3L)), print.gap = 2L, quote = FALSE)
+	 print.default(format( output$out.diff, digits = max(3L, getOption("digits") - 3L)), print.gap = 2L, quote = FALSE)
 	 cat("\n")
 	 cat("---")
 	 cat("\n")
 	 cat(paste("Note: Difference statistics > 0 suggest", varnames[2], "->", varnames[1], sep = " "))
 	 cat("\n")
-    }
-})
+   }
+
+
+
+}
+
 
 

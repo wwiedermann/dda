@@ -92,12 +92,25 @@ summary(m)
 
 ### 1.A.1 Continuous Predictor Example
 
-```{r}
-library(dda)
-cdda.indep(y ~ x + z, pred = "x", data = dat, B = 1000)
+#q:Error: 'dda.indep' is not an exported object from 'namespace:dda', why
+#a: The function is not exported, so you need to use the `::` operator to access it.
+#q: excellent, but I am using the `dda` package, so why is the function not exported?
+#a: The function is not exported because it is not intended to be used by the end-user. It is used internally by other functions in the package.
 
+```{r TEST}
+m.categ <- lm(y ~ x*z.categ, data = dat)
+
+factor.indep <- cdda.indep(m.categ, pred = "x", mod = "z.categ", 
+                          modval = "factor", data = dat, boot.type = "bca",
+                          nlfun = 2, diff = TRUE, hetero = TRUE, B = 1000)
+```
+
+
+
+```{r}
 dda.indep(y ~ x + z, pred = "x", data = dat, B = 1000)
 ```
+
 ### 1.A.2 Categorical Predictor Example
 ```{r}
 dda.indep(y ~ x + z.categ, pred = "x", data = dat, B = 1000)
