@@ -33,9 +33,9 @@
 An object of class \code{dda.Ind} containing the results of the independence tests.
 }
 \description{
-`dda.indep` tests the skewness and kurtosis of the variables of two competing models. It also tests the difference in skewness and kurtosis to assess independence properties of the two models. The function also provides bootstrap confidence intervals for the difference in skewness and kurtosis.
+\code{dda.indep} tests the skewness and kurtosis of the variables of two competing models. It also tests the difference in skewness and kurtosis to assess independence properties of the two models. The function also provides bootstrap confidence intervals for the difference in skewness and kurtosis.
 }
 \examples{
-           dda.indep(y ~ x + z, pred = "x", data = my.data, nlfun = 2, hetero = TRUE, diff = TRUE, B = 1000) 
+           dda.indep(y ~ x + z, pred = "x", data = my.data, nlfun = 2, hetero = TRUE, diff = TRUE, B = 1000)
 
 }

@@ -15,10 +15,12 @@
 #' @param parallelize A logical value indicating whether bootstrapping is performed on multiple cores. Only used if hsic.method = "boot".
 #' @param cores a numeric value indicating the number of cores. Only used if parallelize = TRUE
 #'
-#' @examples car.indep <- cdda.indep(mpg ~ wt * hp + qsec, pred = "wt",
-#'                                    mod = "hp", diff = TRUE, data = mtcars) or
-#' car.test <- lm(mpg ~ wt * hp + qsec, data = mtcars)
-#'                cdda.indep(car.test, pred = "wt", mod = "hp", diff = TRUE, data = mtcars)
+#' @examples cdda.car.indep <- cdda.indep(mpg ~ wt * hp + qsec, pred = "wt",
+#'                                    mod = "hp", diff = TRUE, data = mtcars)
+#'           cdda.car.indep
+#'           #OR
+#'           car.test.mod <- lm(mpg ~ wt * hp + qsec, data = mtcars)
+#'           cdda.indep(car.test.mod, pred = "wt", mod = "hp", diff = TRUE, data = mtcars)
 #'
 #' @returns A list of class \code{cddaindep} containing with information on competing models under moderation
 #' @export
@@ -275,7 +277,7 @@ cdda.indep <- function(formula = NULL, pred = NULL, mod = NULL, modval = "mean",
 
 #' @title Print method for "cddaindep" class
 #' @description Calling `print` on a `cddaindep` object will display the output of the standard linear model coefficients for competing models.
-#' @param x An object of class "cddaindep"
+#' @param x An object of class `cddaindep`
 #'
 #' @export
 print.cddaindep <- function(x, ...){

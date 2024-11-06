@@ -1,0 +1,323 @@
+---
+title: "Package 'dda'"
+output:
+  pdf_document:
+    toc: true
+    toc_depth: '4'
+  html_document:
+    theme: spacelab
+    highlight: kate
+    toc: true
+    toc_float: true
+    collapsed: false
+    smooth_scroll: false
+    toc_depth: 4
+    fig_width: 14
+    fig_height: 9
+    fig_caption: true
+    number_sections: true
+vignette: "%\\VignetteIndexEntry{Introduction to Direction Dependence Analysis (dda)} %\\VignetteEngine{knitr::rmarkdown} %\\VignetteEncoding{UTF-8}\n"
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+
+# Introduction
+
+This is a vignette for the `dda` package. It provides an overview of the package and its functionality. `dda` is a package based on the Direction Dependence Analysis (DDA) framework proposed by Wiedermann, W., & von Eye, A (2015)](https://doi.org/10.1177/0165025415582056). The package compares competing directional linear models: a) the target model (initially specified) `x -> y` and b) the reversed model `y -> x` (reverse specification). The package provides a set of functions to perform the DDA analysis, to test and to visualize the results.
+
+# Installation
+
+You can install the pre-released version of `dda` from GitHub with: 
+
+```{r, eval = FALSE}
+# install.packages("devtools")
+devtools::install_github("wwiedermann/dda")
+library(dda)
+```
+
+```{r, message = FALSE, warning = FALSE, include=FALSE, echo = FALSE}
+devtools::install_github("hirnia/dda")
+library(dda)
+```
+
+# Implementation Example: One Simulation in Many Renditions
+
+## 0: Data Generation
+
+### Data Generation
+
+```{r}
+set.seed(123)
+
+n <- 1000
+
+## --- generate moderator
+
+z <- sort(rnorm(n))
+z1 <- z[z <= 0]
+z2 <- z[z > 0]
+z.categ <- as.factor(ifelse(z < 0, 0, 1))
+
+## --- x -> y when m <= 0
+
+x1 <- rchisq(length(z1), df = 4) - 4
+e1 <- rchisq(length(z1), df = 3) - 3
+y1 <- 0.5 * x1 + e1
+
+## --- y -> x when m > 0
+
+y2 <- rchisq(length(z2), df = 4) - 4
+e2 <- rchisq(length(z2), df = 3) - 3
+x2 <- 0.25 * y2 + e2
+
+y <- c(y1, y2)
+x <- c(x1, x2)
+dat <- data.frame(x,y,z,z.categ)
+
+m <- lm(y ~ x*z, data = dat)
+
+summary(m)
+#plot(y ~ x, data = dat, pch = 21, bg = as.factor(z <= 0))
+```
+
+# 1. Independence Properties (`indep`)
+
+## 1.A `dda.indep` implementation
+
+### 1.A.1 Continuous Predictor Example
+
+```{r}
+dda.indep(y ~ x + z, pred = "x", data = dat, B = 1000)
+```
+### 1.A.2 Categorical Predictor Example
+```{r}
+dda.indep(y ~ x + z.categ, pred = "x", data = dat, B = 1000)
+```
+
+## 1.B `cdda.indep` implementation
+
+### 1.B.1 Factor Level
+
+```{r}
+m.categ <- lm(y ~ x*z.categ, data = dat)
+
+factor.indep <- cdda.indep(m.categ, pred = "x", mod = "z.categ", 
+                          modval = "factor", data = dat, boot.type = "bca",
+                          nlfun = 2, diff = TRUE, hetero = TRUE, B = 1000)
+```
+
+```{r}
+factor.indep
+```
+
+```{r}
+summary(factor.indep, hsic.diff = TRUE, dcor.diff = TRUE,
+        mi.diff = TRUE, nlfun = T)
+```
+
+```{r}
+plot.cddaindep(factor.indep, stat = "hsic.diff")
+plot.cddaindep(factor.indep, stat = "dcor.diff")
+plot.cddaindep(factor.indep, stat = "mi.diff")
+```
+
+
+### 1.B.2 Pick A Point
+
+The poster looks good. Would it make sense to present some other independence tests than Breusch-Pagan that show clearer results in favor of the target model? Similarly, maybe you find another example of a plot than kurtosis difference with clearer results. Other than that, I don't think the poster needs much revision.
+
+```{r}
+point.indep <- cdda.indep(m, pred = "x", mod = "z", data = dat, nlfun = 2,
+                          modval = c(-1, 0, 1), diff = TRUE, hetero = TRUE, point = 0)
+```
+
+```{r}
+# point.indep
+summary(point.indep, hsic.diff = T, dcor.diff = T, mi.diff = T)
+```
+
+```{r}
+plot.cddaindep(point.indep, stat = "hsic.diff")
+plot.cddaindep(point.indep, stat = "dcor.diff")
+plot.cddaindep(point.indep, stat = "mi.diff")
+```
+
+### 1.B.3 Mean
+```{r}
+mean.indep <- cdda.indep(m, pred = "x", mod = "z", data = dat, nlfun = 2,
+                          modval = "mean", diff = TRUE, hetero = TRUE)
+```
+
+```{r}
+#mean.indep
+summary(mean.indep, hsic.diff = TRUE, dcor.diff = TRUE, mi.diff = TRUE)
+```
+
+```{r}
+plot.cddaindep(mean.indep, stat = "hsic.diff")
+plot.cddaindep(mean.indep, stat = "dcor.diff")
+plot.cddaindep(mean.indep, stat = "mi.diff")
+```
+
+### 1.B.4 Median
+```{r}
+median.indep <- cdda.indep(m, pred = "x", mod = "z", data = dat, nlfun = 2,
+                          modval = "median", diff = TRUE, hetero = TRUE, point = 0)
+```
+
+```{r}
+#median.indep
+summary(median.indep, hsic.diff = TRUE, dcor.diff = TRUE, mi.diff = TRUE)
+```
+
+```{r}
+plot.cddaindep(median.indep, stat = "hsic.diff")
+plot.cddaindep(median.indep, stat = "dcor.diff")
+plot.cddaindep(median.indep, stat = "mi.diff")
+```
+
+
+### 1.B.5 Johnson-Neyman, 4 Levels
+```{r}
+jn.indep.b <- cdda.indep(m, pred = "x", mod = "z", data = dat, nlfun = 2,
+                         modval = "JN", JN.length = 4, diff = TRUE, hetero = TRUE)
+```
+
+```{r}
+#jn.indep
+summary(jn.indep.b, hsic.diff = TRUE, dcor.diff = TRUE, mi.diff = TRUE)
+```
+
+```{r}
+plot.cddaindep(jn.indep.b, stat = "hsic.diff")
+plot.cddaindep(jn.indep.b, stat = "dcor.diff")
+plot.cddaindep(jn.indep.b, stat = "mi.diff")
+```
+
+# 2. Residual Distribution Properties (`resdist`)
+
+## 2.A `dda.resdist` implementation
+
+### 2.A.1 Continuous Predictor Example
+```{r}
+dda.resdist(y ~ x + z, pred = "x", data = dat, B = 1000)
+```
+
+### 2.A.2 Categorical Predictor Example
+```{r}
+dda.resdist(y ~ x + z.categ, pred = "x", data = dat, B = 1000)
+```
+
+# 3. Variable Distribution Properties (`vardist`)
+
+## 3.A `dda.vardist` implementation
+
+### 3.A.1 Continuous Predictor Example
+```{r}
+dda.vardist(y ~ x + z, pred = "x", data = dat, B = 1000)
+```
+
+### 3.A.2 Categorical Predictor Example
+```{r}
+dda.vardist(y ~ x + z.categ, pred = "x", data = dat, B = 1000)
+```
+
+## 3.B `cdda.vardist` implementation
+
+### 3.B.1 Factor Level
+
+```{r}
+factor.vardist <- cdda.vardist(m.categ, pred = "x", mod = "z.categ",
+                               modval = "factor", data = dat)
+```
+
+```{r}
+factor.vardist
+```
+
+```{r}
+summary(factor.vardist, coskew = TRUE, cokurt = TRUE)
+```
+
+```{r}
+plot(factor.vardist, stat = "rhs", ylim = c(-0.3, 0.3))
+plot(factor.vardist, stat = "cokurt", ylim = c(-10, 30))
+plot(factor.vardist, stat = "rcc", ylim = c(-5, 15))
+plot(factor.vardist, stat = "rtanh", ylim = c(0, 0.03))
+```
+
+## 3.B.2 Pick A Point
+
+```{r}
+point.vardist <- cdda.vardist(m, pred = "x", mod = "z", data = dat,
+                          modval = c(-1, 0, 1), point = 0)
+```
+
+```{r}
+#point.vardist
+summary(point.vardist, coskew = TRUE, cokurt = TRUE)
+```
+
+## 3.B.3 Mean
+
+```{r}
+mean.vardist <- cdda.vardist(m, pred = "x", mod = "z",
+                             data = dat, modval = "mean")
+```
+
+```{r}
+summary(mean.vardist, coskew = TRUE, cokurt = TRUE)
+```
+
+```{r}
+plot(mean.vardist, stat = "cokurt", ylim = c(-10, 40))
+plot(mean.vardist, stat = "rcc", ylim = c(-5, 25))
+plot(mean.vardist, stat = "rtanh", ylim = c(-0.01, 0.03))
+```
+
+## 3.B.4 Median 
+
+```{r}
+median.vardist <- cdda.vardist(m, pred = "x", mod = "z",
+                               data = dat, modval = "median")
+```
+
+```{r}
+#median.vardist
+summary(median.vardist, coskew = TRUE, cokurt = TRUE)
+```
+
+```{r}
+plot(median.vardist, stat = "rhs", ylim = c(-0.2, 0.3))
+plot(median.vardist, stat = "cokurt", ylim = c(-10, 35))
+plot(median.vardist, stat = "rcc", ylim = c(-5, 25))
+plot(median.vardist, stat = "rtanh", ylim = c(-0.01, 0.03))
+```
+
+## 3.B.5 Johnson-Neyman, 4 Levels
+
+```{r}
+jn.vardist.b <- cdda.vardist(m, pred = "x", mod = "z",
+                           data = dat, modval = "JN", JN.length = 4)
+```
+
+```{r}
+#jn.vardist
+summary(jn.vardist.b, coskew = TRUE, cokurt = TRUE)
+```
+
+```{r}
+plot(jn.vardist.b, stat = "rhs", ylim = c(-0.05, 0.05))
+plot(jn.vardist.b, stat = "cokurt", ylim = c(-2, 5))
+plot(jn.vardist.b, stat = "rcc", ylim = c(-2, 5))
+plot(jn.vardist.b, stat = "rtanh", ylim = c(-0.005, 0.005))
+```
+
+
+

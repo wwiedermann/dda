@@ -7,7 +7,7 @@
 \method{print}{cddaindep}(x, ...)
 }
 \arguments{
-\item{x}{An object of class "cddaindep"}
+\item{x}{An object of class `cddaindep`}
 }
 \description{
 Calling `print` on a `cddaindep` object will display the output of the standard linear model coefficients for competing models.
