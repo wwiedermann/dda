@@ -9,7 +9,7 @@ Authors@R: c(
            )
 Maintainer: Wolfgang Wiedermann <wiedermannw@missouri.edu>
 Description: The dda (Direction Dependence Analysis) package provides functions to analyze the direction dependence of competing linear models. The package includes functions to calculate test independence variable distribution statistics for competing models that are conditioned upon different moderator levels. Plotting and summary generic capabilities are also available for cdda class objects.
-License: MIT + file LICENSE
+License: MIT 
 Imports: 
     boot,
     dHSIC,
