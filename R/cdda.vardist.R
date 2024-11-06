@@ -12,10 +12,12 @@
 #' @param B           number of bootstrap samples
 #' @param boot.type   A vector of character strings representing the type of bootstrap confidence intervals required. Must be one of the two values \code{c("perc", "bca")}. \code{boot.type = "bca"} is the default.
 #'
-#' @examples          car.indep <- cdda.vardist(mpg ~ wt * hp + qsec, pred = "wt",
-#'                                              mod = "hp", data = mtcars) or
-#'                    car.test <- lm(mpg ~ wt * hp + qsec, data = mtcars)
-#'                    cdda.vardist(car.test, pred = "wt", mod = "hp", data = mtcars)
+#' @examples          cdda.car.indep <- cdda.vardist(mpg ~ wt * hp + qsec, pred = "wt",
+#'                                                   mod = "hp", data = mtcars)
+#'                    cdda.car.indep
+#'                    # OR
+#'                    car.test.mod <- lm(mpg ~ wt * hp + qsec, data = mtcars)
+#'                    cdda.vardist(car.test.mod, pred = "wt", mod = "hp", data = mtcars)
 #'
 #' @returns          A list of class \code{cddavardist} containing the results of the conditional directional dependence analysis.
 #' @export
