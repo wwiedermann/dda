@@ -43,9 +43,11 @@ A list of class \code{cddavardist} containing the results of the conditional dir
 \code{cdda.vardist} provides information on competing models under moderation
 }
 \examples{
-         car.indep <- cdda.vardist(mpg ~ wt * hp + qsec, pred = "wt",
-                                             mod = "hp", data = mtcars) or
-                   car.test <- lm(mpg ~ wt * hp + qsec, data = mtcars)
-                   cdda.vardist(car.test, pred = "wt", mod = "hp", data = mtcars)
+         cdda.car.indep <- cdda.vardist(mpg ~ wt * hp + qsec, pred = "wt",
+                                                  mod = "hp", data = mtcars)
+                   cdda.car.indep
+                   # OR
+                   car.test.mod <- lm(mpg ~ wt * hp + qsec, data = mtcars)
+                   cdda.vardist(car.test.mod, pred = "wt", mod = "hp", data = mtcars)
 
 }
