@@ -56,9 +56,11 @@ A list of class \code{cddaindep} containing with information on competing models
 \code{cdda.indep} tests the skewness and kurtosis of the variables of two competing models. It also tests the difference in skewness and kurtosis to assess independence properties of the two models. The function also provides bootstrap confidence intervals for the difference in skewness and kurtosis.
 }
 \examples{
-car.indep <- cdda.indep(mpg ~ wt * hp + qsec, pred = "wt",
-                                   mod = "hp", diff = TRUE, data = mtcars) or
-car.test <- lm(mpg ~ wt * hp + qsec, data = mtcars)
-               cdda.indep(car.test, pred = "wt", mod = "hp", diff = TRUE, data = mtcars)
+cdda.car.indep <- cdda.indep(mpg ~ wt * hp + qsec, pred = "wt",
+                                   mod = "hp", diff = TRUE, data = mtcars)
+          cdda.car.indep
+          #OR
+          car.test.mod <- lm(mpg ~ wt * hp + qsec, data = mtcars)
+          cdda.indep(car.test.mod, pred = "wt", mod = "hp", diff = TRUE, data = mtcars)
 
 }

@@ -93,6 +93,9 @@ summary(m)
 ### 1.A.1 Continuous Predictor Example
 
 ```{r}
+library(dda)
+cdda.indep(y ~ x + z, pred = "x", data = dat, B = 1000)
+
 dda.indep(y ~ x + z, pred = "x", data = dat, B = 1000)
 ```
 ### 1.A.2 Categorical Predictor Example
