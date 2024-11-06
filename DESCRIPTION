@@ -1,0 +1,28 @@
+Package: dda
+Type: Package
+Title: Direction Dependence Analysis
+Version: 0.1.0
+Authors@R: c(
+    person("Wolfgang", "Wiedermann", email = "wiedermannw@missouri.edu",
+           role = c("aut", "cre")),
+    person("Megan", "Hirni", email = "mj.hirni@outlook.com", role = "aut")
+           )
+Maintainer: Wolfgang Wiedermann <wiedermannw@missouri.edu>
+Description: The dda (Direction Dependence Analysis) package provides functions to analyze the direction dependence of competing linear models. The package includes functions to calculate test independence variable distribution statistics for competing models that are conditioned upon different moderator levels. Plotting and summary generic capabilities are also available for cdda class objects.
+License: MIT + file LICENSE
+Imports: 
+    boot,
+    dHSIC,
+    energy,
+    interactions,
+    lmtest,
+    moments
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.3.2
+Suggests: 
+    knitr,
+    rmarkdown,
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
+VignetteBuilder: knitr
