@@ -280,6 +280,7 @@ cdda.indep <- function(formula = NULL, pred = NULL, mod = NULL, modval = "mean",
 #' @param x An object of class `cddaindep`
 #'
 #' @export
+#'
 print.cddaindep <- function(x, ...){
   cdda.output <- x
   cat("\n")

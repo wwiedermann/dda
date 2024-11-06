@@ -16,10 +16,10 @@
 #'                    car.test <- lm(mpg ~ wt + qsec, data = mtcars)
 #'                    dda.vardist(car.test, pred = "wt", B = 500, data = mtcars)
 #'
-#' @returns           An object of class \code{dda.Var} containing the results of skewness and kurtosis tests, and bootstrap confidence intervals for the difference in skewness and kurtosis.
+#' @returns           An object of class \code{ddavar} containing the results of skewness and kurtosis tests, and bootstrap confidence intervals for the difference in skewness and kurtosis.
 #' @export
 
-setClass("dda.Var", representation("list"))
+#setClass("dda.Var", representation("list"))
 
 dda.vardist <- function(formula, pred = NULL, data = list(), B = 100, boot.type = "bca", conf.level = 0.95)
 {
@@ -83,13 +83,6 @@ dda.vardist <- function(formula, pred = NULL, data = list(), B = 100, boot.type 
            delete.pred <- which( colnames(X) == pred ) # get position of tentative predictor
            if ( length(delete.pred) == 0 ) stop( "Specified predictor not found in the target model." )
 
-		   #if( !is.null(moderator) ){
-		   #       position.mod <- which( colnames(X) == moderator) # get position of moderator
-		   #       if ( length(position.mod) == 0 ) stop( "Specified moderator not found in the target model." )
-		   #
-	       #			  m <- X[, position.mod] # extract moderator
-           #       }
-
 		   x <- X[, delete.pred]   # tentative predictor
 		   X <- X[ , -delete.pred] # model matrix with covariates
 		   if ( !is.matrix(X) ) X <- as.matrix(X)
@@ -107,7 +100,7 @@ dda.vardist <- function(formula, pred = NULL, data = list(), B = 100, boot.type 
 		   if (!is.matrix(X)) X <- as.matrix(X)
 	}
 
-    ry <- lm.fit(X, y)$residuals
+  ry <- lm.fit(X, y)$residuals
 	rx <- lm.fit(X, x)$residuals
 
 	ry <- as.vector(scale(ry))
@@ -120,17 +113,17 @@ dda.vardist <- function(formula, pred = NULL, data = list(), B = 100, boot.type 
 	agostino.out <- apply(dat, 2, agostino.test)
 	agostino.out <- lapply(agostino.out, unclass)
 	agostino.out$predictor[3:5] <- NULL
-    agostino.out$outcome[3:5] <- NULL
+  agostino.out$outcome[3:5] <- NULL
 
 	anscombe.out <- apply(dat, 2, anscombe.test)
 	anscombe.out <- lapply(anscombe.out, unclass)
 	anscombe.out$predictor[3:5] <- NULL
-    anscombe.out$outcome[3:5] <- NULL
+  anscombe.out$outcome[3:5] <- NULL
 
 	output <- list(agostino.out, anscombe.out)
 	names(output) <- c("agostino", "anscombe")
 
-    output$anscombe$outcome$statistic[1] <- output$anscombe$outcome$statistic[1] - 3     # change kurtosis to ex-kurtosis
+  output$anscombe$outcome$statistic[1] <- output$anscombe$outcome$statistic[1] - 3     # change kurtosis to ex-kurtosis
 	output$anscombe$predictor$statistic[1] <- output$anscombe$predictor$statistic[1] - 3 # change kurtosis to ex-kurtosis
 
     ### --- run bootstrap confidence intervals
@@ -142,7 +135,7 @@ dda.vardist <- function(formula, pred = NULL, data = list(), B = 100, boot.type 
 
 			 names(boot.out) <- c("skew.diff", "kurt.diff", "cor12.diff", "cor13.diff", "RHS", "RCC", "Rtanh")
 
-             ci.skewdiff  <- unclass(boot.out$skew.diff)[[4]][4:5] ; names(ci.skewdiff) <- c("lower", "upper")
+       ci.skewdiff  <- unclass(boot.out$skew.diff)[[4]][4:5] ; names(ci.skewdiff) <- c("lower", "upper")
 			 ci.kurtdiff  <- unclass(boot.out$kurt.diff)[[4]][4:5] ; names(ci.kurtdiff) <- c("lower", "upper")
 			 ci.cor12diff <- unclass(boot.out$cor12.diff)[[4]][4:5] ; names(ci.cor12diff) <- c("lower", "upper")
 			 ci.cor13diff <- unclass(boot.out$cor13.diff)[[4]][4:5] ; names(ci.cor13diff) <- c("lower", "upper")
@@ -167,36 +160,32 @@ dda.vardist <- function(formula, pred = NULL, data = list(), B = 100, boot.type 
 	response.name <- all.vars(formula(formula))[1]  # get name of response variable
 	output <- c(output, list(var.names = c(response.name, pred)))
 
-	new ("dda.Var", output  )
+	#new ("dda.Var", output  )
 
-}
-
-setMethod("show", "dda.Var", function(object){
-
-     varnames <- object$var.names
+  varnames <- output$var.names
 
 	 cat("\n")
      cat("DIRECTION DEPENDENCE ANALYSIS: Variable Distributions", "\n", "\n")
      cat("Skewness and kurtosis tests:", "\n")
 
-	     sigtests <- rbind( c(object[[1]]$outcome$statistic, object[[1]]$outcome$p.value, object[[1]]$predictor$statistic, object[[1]]$predictor$p.value),
-	                        c(object[[2]]$outcome$statistic, object[[2]]$outcome$p.value, object[[2]]$predictor$statistic, object[[2]]$predictor$p.value)
+	     sigtests <- rbind( c(output[[1]]$outcome$statistic, output[[1]]$outcome$p.value, output[[1]]$predictor$statistic, output[[1]]$predictor$p.value),
+	                        c(output[[2]]$outcome$statistic, output[[2]]$outcome$p.value, output[[2]]$predictor$statistic, output[[2]]$predictor$p.value)
 	                      )
          sigtests <- round(sigtests, 4)
          rownames(sigtests) <- c("Skewness", "Kurtosis")
 		 colnames(sigtests) <- c(varnames[1], " z-value", " Pr(>|z|)", varnames[2], " z-value", " Pr(>|z|)")
          print.default(format( sigtests, digits = max(3L, getOption("digits") - 3L)), print.gap = 2L, quote = FALSE)
 
-	 if(!is.null(object$boot.args)){
-	       ci.level <- as.numeric(object$boot.args[2]) * 100
+	 if(!is.null(output$boot.args)){
+	       ci.level <- as.numeric(output$boot.args[2]) * 100
 		   cat("\n")
 
 	       # Print Skewness and Kurtosis based measures
 
-		   if(object$boot.args[1] == "bca") cat(ci.level, "% ", "BCa bootstrap CIs for higher moment differences:", "\n", sep = "")
-           if(object$boot.args[1] == "perc") cat(ci.level, "% ", "Percentile bootstrap CIs for higher moment differences:", "\n", sep = "")
+		   if(output$boot.args[1] == "bca") cat(ci.level, "% ", "BCa bootstrap CIs for higher moment differences:", "\n", sep = "")
+       if(output$boot.args[1] == "perc") cat(ci.level, "% ", "Percentile bootstrap CIs for higher moment differences:", "\n", sep = "")
 
-	       citests <- rbind(object$skewdiff, object$kurtdiff)
+	       citests <- rbind(output$skewdiff, output$kurtdiff)
 		   citests <- round(citests, 4)
 	       rownames(citests) <- c("Skewness", "Kurtosis")
 	       colnames(citests) <- c("diff", "lower", "upper")
@@ -205,10 +194,10 @@ setMethod("show", "dda.Var", function(object){
 
            # Print Co-Skewness and Co-Kurtosis based measures
 
-   	       if(object$boot.args[1] == "bca") cat(ci.level, "% ", "BCa bootstrap CIs for differences in higher-order correlations:", "\n", sep = "")
-           if(object$boot.args[1] == "perc") cat(ci.level, "% ", "Percentile bootstrap CIs for differences in higher-order correlations:", "\n", sep = "")
+   	       if(output$boot.args[1] == "bca") cat(ci.level, "% ", "BCa bootstrap CIs for differences in higher-order correlations:", "\n", sep = "")
+           if(output$boot.args[1] == "perc") cat(ci.level, "% ", "Percentile bootstrap CIs for differences in higher-order correlations:", "\n", sep = "")
 
-		   hoctests <- rbind(object$cor12diff, object$cor13diff)
+		   hoctests <- rbind(output$cor12diff, output$cor13diff)
 		   hoctests <- round(hoctests, 4)
 		   rownames(hoctests) <- c("Cor^2[2,1] - Cor^2[1,2]", "Cor^2[3,1] - Cor^2[1,3]" )
 		   colnames(hoctests) <- c("estimate", "lower", "upper")
@@ -217,24 +206,26 @@ setMethod("show", "dda.Var", function(object){
 
            # Print LR approximative measures
 
-   	       if(object$boot.args[1] == "bca") cat(ci.level, "% ", "BCa bootstrap CIs for Likelihood Ratio approximations:", "\n", sep = "")
-           if(object$boot.args[1] == "perc") cat(ci.level, "% ", "Percentile bootstrap CIs for Likelihood Ratio approximations:", "\n", sep = "")
+   	       if(output$boot.args[1] == "bca") cat(ci.level, "% ", "BCa bootstrap CIs for Likelihood Ratio approximations:", "\n", sep = "")
+           if(output$boot.args[1] == "perc") cat(ci.level, "% ", "Percentile bootstrap CIs for Likelihood Ratio approximations:", "\n", sep = "")
 
-		   LRtests <- rbind(object$RHS, object$Rtanh, object$RCC )
+		   LRtests <- rbind(output$RHS, output$Rtanh, output$RCC )
 		   LRtests <- round(LRtests, 4)
 		   rownames(LRtests) <- c("Hyvarinen-Smith (co-skewness)", "Hyvarinen-Smith (tanh)", "Chen-Chan (co-kurtosis)")
 		   colnames(LRtests) <- c("estimate", "lower", "upper")
 		   print.default(format( LRtests, digits = max(3L, getOption("digits") - 3L)), print.gap = 2L, quote = FALSE)
 
 		   cat("\n")
-	       cat(paste("Number of resamples:", object$boot.args[3]))
+	       cat(paste("Number of resamples:", output$boot.args[3]))
 	       cat("\n")
 	       cat("---")
 	       cat("\n")
 	       cat(paste("Note: (Cor^2[i,j] - Cor^2[j,i]) > 0 suggests the model", varnames[2], "->", varnames[1], sep = " "))
 	       cat("\n")
-		   if(object$boot.warning) { cat("Warning: Excess-kurtosis values of", varnames[2], "and", varnames[1], "have unequal signs", "\n", "        Cor^2[3,1] - Cor^2[1,3] should also be computed for the model", varnames[1], "->", varnames[2], "\n") }
-        }
-})
+		   if(output$boot.warning) { cat("Warning: Excess-kurtosis values of", varnames[2], "and", varnames[1], "have unequal signs", "\n", "        Cor^2[3,1] - Cor^2[1,3] should also be computed for the model", varnames[1], "->", varnames[2], "\n") }
+	      }
+      class(output) <- "ddavardist"
+
+}
 
 
