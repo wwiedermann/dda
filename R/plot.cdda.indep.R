@@ -13,6 +13,7 @@
 #' @returns             A plot of a test statistic result from the \code{cdda.indep} class object.
 #' @export
 
+### look @noRd
 plot.cddaindep <- function(obj = NULL, stat = NULL, ylim =  NULL){ #alpha = 0.05,
 
   if(class(obj) != "cddaindep"){
@@ -27,7 +28,7 @@ plot.cddaindep <- function(obj = NULL, stat = NULL, ylim =  NULL){ #alpha = 0.05
     mod.vals <- obj[[4]][["mod_data"]] #modvalues, raw data
     mod.levels <- x.axis.labels <- obj[[4]][["mod_levels"]] #"modval levels for pick-a-point, not raw data"
     y.title <- obj[[3]][[1]] #Test statistic CI header
-    ci.level <- as.numeric(cdda.output[[1]][[1]]$boot.args[2]) * 100
+    ci.level <- as.numeric(obj[[1]][[1]]$boot.args[2]) * 100
 
     tar.model.label <- paste0(obj[[4]]["response_name"], "|", obj[[4]]["mod_name"],
                               "\u2192", obj[[4]]["pred_name"]) # y ~ x | m
