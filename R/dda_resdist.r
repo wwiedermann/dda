@@ -15,13 +15,16 @@
 #'                   car.test <- lm(mpg ~ wt + qsec, data = mtcars)
 #'                   dda.resdist(car.test, pred = "wt", boot.type = "bca", data = mtcars)
 #'
-#' @returns          An object of class \code{ddaresdist} containing the results of skewness and kurtosis tests, the difference in skewness and kurtosis, and bootstrap confidence intervals for the difference in skewness and kurtosis.
+#' @returns          An object of class \code{dda.Res} containing the results of skewness and kurtosis tests, the difference in skewness and kurtosis, and bootstrap confidence intervals for the difference in skewness and kurtosis.
 #' @export
-dda.resdist <- function(formula, pred = NULL, data = list(), B = 100,
-                        boot.type = "bca", conf.level = 0.95) {
+
+library(boot)
+library(moments)
+
+setClass("dda.Res", representation("list"))
+
+dda.resdist <- function(formula, pred = NULL, data = list(), B = 100, boot.type = "bca", conf.level = 0.95){
    ### --- helper function for bootstrap CIs
-  library(boot)
-  library(moments)
 
     boot.diff <- function(dat, g){
               dat <- dat[g, ]
@@ -50,7 +53,7 @@ dda.resdist <- function(formula, pred = NULL, data = list(), B = 100,
                      return(z)
             }
 
-    zval <- (agostino.zvalue(x) - agostino.zvalue(y))/sqrt(2 - 2*cor(x,y)^3)
+        zval <- (agostino.zvalue(x) - agostino.zvalue(y))/sqrt(2 - 2*cor(x,y)^3)
 		pval <- (1 - pnorm(abs(zval))) * 2 # two-sided pvalue
 		return(list(z.value = abs(zval), p.value = pval))
 	}
@@ -69,12 +72,12 @@ dda.resdist <- function(formula, pred = NULL, data = list(), B = 100,
                      return(z)
             }
 
-    zval <- (anscombe.zvalue(x) - anscombe.zvalue(y))/sqrt(2 - 2*cor(x,y)^4)
+        zval <- (anscombe.zvalue(x) - anscombe.zvalue(y))/sqrt(2 - 2*cor(x,y)^4)
 		pval <- (1 - pnorm(abs(zval))) * 2 # two-sided pvalue
 		return(list(z.value = abs(zval), p.value = pval))
 	}
 
-  if(is.null(pred)) stop( "Tentative predictor is missing." )
+    if(is.null(pred)) stop( "Tentative predictor is missing." )
 	if(B < 0) stop( "Number of resamples 'B' must be positive." )
 	if(conf.level < 0 || conf.level > 1) stop("'conf.level' must be between 0 and 1")
 	if( !boot.type %in% c("bca", "perc") ) stop( "Unknown argument in boot.type." )
@@ -95,7 +98,7 @@ dda.resdist <- function(formula, pred = NULL, data = list(), B = 100,
 		   if ( !is.matrix(X) ) X <- as.matrix(X)
 	}
 	else {
-       mf <- model.frame(formula, data = data)
+           mf <- model.frame(formula, data = data)
 		   y <- model.response(mf)   # tentative outcome
 		   X <- model.matrix(formula, data = data)
 
@@ -107,7 +110,7 @@ dda.resdist <- function(formula, pred = NULL, data = list(), B = 100,
 		   if (!is.matrix(X)) X <- as.matrix(X)
 	}
 
-  ry <- lm.fit(X, y)$residuals
+    ry <- lm.fit(X, y)$residuals
 	rx <- lm.fit(X, x)$residuals
 
 	### --- estimate competing models
@@ -162,48 +165,54 @@ dda.resdist <- function(formula, pred = NULL, data = list(), B = 100,
 	response.name <- all.vars(formula(formula))[1]  # get name of response variable
 	output <- c(output, list(var.names = c(response.name, pred)))
 
-  varnames <- output$var.names
+	new ("dda.Res", output  )
+
+}
+
+setMethod("show", "dda.Res", function(object){
+
+     varnames <- object$var.names
 
 	 cat("\n")
      cat("DIRECTION DEPENDENCE ANALYSIS: Residual Distributions", "\n", "\n")
      cat("Skewness and kurtosis tests:", "\n")
 
-	     sigtests <- rbind( c(output[[1]]$target$statistic, output[[1]]$target$p.value, output[[1]]$alternative$statistic, output[[1]]$alternative$p.value),
-	                        c(output[[2]]$target$statistic, output[[2]]$target$p.value, output[[2]]$alternative$statistic, output[[2]]$alternative$p.value)
+	     sigtests <- rbind( c(object[[1]]$target$statistic, object[[1]]$target$p.value, object[[1]]$alternative$statistic, object[[1]]$alternative$p.value),
+	                        c(object[[2]]$target$statistic, object[[2]]$target$p.value, object[[2]]$alternative$statistic, object[[2]]$alternative$p.value)
 	                      )
-       sigtests <- round(sigtests, 4)
-       rownames(sigtests) <- c("Skewness", "Kurtosis")
-		   colnames(sigtests) <- c("target", "z-value", "Pr(>|z|)", "alternative", "z-value", "Pr(>|z|)")
-      print.default(format( sigtests, digits = max(3L, getOption("digits") - 3L), scientific = NA, scipen = 999), print.gap = 2L, quote = FALSE)
+        sigtests <- round(sigtests, 4)
+         rownames(sigtests) <- c("Skewness", "Kurtosis")
+		 colnames(sigtests) <- c("target", "z-value", "Pr(>|z|)", "alternative", "z-value", "Pr(>|z|)")
+         print.default(format( sigtests, digits = max(3L, getOption("digits") - 3L), scientific = NA, scipen = 999), print.gap = 2L, quote = FALSE)
 
-	 if(is.null(output$boot.args)){
+	 if(is.null(object$boot.args)){
 		   cat("\n")
 	       cat("Skewness and kurtosis difference tests:", "\n")
 
-	       citests <- rbind(output$skewdiff, output$kurtdiff)
-		     citests <- round(citests, 4)
+	       citests <- rbind(object$skewdiff, object$kurtdiff)
+		   citests <- round(citests, 4)
 	       rownames(citests) <- c("Skewness", "Kurtosis")
 	       colnames(citests) <- c("diff", "z-value", "Pr(>|z|)")
 	       print.default(format( citests, digits = max(3L, getOption("digits") - 3L)), print.gap = 2L, quote = FALSE)
 	       cat("\n")
         }
 
-	 if(!is.null(output$boot.args)){
-	       ci.level <- as.numeric(output$boot.args[2]) * 100
-		     cat("\n")
+	 if(!is.null(object$boot.args)){
+	       ci.level <- as.numeric(object$boot.args[2]) * 100
+		   cat("\n")
 	       cat("Skewness and kurtosis difference tests:", "\n")
 
-	       citests <- rbind(output$skewdiff, output$kurtdiff)
-         citests <- round(citests, 4)
+	       citests <- rbind(object$skewdiff, object$kurtdiff)
+                citests <- round(citests, 4)
 	       rownames(citests) <- c("Skewness", "Kurtosis")
 	       colnames(citests) <- c("diff", "z-value", "Pr(>|z|)", "lower", "upper")
 	       print.default(format( citests, digits = max(3L, getOption("digits") - 3L)), print.gap = 2L, quote = FALSE)
 	       cat("\n")
-	       cat(paste("Number of resamples:", output$boot.args[3]))
-		     cat("\n")
-		     if(output$boot.args[1] == "bca") cat(ci.level, "% ", "BCa bootstrap CIs reported", "\n", "\n", sep = "")
-		     if(output$boot.args[1] == "perc") cat(ci.level, "% ", "Percentile bootstrap CIs reported", "\n", "\n", sep = "")
-          }
+	       cat(paste("Number of resamples:", object$boot.args[3]))
+		   cat("\n")
+		   if(object$boot.args[1] == "bca") cat(ci.level, "% ", "BCa bootstrap CIs reported", "\n", "\n", sep = "")
+		   if(object$boot.args[1] == "perc") cat(ci.level, "% ", "Percentile bootstrap CIs reported", "\n", "\n", sep = "")
+        }
 
 	  cat("---")
 	  cat("\n")
@@ -211,8 +220,5 @@ dda.resdist <- function(formula, pred = NULL, data = list(), B = 100,
 	  cat("\n")
 	  cat(paste("      Alternative is", varnames[1], "->", varnames[2], sep = " "))
 	  cat("\n")
-
-	  #class(output) <- "ddaresdist"
-
-}
+})
 
