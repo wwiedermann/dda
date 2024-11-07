@@ -24,7 +24,6 @@
 #'
 #' @returns A list of class \code{cddaindep} containing with information on competing models under moderation
 #' @export
-
 cdda.indep <- function(formula = NULL, pred = NULL, mod = NULL, modval = "mean",
                        data = list(), hetero = TRUE, diff = FALSE,
                        nlfun = NULL, hsic.method = "gamma",
