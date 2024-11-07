@@ -27,10 +27,10 @@ dda.vardist(
 \item{conf.level}{confidence level for boostrap confidence intervals}
 }
 \value{
-An object of class \code{ddavar} containing the results of skewness and kurtosis tests, and bootstrap confidence intervals for the difference in skewness and kurtosis.
+An object of class \code{ddavardist} containing the results of skewness and kurtosis tests, and bootstrap confidence intervals for the difference in skewness and kurtosis.
 }
 \description{
-\code{dda.vardist} tests the skewness and kurtosis of the variables of two competing models. It also tests the difference in skewness and kurtosis between the residuals of the two models. The function also provides bootstrap confidence intervals for the difference in skewness and kurtosis.
+tests the skewness and kurtosis of the variables of two competing models. It also tests the difference in skewness and kurtosis between the residuals of the two models. The function also provides bootstrap confidence intervals for the difference in skewness and kurtosis.
 }
 \examples{
          dda.car.vardist <- dda.vardist(mpg ~ wt + qsec, pred = "wt",

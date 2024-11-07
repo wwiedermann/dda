@@ -42,7 +42,7 @@ library(dda)
 ```
 
 ```{r, message = FALSE, warning = FALSE, include=FALSE, echo = FALSE}
-devtools::install_github("hirnia/dda")
+devtools::install_github("hirnia/dda", force = TRUE)
 library(dda)
 ```
 
@@ -53,7 +53,6 @@ library(dda)
 ### Data Generation
 
 ```{r}
-library(dda)
 set.seed(123)
 
 n <- 1000
