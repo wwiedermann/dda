@@ -3,6 +3,16 @@
 \name{dda.resdist}
 \alias{dda.resdist}
 \title{Direction Dependence Analysis: Residual Distributions}
+\usage{
+dda.resdist(
+  formula,
+  pred = NULL,
+  data = list(),
+  B = 100,
+  boot.type = "bca",
+  conf.level = 0.95
+)
+}
 \arguments{
 \item{formula}{symbolic formula of the target model to be tested or a \code{lm} object}
 

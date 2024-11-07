@@ -17,13 +17,11 @@
 #'
 #' @returns          An object of class \code{ddaresdist} containing the results of skewness and kurtosis tests, the difference in skewness and kurtosis, and bootstrap confidence intervals for the difference in skewness and kurtosis.
 #' @export
-
-library(boot)
-library(moments)
-
 dda.resdist <- function(formula, pred = NULL, data = list(), B = 100,
                         boot.type = "bca", conf.level = 0.95) {
    ### --- helper function for bootstrap CIs
+  library(boot)
+  library(moments)
 
     boot.diff <- function(dat, g){
               dat <- dat[g, ]
@@ -52,7 +50,7 @@ dda.resdist <- function(formula, pred = NULL, data = list(), B = 100,
                      return(z)
             }
 
-        zval <- (agostino.zvalue(x) - agostino.zvalue(y))/sqrt(2 - 2*cor(x,y)^3)
+    zval <- (agostino.zvalue(x) - agostino.zvalue(y))/sqrt(2 - 2*cor(x,y)^3)
 		pval <- (1 - pnorm(abs(zval))) * 2 # two-sided pvalue
 		return(list(z.value = abs(zval), p.value = pval))
 	}
@@ -183,7 +181,7 @@ dda.resdist <- function(formula, pred = NULL, data = list(), B = 100,
 	       cat("Skewness and kurtosis difference tests:", "\n")
 
 	       citests <- rbind(output$skewdiff, output$kurtdiff)
-		   citests <- round(citests, 4)
+		     citests <- round(citests, 4)
 	       rownames(citests) <- c("Skewness", "Kurtosis")
 	       colnames(citests) <- c("diff", "z-value", "Pr(>|z|)")
 	       print.default(format( citests, digits = max(3L, getOption("digits") - 3L)), print.gap = 2L, quote = FALSE)
