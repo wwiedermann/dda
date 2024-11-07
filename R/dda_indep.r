@@ -23,7 +23,7 @@
 #'           dda.indep(car.test, pred = "wt", diff = TRUE, data = mtcars)
 #'
 #' @returns An object of class \code{ddaindep} containing the results of the independence tests.
-#' @export
+#' @export dda.indep
 
 dda.indep <- function(formula, pred = NULL, data = list(), nlfun = NULL, hetero = FALSE, hsic.method = "gamma", diff = FALSE, B = 200,
                       boot.type = "perc", conf.level = 0.95, parallelize = FALSE, cores = 1, ...)
