@@ -9,6 +9,9 @@
 \arguments{
 \item{x}{An object of class `cddaindep`}
 }
+\value{
+An object of class \code{cddaindep} with readable ols coefficients for competing models
+}
 \description{
 Calling `print` on a `cddaindep` object will display the output of the standard linear model coefficients for competing models.
 }

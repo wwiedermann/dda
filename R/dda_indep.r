@@ -33,98 +33,6 @@ dda.indep <- function(formula, pred = NULL, data = list(), nlfun = NULL,
   library(energy)
   library(boot)
 
-   ### --- helper functions for independence difference statistics
-
-    max.entropy <- function(x){
-           sdx <- sd(x)
-           x  <- as.vector(scale(x))
-           k1 <- 79.047
-           k2 <- 7.412889
-           g  <- 0.37457
-           GaussE <- log(2*pi)/2+1/2
-           NegE <- k1 * (mean(log(cosh(x))) - g)^2 + k2 * mean(x * exp(-x^2/2))^2
-           entropy <- GaussE - NegE + log(sdx)
-           return(entropy)
-    }
-
-    boot.diff <- function(dat, g){
-
-      dat <- dat[g, ]
-
-  	  ry     <- dat[,1] # purified outcome
-      err.xy <- dat[,2] # errors of alternative model
-      rx     <- dat[,3] # purified predictor
-      err.yx <- dat[,4] # errors of target model
-
-      diff.hsic <- dHSIC::dhsic.test(err.xy, ry, method = "gamma")$statistic - dHSIC::dhsic.test(err.yx, rx, method = "gamma")$statistic
-      diff.dcor <- energy::dcor.test(err.xy, ry)$statistic - energy::dcor.test(err.yx, rx)$statistic
-      diff.mi <- (max.entropy(ry) + max.entropy(err.xy)) - (max.entropy(rx) + max.entropy(err.yx))
-      c(diff.hsic, diff.dcor, diff.mi)
-    }
-
-
-   ### --- non-linear correlation test function
-
-   nlcorTest <- function(x, y, fun, fname=NULL){
-
-      varnames <- c(deparse(substitute(x)), deparse(substitute(y)))
-
-      if (length(x) != length(y)) stop("Variables must have same length")
-
-      n <- length(x)
-      x <- as.vector(scale(x))
-      y <- as.vector(scale(y))
-
-      if (is.numeric(fun)){
-        func <- as.character(fun)
-	      r1 <- cor(x^fun, y)
-	      r2 <- cor(x, y^fun)
-	      r3 <- cor(x^fun, y^fun)
-
-   	      if( any(is.na( c(r1, r2, r3) ) ) || any( is.nan( c(r1, r2, r3) ) ) ){
-
-	          x <- x + abs( min(x) ) + 0.1
-	          y <- y + abs( min(y) ) + 0.1
-
-            r1 <- cor(x^fun, y)
-	          r2 <- cor(x, y^fun)
-	          r3 <- cor(x^fun, y^fun)
-	        }
-        } # end if
-     else {
-
-           func <- paste(substitute(fun))
-
-	       test.run <- suppressWarnings( c(fun(x), fun(y) ) )
-
-	        if( any(is.na( test.run ) ) || any( is.nan( test.run ) ) ){
-                x <- x + abs( min(x) ) + 0.1
-                y <- y + abs( min(y) ) + 0.1
-               } # end if
-
-           r1 <- cor(fun(x), y)
-	       r2 <- cor(x, fun(y))
-	       r3 <- cor(fun(x), fun(y))
-
-        } # end else = not is.numeric(fun)
-
-     tval1 <- r1 * sqrt( ( n - 2)/(1 - r1^2))
-     tval2 <- r2 * sqrt( ( n - 2)/(1 - r2^2))
-     tval3 <- r3 * sqrt( ( n - 2)/(1 - r3^2))
-
-     pval1 <- pt(abs(tval1), df = n - 2, lower.tail=FALSE) * 2
-     pval2 <- pt(abs(tval2), df = n - 2, lower.tail=FALSE) * 2
-     pval3 <- pt(abs(tval3), df = n - 2, lower.tail=FALSE) * 2
-
-     output <- list(t1 = c(r1, tval1, n - 2, pval1),
-                    t2 = c(r2, tval2, n - 2, pval2),
-                    t3 = c(r3, tval3, n - 2, pval3),
-	                func = fname,
-        		    varnames = varnames)
-
-    }
-
-
    ### --- start checking validity of input
 
 
@@ -255,7 +163,7 @@ dda.indep <- function(formula, pred = NULL, data = list(), nlfun = NULL,
 
 	    }
 
-      if( boot.type == "bca" && any( is.na( empinf( boot.res ) ) ) ) stop("Acceleration constant cannot be calculated. Increase the number of resamples or use boot.type = 'perc'")
+    if( boot.type == "bca" && any( is.na( empinf( boot.res ) ) ) ) stop("Acceleration constant cannot be calculated. Increase the number of resamples or use boot.type = 'perc'")
 
 	  suppressWarnings(boot.out <- lapply(as.list(1:3), function(i, boot.res) boot.ci(boot.res, conf=conf.level, type=boot.type, t0=boot.res$t0[i], t=boot.res$t[,i]), boot.res=boot.res))
 
@@ -422,5 +330,6 @@ if(!is.null(output$out.diff)){
 
 }
 
-
+#q: I need major help, why isn't this function documenting correctly and appearing as a function under dda?
+#a: You need to add the @export tag to the function. This will make the function available to the user when the package is loaded.
 
