@@ -279,7 +279,6 @@ dda.indep <- function(formula, pred = NULL, data = list(), nlfun = NULL,
 
   response.name <- all.vars(formula(formula))[1]  # get name of response variable
   output <- c(output, list(var.names = c(response.name, pred)))
-  class(output) <- "ddaindep"
   #new ("ddaindep", output )
 
   varnames <- output$var.names
@@ -417,9 +416,9 @@ if(!is.null(output$out.diff)){
 	 cat("\n")
 	 cat(paste("Note: Difference statistics > 0 suggest", varnames[2], "->", varnames[1], sep = " "))
 	 cat("\n")
-   }
+    }
 
-
+   class(output) <- "ddaindep"
 
 }
 

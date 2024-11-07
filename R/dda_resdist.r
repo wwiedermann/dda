@@ -212,7 +212,7 @@ dda.resdist <- function(formula, pred = NULL, data = list(), B = 100,
 	  cat(paste("      Alternative is", varnames[1], "->", varnames[2], sep = " "))
 	  cat("\n")
 
-	  class(output) <- "ddaresdist"
+	  #class(output) <- "ddaresdist"
 
 }
 
