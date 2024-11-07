@@ -194,7 +194,7 @@ dda.resdist <- function(formula, pred = NULL, data = list(), B = 100,
 	       cat("Skewness and kurtosis difference tests:", "\n")
 
 	       citests <- rbind(output$skewdiff, output$kurtdiff)
-                citests <- round(citests, 4)
+         citests <- round(citests, 4)
 	       rownames(citests) <- c("Skewness", "Kurtosis")
 	       colnames(citests) <- c("diff", "z-value", "Pr(>|z|)", "lower", "upper")
 	       print.default(format( citests, digits = max(3L, getOption("digits") - 3L)), print.gap = 2L, quote = FALSE)
