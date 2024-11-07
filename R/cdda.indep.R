@@ -277,9 +277,8 @@ cdda.indep <- function(formula = NULL, pred = NULL, mod = NULL, modval = "mean",
 #' @title Print method for "cddaindep" class
 #' @description Calling `print` on a `cddaindep` object will display the output of the standard linear model coefficients for competing models.
 #' @param x An object of class `cddaindep`
-#'
+#' @returns An object of class \code{cddaindep} with readable ols coefficients for competing models
 #' @export
-#'
 print.cddaindep <- function(x, ...){
   cdda.output <- x
   cat("\n")

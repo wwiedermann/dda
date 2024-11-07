@@ -24,46 +24,6 @@ dda.vardist <- function(formula, pred = NULL, data = list(), B = 100,
   library(boot)
   library(moments)
 
-   ### --- helper functions for bootstrap CIs
-
-   mysd <- function(x){sqrt(sum((x-mean(x))^2)/length(x))}
-
-   cor.ij <- function(x,y, i=1, j=1){
-       n <- length(x)
-       mx <- mean(x)
-       my <- mean(y)
-       Cov <- sum((x - mx)^i * (y - my)^j)/n
-       Cov/(mysd(x)^i * mysd(y)^j)
-    }
-
-    boot.diff <- function(dat, g){
-              dat <- dat[g, ]
-              x <- dat[, 1]  # "purified" predictor
-              y <- dat[, 2]  # "purified" outcome
-
-              x <- as.vector(scale(x))
-			  y <- as.vector(scale(y))
-
-              skew.diff <- (skewness(x)^2) - (skewness(y)^2)
-              kurt.diff <- (kurtosis(x)-3)^2 - (kurtosis(y)-3)^2
-              cor12.diff <- (cor.ij(x, y, i = 2, j = 1)^2) - (cor.ij(x, y, i = 1, j = 2)^2)
-			  cor13.diff <- ((cor.ij(x, y, i = 3, j = 1)^2) - (cor.ij(x, y, i = 1, j = 3)^2)) * sign(kurtosis(x)-3)
-
-              Rtanh <- cor(x, y) * mean(x * tanh(y) - tanh(x) * y)
-
-			  Cxy <- mean(x^3 * y) - 3*cor(x,y)*var(x)
-			  Cyx <- mean(x * y^3) - 3*cor(x,y)*var(y)
-              RCC <- (Cxy + Cyx) * (Cxy - Cyx)
-
-              xx <- sign(skewness(x)) * x
-			  yy <- sign(skewness(y)) * y
-              RHS <- cor(xx, yy) * mean( (xx^2 * yy) - (xx * yy^2) )
-
-              result <- c(skew.diff, kurt.diff, cor12.diff, cor13.diff, RHS, RCC, Rtanh)
-              names(result) <- c("skew.diff", "kurt.diff", "cor21.diff", "cor13.diff", "RHS", "RCC", "Rtanh")
-              return(result)
-    }
-
   if(is.null(pred)) stop( "Tentative predictor is missing." )
 	if(B <= 0) stop( "Number of resamples 'B' must be positive." )
 	if(conf.level < 0 || conf.level > 1) stop("'conf.level' must be between 0 and 1")
