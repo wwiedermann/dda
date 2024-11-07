@@ -12,8 +12,6 @@
 #'
 #' @returns             A plot of a test statistic result from the \code{cdda.indep} class object.
 #' @export
-
-### look @noRd
 plot.cddaindep <- function(obj = NULL, stat = NULL, ylim =  NULL){ #alpha = 0.05,
 
   if(class(obj) != "cddaindep"){
