@@ -17,7 +17,7 @@
 #'                    dda.vardist(car.test, pred = "wt", B = 500, data = mtcars)
 #'
 #' @returns           An object of class \code{ddavar} containing the results of skewness and kurtosis tests, and bootstrap confidence intervals for the difference in skewness and kurtosis.
-#' @export
+#' @export dda.vardist
 
 #setClass("dda.Var", representation("list"))
 
