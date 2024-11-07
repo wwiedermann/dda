@@ -115,7 +115,7 @@ summary(m)
 
 
 ```{r, eval = FALSE}
-dda.indep(y ~ x + z, pred = "x", data = dat, B = 1000)
+dda.indep(y ~ x + z, pred = "x", data = dat, B = 100)
 ```
 
 ### 1.A.2 Categorical Predictor Example
@@ -132,7 +132,7 @@ m.categ <- lm(y ~ x*z.categ, data = dat)
 
 factor.indep <- cdda.indep(m.categ, pred = "x", mod = "z.categ", 
                           modval = "factor", data = dat, boot.type = "bca",
-                          nlfun = 2, diff = TRUE, hetero = TRUE, B = 1000)
+                          nlfun = 2, diff = TRUE, hetero = TRUE, B = 500)
 ```
 
 ```{r, eval = FALSE}
@@ -140,7 +140,7 @@ factor.indep
 ```
 
 ```{r, eval = FALSE}
-summaryp(factor.indep, hsic.diff = TRUE, dcor.diff = TRUE,
+summary(factor.indep, hsic.diff = TRUE, dcor.diff = TRUE,
         mi.diff = TRUE, nlfun = T)
 ```
 
@@ -162,7 +162,7 @@ point.indep <- cdda.indep(m, pred = "x", mod = "z", data = dat, nlfun = 2,
 
 ```{r, eval = FALSE}
 # point.indep
-summaryp(point.indep, hsic.diff = T, dcor.diff = T, mi.diff = T)
+summary(point.indep, hsic.diff = T, dcor.diff = T, mi.diff = T)
 ```
 
 ```{r, eval = FALSE}
@@ -179,7 +179,7 @@ mean.indep <- cdda.indep(m, pred = "x", mod = "z", data = dat, nlfun = 2,
 
 ```{r, eval = FALSE}
 #mean.indep
-summaryp(mean.indep, hsic.diff = TRUE, dcor.diff = TRUE, mi.diff = TRUE)
+summary(mean.indep, hsic.diff = TRUE, dcor.diff = TRUE, mi.diff = TRUE)
 ```
 
 ```{r, eval = FALSE}
@@ -196,7 +196,7 @@ median.indep <- cdda.indep(m, pred = "x", mod = "z", data = dat, nlfun = 2,
 
 ```{r, eval = FALSE}
 #median.indep
-summaryp(median.indep, hsic.diff = TRUE, dcor.diff = TRUE, mi.diff = TRUE)
+summary(median.indep, hsic.diff = TRUE, dcor.diff = TRUE, mi.diff = TRUE)
 ```
 
 ```{r, eval = FALSE}
@@ -214,7 +214,7 @@ jn.indep.b <- cdda.indep(m, pred = "x", mod = "z", data = dat, nlfun = 2,
 
 ```{r, eval = FALSE}
 #jn.indep
-summaryp(jn.indep.b, hsic.diff = TRUE, dcor.diff = TRUE, mi.diff = TRUE)
+summary(jn.indep.b, hsic.diff = TRUE, dcor.diff = TRUE, mi.diff = TRUE)
 ```
 
 ```{r, eval = FALSE}

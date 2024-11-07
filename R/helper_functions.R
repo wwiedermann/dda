@@ -4,7 +4,7 @@
 #' @param x a vector
 #' @param ... other arguments not used by this method.
 #' @returns Invisibly returns the standard deviation of a vector
-#' @export
+#' @noRd
 mysd <- function(x){sqrt(sum((x-mean(x))^2)/length(x))} #dda.vardist
 
 #' Correlation helper function
@@ -15,6 +15,7 @@ mysd <- function(x){sqrt(sum((x-mean(x))^2)/length(x))} #dda.vardist
 #' @param j a numeric value
 #' @param ... other arguments not used by this method.
 #' @returns Invisibly returns the correlation between two vectors raised to the power of i and j.
+#' @noRd
 cor.ij <- function(x,y, i=1, j=1){ #dda.vardist
   n <- length(x)
   mx <- mean(x)
@@ -29,7 +30,7 @@ cor.ij <- function(x,y, i=1, j=1){ #dda.vardist
 #' @param g a vector of indices
 #' @param ... other arguments not used by this method.
 #' @returns Invisibly returns the difference between the skewness and kurtosis of two vectors.
-#' @export
+#' @noRd
 boot.diff <- function(dat, g){ #dda.indep & dda.vardist
   dat <- dat[g, ]
   x <- dat[, 1]  # "purified" predictor
@@ -83,7 +84,7 @@ max.entropy <- function(x){ #dda.indep
 #' @param fun a numeric value or a function of .Primitive type used for non-linear correlation tests. When \code{fun} is numeric the value is used in a power transformation.
 #' @param ... other arguments not used by this method.
 #' @returns Invisibly returns the correlation coefficient, t-value, degrees of freedom, and p-value for three different tests.
-#' @export
+#' @noRd
 nlcorTest <- function(x, y, fun, fname=NULL){ #dda.indep
 
   varnames <- c(deparse(substitute(x)), deparse(substitute(y)))

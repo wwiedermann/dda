@@ -326,10 +326,7 @@ if(!is.null(output$out.diff)){
 	 cat("\n")
     }
 
-   class(output) <- "ddaindep"
+   #class(output) <- "ddaindep"
 
 }
-
-#q: I need major help, why isn't this function documenting correctly and appearing as a function under dda?
-#a: You need to add the @export tag to the function. This will make the function available to the user when the package is loaded.
 

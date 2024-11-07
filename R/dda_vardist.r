@@ -182,7 +182,7 @@ dda.vardist <- function(formula, pred = NULL, data = list(), B = 100,
 		   if(output$boot.warning) { cat("Warning: Excess-kurtosis values of", varnames[2], "and", varnames[1], "have unequal signs", "\n", "        Cor^2[3,1] - Cor^2[1,3] should also be computed for the model", varnames[1], "->", varnames[2], "\n") }
 	 }
 
-      class(output) <- "ddavardist"
+      #class(output) <- "ddavardist"
 
 }
 
