@@ -20,8 +20,10 @@ plot.cddavardist <- function(obj = NULL, stat = NULL,
   if(class(obj) != "cddavardist"){
     stop("Object must be of class 'cddaindep' or 'cddavardist'.")
   }
-
-  if(stat != "rhs" & stat != "cokurt" & stat != "rcc" & stat != "rtanh"){
+  if(is.null(stat)){
+    stop("stat argument must be specified. as 'rhs', 'cokurt', 'rcc', or 'rtanh'")
+  }
+  else if(stat != "rhs" & stat != "cokurt" & stat != "rcc" & stat != "rtanh"){
     stop("stat must be one of 'rhs', 'cokurt', 'rcc', or 'rtanh'.")
   }
 

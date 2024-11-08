@@ -17,24 +17,9 @@
 #'
 #' @returns               A summary of test statistic results from the \code{cdda.indep} class object.
 #' @export
-
 summary.cddaindep <- function(cdda.output, nlfun = FALSE, hetero = TRUE,
                               hsic = TRUE, hsic.diff = FALSE, dcor = TRUE,
                               dcor.diff = FALSE, mi.diff = FALSE, ...) {
-  ## -------------------------------------------------------------------------------------------
-  ## cdda.output output from cdda.indep object
-  ## nlfun logical, default is FALSE, includes non-linear correlation test
-  ## hetero logical, default is TRUE, includes Breusch-Pagan Homoscedasticity test
-  ## hsic logical, default is TRUE, includes Hilbert-Schmidt Independence Criterion (HSIC) test
-  ## hsic.diff logical, default is FALSE, includes HSIC differences
-  ## dcor logical, default is TRUE, includes Distance Correlation (dCor) test
-  ## dcor.diff logical, default is FALSE, includes dCor differences
-  ## mi.diff logical, default is FALSE, includes Mutual Information (MI) differences
-  ## -------------------------------------------------------------------------------------------
-  ## Example      car.indep <- cdda.indep(mpg ~ wt * hp + qsec, pred = "wt",
-  ##                                       mod = "hp", diff = TRUE, data = mtcars)
-  ##               summary(car.indep, hsic.diff = TRUE, mi.diff = TRUE)
-  ## -------------------------------------------------------------------------------------------
 
   varnames <- cdda.output[[1]][[1]]$var.names # used in nlcor, boot.args, . . .
   mod_names <- names(cdda.output[[1]])
@@ -148,8 +133,8 @@ if (hsic == TRUE) {
 
     for (i in 1:length(mod_names)) {
 
-      tar.hsic <- unlist(cdda.output[[1]][[i]]$hsic.yx[13])
-      alt.hsic <- unlist(cdda.output[[2]][[i]]$hsic.yx[13])
+      tar.hsic <- unlist(cdda.output[[1]][[i]]$hsic.yx[1:3])
+      alt.hsic <- unlist(cdda.output[[2]][[i]]$hsic.yx[1:3])
       hsictests[i, ] <- c(tar.hsic, alt.hsic)
     }
 
