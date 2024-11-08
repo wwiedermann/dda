@@ -1,5 +1,5 @@
 #' @title Direction Dependence Analysis: Independence Distribution
-#' @description \code{dda.indep}tests the skewness and kurtosis of the variables of two competing models. It also tests the difference in skewness and kurtosis to assess independence properties of the two models. The function also provides bootstrap confidence intervals for the difference in skewness and kurtosis.
+#' @description \code{dda.indep} tests the skewness and kurtosis of the variables of two competing models. It also tests the difference in skewness and kurtosis to assess independence properties of the two models. The function also provides bootstrap confidence intervals for the difference in skewness and kurtosis.
 #' @name dda.indep
 #'
 #' @param formula:      symbolic formula of the model to be tested or a \code{lm} object.
