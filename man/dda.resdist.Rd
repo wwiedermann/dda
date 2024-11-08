@@ -27,16 +27,14 @@ dda.resdist(
 \item{conf.level}{confidence level for boostrap confidence intervals}
 }
 \value{
-An object of class \code{ddaresdist} containing the results of skewness and kurtosis tests, the difference in skewness and kurtosis, and bootstrap confidence intervals for the difference in skewness and kurtosis.
+An object of class \code{dda.Res} containing the results of skewness and kurtosis tests, the difference in skewness and kurtosis, and bootstrap confidence intervals for the difference in skewness and kurtosis.
 }
 \description{
 This function tests the skewness and kurtosis of the residuals of two competing models. It also tests the difference in skewness and kurtosis between the residuals of the two models. The function also provides bootstrap confidence intervals for the difference in skewness and kurtosis.
 }
 \examples{
-        dda.car.resdist <- dda.resdist(mpg ~ wt + qsec, pred = "wt",
-                                                boot.type = "bca", data = mtcars)
-                  #OR
-                  car.test <- lm(mpg ~ wt + qsec, data = mtcars)
-                  dda.resdist(car.test, pred = "wt", boot.type = "bca", data = mtcars)
+        dda.resdist(y ~ x + z, pred = "x", data = my.data) or
+                  m <- y ~ x + z
+                  dda.vardist(m, pred = "x", data = my.data)
 
 }

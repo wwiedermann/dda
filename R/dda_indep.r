@@ -1,5 +1,5 @@
 #' @title Direction Dependence Analysis: Independence Distribution
-#' @description `dda.indep` tests the skewness and kurtosis of the variables of two competing models. It also tests the difference in skewness and kurtosis to assess independence properties of the two models. The function also provides bootstrap confidence intervals for the difference in skewness and kurtosis.
+#' @description \code{dda.indep}tests the skewness and kurtosis of the variables of two competing models. It also tests the difference in skewness and kurtosis to assess independence properties of the two models. The function also provides bootstrap confidence intervals for the difference in skewness and kurtosis.
 #' @name dda.indep
 #'
 #' @param formula:      symbolic formula of the model to be tested or a \code{lm} object.
@@ -23,7 +23,7 @@ dda.indep <- function(formula, pred = NULL, data = list(), nlfun = NULL,
                       hetero = FALSE, hsic.method = "gamma", diff = FALSE,
                       B = 200,  boot.type = "perc", conf.level = 0.95,
                       parallelize = FALSE, cores = 1, ...) {
-  setClass("dda.Ind", representation("list"))
+  #setClass("dda.Ind", representation("list"))
 
   library(dHSIC)
   library(lmtest)
@@ -99,7 +99,7 @@ dda.indep <- function(formula, pred = NULL, data = list(), nlfun = NULL,
                 y <- y + abs( min(y) ) + 0.1
                } # end if
 
-           r1 <- cor(fun(x), y)
+         r1 <- cor(fun(x), y)
 	       r2 <- cor(x, fun(y))
 	       r3 <- cor(fun(x), fun(y))
 
@@ -277,17 +277,17 @@ dda.indep <- function(formula, pred = NULL, data = list(), nlfun = NULL,
   response.name <- all.vars(formula(formula))[1]  # get name of response variable
   output <- c(output, list(var.names = c(response.name, pred)))
 
-  new ("dda.Ind", output )
+  class(output) <- "ddaindep"
 }
 
 
 
-setMethod("show", "dda.Ind", function(object){
+print.ddaindep <- function(object, ...){
 
-     varnames <- object$var.names
+   varnames <- object$var.names
 
 	 cat("\n")
-     cat("DIRECTION DEPENDENCE ANALYSIS: Independence Properties", "\n", "\n")
+   cat("DIRECTION DEPENDENCE ANALYSIS: Independence Properties", "\n", "\n")
 
      # ------------------------------------------------------------------------------------------- Print Target Model:
 
@@ -420,6 +420,6 @@ if(!is.null(object$out.diff)){
 	 cat(paste("Note: Difference statistics > 0 suggest", varnames[2], "->", varnames[1], sep = " "))
 	 cat("\n")
     }
-})
+}
 
 
