@@ -24,12 +24,13 @@ summary.cddavardist <- function(cdda.output, skew = TRUE, coskew = FALSE,
   n_resamples <- cdda.output[[1]][[1]]$boot.args[3]
   ci.level <- as.numeric(cdda.output[[1]][[1]]$boot.args[2]) * 100
 
-  if(!is.null(cdda.output[[1]][[1]]$boot.args[1]))
-    boot_print <- NULL
-  if(cdda.output[[1]][[1]]$boot.args[1] == "bca")
+  if (!is.null(cdda.output[[1]][[1]]$boot.args[1]) && cdda.output[[1]][[1]]$boot.args[1] == "bca") {
     boot_print <- paste("\n", ci.level, "% BCa bootstrap CIs (", n_resamples, " resamples)", "\n\n", sep = "")
-  if(cdda.output[[1]][[1]]$boot.args[1] == "perc")
-    boot_print <- paste("\n", ci.level,"% percentile bootstrap CIs (", n_resamples, " resamples)", "\n\n", sep = "")
+  } else if (!is.null(cdda.output[[1]][[1]]$boot.args[1]) && cdda.output[[1]][[1]]$boot.args[1] == "perc") {
+    boot_print <- paste("\n", ci.level, "% percentile bootstrap CIs (", n_resamples, " resamples)", "\n\n", sep = "")
+  } else {
+    boot_print <- NULL
+  }
   cat("\n")
 
     if (skew == TRUE){
