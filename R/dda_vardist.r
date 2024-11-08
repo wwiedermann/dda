@@ -18,8 +18,6 @@
 dda.vardist <- function(formula, pred = NULL, data = list(),
                         B = 100, boot.type = "bca", conf.level = 0.95){
 
-  setClass("dda.Var", representation("list"))
-
   library(boot)
   library(moments)
 
@@ -79,13 +77,6 @@ dda.vardist <- function(formula, pred = NULL, data = list(),
            delete.pred <- which( colnames(X) == pred ) # get position of tentative predictor
            if ( length(delete.pred) == 0 ) stop( "Specified predictor not found in the target model." )
 
-		   #if( !is.null(moderator) ){
-		   #       position.mod <- which( colnames(X) == moderator) # get position of moderator
-		   #       if ( length(position.mod) == 0 ) stop( "Specified moderator not found in the target model." )
-		   #
-	       #			  m <- X[, position.mod] # extract moderator
-           #       }
-
 		   x <- X[, delete.pred]   # tentative predictor
 		   X <- X[ , -delete.pred] # model matrix with covariates
 		   if ( !is.matrix(X) ) X <- as.matrix(X)
@@ -138,7 +129,7 @@ dda.vardist <- function(formula, pred = NULL, data = list(),
 
 			 names(boot.out) <- c("skew.diff", "kurt.diff", "cor12.diff", "cor13.diff", "RHS", "RCC", "Rtanh")
 
-             ci.skewdiff  <- unclass(boot.out$skew.diff)[[4]][4:5] ; names(ci.skewdiff) <- c("lower", "upper")
+       ci.skewdiff  <- unclass(boot.out$skew.diff)[[4]][4:5] ; names(ci.skewdiff) <- c("lower", "upper")
 			 ci.kurtdiff  <- unclass(boot.out$kurt.diff)[[4]][4:5] ; names(ci.kurtdiff) <- c("lower", "upper")
 			 ci.cor12diff <- unclass(boot.out$cor12.diff)[[4]][4:5] ; names(ci.cor12diff) <- c("lower", "upper")
 			 ci.cor13diff <- unclass(boot.out$cor13.diff)[[4]][4:5] ; names(ci.cor13diff) <- c("lower", "upper")
@@ -163,13 +154,18 @@ dda.vardist <- function(formula, pred = NULL, data = list(),
 	response.name <- all.vars(formula(formula))[1]  # get name of response variable
 	output <- c(output, list(var.names = c(response.name, pred)))
 
-	new ("dda.Var", output  )
+	class(output) <- "ddavardist"
+	return(output)
 
 }
 
-setMethod("show", "dda.Var", function(object){
-
-     varnames <- object$var.names
+#' @name print.ddavardist
+#' @title Print method for \code{ddavardist} objects
+#' @description Calling \code{print} on a \code{ddavardist} object will display the results of the skewness and kurtosis tests, and bootstrap confidence intervals for the difference in skewness and kurtosis of the variables of two competing models.
+#'
+#' @export
+print.ddavardist <- function(object){
+   varnames <- object$var.names
 
 	 cat("\n")
      cat("DIRECTION DEPENDENCE ANALYSIS: Variable Distributions", "\n", "\n")
@@ -180,24 +176,24 @@ setMethod("show", "dda.Var", function(object){
 	                      )
          sigtests <- round(sigtests, 4)
          rownames(sigtests) <- c("Skewness", "Kurtosis")
-		 colnames(sigtests) <- c(varnames[1], " z-value", " Pr(>|z|)", varnames[2], " z-value", " Pr(>|z|)")
+		     colnames(sigtests) <- c(varnames[1], " z-value", " Pr(>|z|)", varnames[2], " z-value", " Pr(>|z|)")
          print.default(format( sigtests, digits = max(3L, getOption("digits") - 3L)), print.gap = 2L, quote = FALSE)
 
 	 if(!is.null(object$boot.args)){
-	       ci.level <- as.numeric(object$boot.args[2]) * 100
+	     ci.level <- as.numeric(object$boot.args[2]) * 100
 		   cat("\n")
 
 	       # Print Skewness and Kurtosis based measures
 
 		   if(object$boot.args[1] == "bca") cat(ci.level, "% ", "BCa bootstrap CIs for higher moment differences:", "\n", sep = "")
-           if(object$boot.args[1] == "perc") cat(ci.level, "% ", "Percentile bootstrap CIs for higher moment differences:", "\n", sep = "")
+       if(object$boot.args[1] == "perc") cat(ci.level, "% ", "Percentile bootstrap CIs for higher moment differences:", "\n", sep = "")
 
 	       citests <- rbind(object$skewdiff, object$kurtdiff)
-		   citests <- round(citests, 4)
+		     citests <- round(citests, 4)
 	       rownames(citests) <- c("Skewness", "Kurtosis")
 	       colnames(citests) <- c("diff", "lower", "upper")
 	       print.default(format( citests, digits = max(3L, getOption("digits") - 3L)), print.gap = 2L, quote = FALSE)
-		   cat("\n")
+		     cat("\n")
 
            # Print Co-Skewness and Co-Kurtosis based measures
 
@@ -222,7 +218,7 @@ setMethod("show", "dda.Var", function(object){
 		   colnames(LRtests) <- c("estimate", "lower", "upper")
 		   print.default(format( LRtests, digits = max(3L, getOption("digits") - 3L)), print.gap = 2L, quote = FALSE)
 
-		   cat("\n")
+		     cat("\n")
 	       cat(paste("Number of resamples:", object$boot.args[3]))
 	       cat("\n")
 	       cat("---")
@@ -230,7 +226,7 @@ setMethod("show", "dda.Var", function(object){
 	       cat(paste("Note: (Cor^2[i,j] - Cor^2[j,i]) > 0 suggests the model", varnames[2], "->", varnames[1], sep = " "))
 	       cat("\n")
 		   if(object$boot.warning) { cat("Warning: Excess-kurtosis values of", varnames[2], "and", varnames[1], "have unequal signs", "\n", "        Cor^2[3,1] - Cor^2[1,3] should also be computed for the model", varnames[1], "->", varnames[2], "\n") }
-        }
-})
+      }
+}
 
 

@@ -256,8 +256,8 @@ cdda.vardist <- function(formula = NULL, pred = NULL, mod = NULL, modval = "mean
 }
 
 #' @name print.cddavardist
-#' @title Print method for cddavardist objects
-#' @description Calling `print` on a `cddavardist` object will display the output of the standard linear model coefficients for competing models.
+#' @title Print method for \code{cddavardist} objects
+#' @description Calling \code{print} on a \code{cddavardist} object will display the output of the standard linear model coefficients for competing models.
 #'
 #' @export
 print.cddavardist <- function(cdda.var.output){

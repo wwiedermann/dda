@@ -13,13 +13,12 @@
 #'                   m <- y ~ x + z
 #'                   dda.vardist(m, pred = "x", data = my.data)
 #'
-#' @returns          An object of class \code{dda.Res} containing the results of skewness and kurtosis tests, the difference in skewness and kurtosis, and bootstrap confidence intervals for the difference in skewness and kurtosis.
+#' @returns          An object of class \code{ddaresdist} containing the results of skewness and kurtosis tests, the difference in skewness and kurtosis, and bootstrap confidence intervals for the difference in skewness and kurtosis.
 #' @export
 dda.resdist <- function(formula, pred = NULL, data = list(), B = 100, boot.type = "bca", conf.level = 0.95){
+
   library(boot)
   library(moments)
-
-  setClass("dda.Res", representation("list"))
 
   ### --- helper function for bootstrap CIs
 
@@ -162,12 +161,16 @@ dda.resdist <- function(formula, pred = NULL, data = list(), B = 100, boot.type 
 	response.name <- all.vars(formula(formula))[1]  # get name of response variable
 	output <- c(output, list(var.names = c(response.name, pred)))
 
-	new ("dda.Res", output  )
-
+  class(output) <- "ddaresdist"
+  return(output)
 }
 
-setMethod("show", "dda.Res", function(object){
-
+#' @name print.ddaresdist
+#' @title Print method for \code{ddaresdist} objects
+#' @description Calling \code{print} on a \code{ddaresdist} object will display the test statistics and p-values for the difference in skewness and kurtosis between the residuals of the two competing models. If bootstrap confidence intervals are computed, the lower and upper bounds of the confidence intervals will also be displayed.
+#'
+#' @export
+print.ddaresdist <- function(object){
      varnames <- object$var.names
 
 	 cat("\n")
@@ -178,16 +181,16 @@ setMethod("show", "dda.Res", function(object){
 	                        c(object[[2]]$target$statistic, object[[2]]$target$p.value, object[[2]]$alternative$statistic, object[[2]]$alternative$p.value)
 	                      )
         sigtests <- round(sigtests, 4)
-         rownames(sigtests) <- c("Skewness", "Kurtosis")
-		 colnames(sigtests) <- c("target", "z-value", "Pr(>|z|)", "alternative", "z-value", "Pr(>|z|)")
-         print.default(format( sigtests, digits = max(3L, getOption("digits") - 3L), scientific = NA, scipen = 999), print.gap = 2L, quote = FALSE)
+        rownames(sigtests) <- c("Skewness", "Kurtosis")
+		    colnames(sigtests) <- c("target", "z-value", "Pr(>|z|)", "alternative", "z-value", "Pr(>|z|)")
+        print.default(format( sigtests, digits = max(3L, getOption("digits") - 3L), scientific = NA, scipen = 999), print.gap = 2L, quote = FALSE)
 
 	 if(is.null(object$boot.args)){
 		   cat("\n")
 	       cat("Skewness and kurtosis difference tests:", "\n")
 
 	       citests <- rbind(object$skewdiff, object$kurtdiff)
-		   citests <- round(citests, 4)
+		     citests <- round(citests, 4)
 	       rownames(citests) <- c("Skewness", "Kurtosis")
 	       colnames(citests) <- c("diff", "z-value", "Pr(>|z|)")
 	       print.default(format( citests, digits = max(3L, getOption("digits") - 3L)), print.gap = 2L, quote = FALSE)
@@ -217,5 +220,6 @@ setMethod("show", "dda.Res", function(object){
 	  cat("\n")
 	  cat(paste("      Alternative is", varnames[1], "->", varnames[2], sep = " "))
 	  cat("\n")
-})
+  }
+
 

@@ -2,10 +2,10 @@
 % Please edit documentation in R/cdda.vardist.R
 \name{print.cddavardist}
 \alias{print.cddavardist}
-\title{Print method for cddavardist objects}
+\title{Print method for \code{cddavardist} objects}
 \usage{
 \method{print}{cddavardist}(cdda.var.output)
 }
 \description{
-Calling `print` on a `cddavardist` object will display the output of the standard linear model coefficients for competing models.
+Calling \code{print} on a \code{cddavardist} object will display the output of the standard linear model coefficients for competing models.
 }

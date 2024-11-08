@@ -278,10 +278,15 @@ dda.indep <- function(formula, pred = NULL, data = list(), nlfun = NULL,
   output <- c(output, list(var.names = c(response.name, pred)))
 
   class(output) <- "ddaindep"
+  return(output)
 }
 
 
-
+#' @title Print method for \code{ddaindep} class
+#' @description Calling \code{print} on a \code{ddaindep}object will display the results of the skewness and kurtosis tests, and bootstrap confidence intervals for the difference in skewness and kurtosis of the indepence properties of two competing models.
+#' @param x An object of class \code{cddaindep}
+#' @returns An object of class \code{ddaindep} with readable ols coefficients for competing models
+#' @export
 print.ddaindep <- function(object, ...){
 
    varnames <- object$var.names
