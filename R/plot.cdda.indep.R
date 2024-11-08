@@ -18,6 +18,9 @@ plot.cddaindep <- function(obj = NULL, stat = NULL, ylim =  NULL){ #alpha = 0.05
     stop("Object must be of class 'cddaindep' or 'cddavardist'.")
   }
 
+  if(is.null(stat)){
+    stop("stat argument must be specified. as 'hsic.diff', 'dcor.diff', or 'mi.diff'")
+  }
   if(stat != "hsic.diff" & stat != "dcor.diff" & stat != "mi.diff"){
     stop("stat must be one of 'hsic.diff', 'dcor.diff', or 'mi.diff'.")
   }
