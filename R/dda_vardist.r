@@ -9,11 +9,14 @@
 #' @param B           number of bootstrap samples
 #' @param boot.type   A vector of character strings representing the type of bootstrap confidence intervals required. Must be one of the two values \code{c("perc", "bca")}. \code{boot.type = "bca"} is the default.
 #'
-#' @examples          dda.vardist(y ~ x + z, pred = "x", data = my.data) or
-#'                    m <- y ~ x + z
-#'                    dda.vardist(m, pred = "x", data = my.data)
+#' @examples          dda.car.vardist <- dda.vardist(mpg ~ wt + qsec, pred = "wt",
+#'                                                   B = 500, data = mtcars)
+#'                    dda.car.vardist
+#'                    # OR
+#'                    car.test <- lm(mpg ~ wt + qsec, data = mtcars)
+#'                    dda.vardist(car.test, pred = "wt", B = 500, data = mtcars)
 #'
-#' @returns           An object of class \code{dda.Var} containing the results of skewness and kurtosis tests, and bootstrap confidence intervals for the difference in skewness and kurtosis.
+#' @returns           An object of class \code{ddavardist} containing the results of skewness and kurtosis tests, and bootstrap confidence intervals for the difference in skewness and kurtosis.
 #' @export
 dda.vardist <- function(formula, pred = NULL, data = list(),
                         B = 100, boot.type = "bca", conf.level = 0.95){

@@ -15,9 +15,14 @@
 #' @param parallelize:  A logical value indicating whether boostrapping is performed on multiple cores. Only used if \code{diff = TRUE.}
 #' @param cores:        a numeric value indicating the number of cores. Only used if parallelize = TRUE
 #'
-#' @examples            dda.indep(y ~ x + z, pred = "x", data = my.data, nlfun = 2, hetero = TRUE, diff = TRUE, B = 1000)
+#' @examples dda.car.indep <- dda.indep(mpg ~ wt + qsec, pred = "wt",
+#'                                      diff = TRUE, data = mtcars)
+#'           dda.car.indep
+#'           #OR
+#'           car.test <- lm(mpg ~ wt + qsec, data = mtcars)
+#'           dda.indep(car.test, pred = "wt", diff = TRUE, data = mtcars)
 #'
-#' @returns An object of class \code{dda.Ind} containing the results of the independence tests.
+#' @returns An object of class \code{ddaindep} containing the results of the independence tests.
 #' @export
 dda.indep <- function(formula, pred = NULL, data = list(), nlfun = NULL,
                       hetero = FALSE, hsic.method = "gamma", diff = FALSE,
