@@ -85,7 +85,6 @@ dat <- data.frame(x,y,z,z.categ)
 m <- lm(y ~ x*z, data = dat)
 
 summary(m)
-#plot(y ~ x, data = dat, pch = 21, bg = as.factor(z <= 0))
 ```
 
 # 1. Independence Properties (`indep`)
@@ -96,14 +95,13 @@ Independence functions within `dda` are implemented in two ways: a) `dda.indep` 
 
 ### 1.A.1 Continuous Predictor Example
 
-
 ```{r, eval = FALSE}
-dda.indep(y ~ x + z, pred = "x", data = dat, B = 100)
+dda.indep(y ~ x + z, pred = "x", data = dat, B = 500)
 ```
 
 ### 1.A.2 Categorical Predictor Example
 ```{r, eval = FALSE}
-dda.indep(y ~ x + z.categ, pred = "x", data = dat, B = 1000)
+dda.indep(y ~ x + z.categ, pred = "x", data = dat, B = 500)
 ```
 
 ## 1.B `cdda.indep` implementation
@@ -129,14 +127,12 @@ summary(factor.indep, hsic.diff = TRUE, dcor.diff = TRUE,
 
 ```{r, eval = FALSE}
 plot(factor.indep, stat = "hsic.diff")
-plot(factor.indep, stat = "dcor.diff")
-plot(factor.indep, stat = "mi.diff")
+# plot(factor.indep, stat = "dcor.diff")
+# plot(factor.indep, stat = "mi.diff")
 ```
 
 
 ### 1.B.2 Pick A Point
-
-The poster looks good. Would it make sense to present some other independence tests than Breusch-Pagan that show clearer results in favor of the target model? Similarly, maybe you find another example of a plot than kurtosis difference with clearer results. Other than that, I don't think the poster needs much revision.
 
 ```{r, eval = FALSE}
 point.indep <- cdda.indep(m, pred = "x", mod = "z", data = dat, nlfun = 2,
@@ -150,8 +146,8 @@ summary(point.indep, hsic.diff = T, dcor.diff = T, mi.diff = T)
 
 ```{r, eval = FALSE}
 plot(point.indep, stat = "hsic.diff")
-plot(point.indep, stat = "dcor.diff")
-plot(point.indep, stat = "mi.diff")
+# plot(point.indep, stat = "dcor.diff")
+# plot(point.indep, stat = "mi.diff")
 ```
 
 ### 1.B.3 Mean
@@ -167,8 +163,8 @@ summary(mean.indep, hsic.diff = TRUE, dcor.diff = TRUE, mi.diff = TRUE)
 
 ```{r, eval = FALSE}
 plot(mean.indep, stat = "hsic.diff")
-plot(mean.indep, stat = "dcor.diff")
-plot(mean.indep, stat = "mi.diff")
+# plot(mean.indep, stat = "dcor.diff")
+# plot(mean.indep, stat = "mi.diff")
 ```
 
 ### 1.B.4 Median
@@ -184,8 +180,8 @@ summary(median.indep, hsic.diff = TRUE, dcor.diff = TRUE, mi.diff = TRUE)
 
 ```{r, eval = FALSE}
 plot(median.indep, stat = "hsic.diff")
-plot(median.indep, stat = "dcor.diff")
-plot(median.indep, stat = "mi.diff")
+# plot(median.indep, stat = "dcor.diff")
+# plot(median.indep, stat = "mi.diff")
 ```
 
 
@@ -202,8 +198,8 @@ summary(jn.indep.b, hsic.diff = TRUE, dcor.diff = TRUE, mi.diff = TRUE)
 
 ```{r, eval = FALSE}
 plot(jn.indep.b, stat = "hsic.diff")
-plot(jn.indep.b, stat = "dcor.diff")
-plot(jn.indep.b, stat = "mi.diff")
+# plot(jn.indep.b, stat = "dcor.diff")
+# plot(jn.indep.b, stat = "mi.diff")
 ```
 
 # 2. Residual Distribution Properties (`resdist`)
@@ -257,9 +253,9 @@ summary(factor.vardist, coskew = TRUE, cokurt = TRUE)
 
 ```{r, eval = FALSE}
 plot(factor.vardist, stat = "rhs", ylim = c(-0.3, 0.3))
-plot(factor.vardist, stat = "cokurt", ylim = c(-10, 30))
-plot(factor.vardist, stat = "rcc", ylim = c(-5, 15))
-plot(factor.vardist, stat = "rtanh", ylim = c(0, 0.03))
+# plot(factor.vardist, stat = "cokurt", ylim = c(-10, 30))
+# plot(factor.vardist, stat = "rcc", ylim = c(-5, 15))
+# plot(factor.vardist, stat = "rtanh", ylim = c(0, 0.03))
 ```
 
 ## 3.B.2 Pick A Point
@@ -287,8 +283,8 @@ summary(mean.vardist, coskew = TRUE, cokurt = TRUE)
 
 ```{r, eval = FALSE}
 plot(mean.vardist, stat = "cokurt", ylim = c(-10, 40))
-plot(mean.vardist, stat = "rcc", ylim = c(-5, 25))
-plot(mean.vardist, stat = "rtanh", ylim = c(-0.01, 0.03))
+# plot(mean.vardist, stat = "rcc", ylim = c(-5, 25))
+# plot(mean.vardist, stat = "rtanh", ylim = c(-0.01, 0.03))
 ```
 
 ## 3.B.4 Median 
@@ -305,9 +301,9 @@ summary(median.vardist, coskew = TRUE, cokurt = TRUE)
 
 ```{r, eval = FALSE}
 plot(median.vardist, stat = "rhs", ylim = c(-0.2, 0.3))
-plot(median.vardist, stat = "cokurt", ylim = c(-10, 35))
-plot(median.vardist, stat = "rcc", ylim = c(-5, 25))
-plot(median.vardist, stat = "rtanh", ylim = c(-0.01, 0.03))
+#plot(median.vardist, stat = "cokurt", ylim = c(-10, 35))
+#plot(median.vardist, stat = "rcc", ylim = c(-5, 25))
+#plot(median.vardist, stat = "rtanh", ylim = c(-0.01, 0.03))
 ```
 
 ## 3.B.5 Johnson-Neyman, 4 Levels
@@ -324,8 +320,8 @@ summary(jn.vardist.b, coskew = TRUE, cokurt = TRUE)
 
 ```{r, eval = FALSE}
 plot(jn.vardist.b, stat = "rhs", ylim = c(-0.05, 0.05))
-plot(jn.vardist.b, stat = "cokurt", ylim = c(-2, 5))
-plot(jn.vardist.b, stat = "rcc", ylim = c(-2, 5))
+# plot(jn.vardist.b, stat = "cokurt", ylim = c(-2, 5))
+# plot(jn.vardist.b, stat = "rcc", ylim = c(-2, 5))
 ```
 
 
