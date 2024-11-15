@@ -29,28 +29,7 @@ knitr::opts_chunk$set(
 
 # Introduction
 
-This is a vignette for the `dda` package. It provides an overview of the package and its functionality. `dda` is a package based on the Direction Dependence Analysis (DDA) framework proposed by Wiedermann, W., & von Eye, A (2015)](https://doi.org/10.1177/0165025415582056). The package compares competing directional linear models: a) the target model (initially specified) `x -> y` and b) the reversed model `y -> x` (reverse specification). The package provides a set of functions to perform the DDA analysis, to test and to visualize the results.
-
-# Methodology
-\begin{figure}[htbp]
-\begin{center}
-\begin{tikzpicture}[>=stealth,semithick]
-% observed variables
-\node[ov] (x1) at (0,-1)  {$x_1$};
-\node[ov] (x2) at (0,-4)  {$x_2$};
-\node[ov] (x3) at (0,-7)  {$x_3$};
-% latent variable
-\node[lv] (f1) at (4.5, -4)  {$\alpha$};
-% paths (no label rotation necessary)
-\path[->] (f1) edge node[above,scale=0.6] {$\lambda_1$ = 1} (x1)
-          (f1) edge node[above,scale=0.6] {$\lambda_2$} (x2)
-          (f1) edge node[above,scale=0.6] {$\lambda_3$} (x3);
-% paths between latent variables
-\path[<->] (f1) edge[rloop] node[sloped, above, scale=0.5] {$\psi$} (f1);
-\end{tikzpicture}
-\end{center}
-\caption{\label{fig:pd1}CFA Model 1 Path Diagram}
-\end{figure}
+This is a vignette for the `dda` package. It provides an overview of the package and its functionality. `dda` is a package based on the Direction Dependence Analysis (DDA) framework proposed by Wiedermann, W., & von Eye, A (2015)](https://doi.org/10.1177/0165025415582056). The package compares competing directional linear models: a) the target model (initially specified) `x -> y` and b) the reversed model `y -> x` (reverse specification). The `cdda` class objects provides a set of functions to perform the DDA analysis, to test and to visualize the results.
 
 # Installation
 
@@ -68,6 +47,8 @@ library(dda)
 ```
 
 # Implementation Example: One Simulation in Many Renditions
+
+Below we take a look at the `dda` package in action. We generate a dataset with a continuous predictor `x`, a continuous outcome `y`, and a continuous moderator `z`. We then fit a linear model with an interaction term between `x` and `z`. We use the `dda` package to test the independence of `x` and `y` given `z` and to test the distributional properties of the residuals and the predictor `x` given `z`.
 
 ## 0: Data Generation
 
@@ -108,6 +89,8 @@ summary(m)
 ```
 
 # 1. Independence Properties (`indep`)
+
+Independence functions within `dda` are implemented in two ways: a) `dda.indep` for a linear model and b) `cdda.indep` for linear models with interactions (conditional). These `indep` functions evaluate the independence assumption of the target model $x \rightarrow y$ and the alternative model $y \rightarrow x$. The functions provide a set of statistics to test the independence assumption, including the Hilbert-Schmidt Independence Criterion (HSIC), Distance Correlation (dCor), and Mutual Information (MI). The `cdda.indep` function also provides a set of `plot` options and a generic `summary` to help interpret the results at different moderation levels.
 
 ## 1.A `dda.indep` implementation
 
@@ -225,6 +208,8 @@ plot(jn.indep.b, stat = "mi.diff")
 
 # 2. Residual Distribution Properties (`resdist`)
 
+Residual distribution functions within `dda` are implemented in two ways: a) `dda.resdist` for a linear model. The `resdist` function evaluate the distributional properties of the residuals of the target model $x \rightarrow y$ and the alternative model $y \rightarrow x$. The functions provide a set of statistics to test the distributional properties of the residuals, including the skewness, kurtosis, and the distributional properties of the predictor `x`.
+
 ## 2.A `dda.resdist` implementation
 
 ### 2.A.1 Continuous Predictor Example
@@ -238,6 +223,8 @@ dda.resdist(y ~ x + z.categ, pred = "x", data = dat, B = 1000)
 ```
 
 # 3. Variable Distribution Properties (`vardist`)
+
+Variable distribution functions within `dda` are implemented in two ways: a) `dda.vardist` for a linear model and b) `cdda.vardist` for linear models with interactions (conditional). The `vardist` functions evaluate the distributional properties of the predictor `x` given the moderator `z`. The functions provide a set of statistics to test the distributional properties of the predictor `x`, including the skewness, kurtosis, and the distributional properties of the residuals. The `cdda.vardist` function also provides a set of `plot` options and a generic `summary` to help interpret the results at different moderation levels.
 
 ## 3.A `dda.vardist` implementation
 
