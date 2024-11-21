@@ -15,12 +15,33 @@
 #' @param parallelize A logical value indicating whether bootstrapping is performed on multiple cores. Only used if hsic.method = "boot".
 #' @param cores a numeric value indicating the number of cores. Only used if parallelize = TRUE
 #'
-#' @examples cdda.car.indep <- cdda.indep(mpg ~ wt * hp + qsec, pred = "wt",
-#'                                    mod = "hp", diff = TRUE, data = mtcars)
-#'           cdda.car.indep
-#'           #OR
-#'           car.test.mod <- lm(mpg ~ wt * hp + qsec, data = mtcars)
-#'           cdda.indep(car.test.mod, pred = "wt", mod = "hp", diff = TRUE, data = mtcars)
+#' @examples n <- 1000
+#'
+#'           ## --- generate moderator
+#'           z <- sort(rnorm(n))
+#'           z1 <- z[z <= 0]
+#'           z2 <- z[z > 0]
+#'
+#'           x1 <- rchisq(length(z1), df = 4) - 4
+#'           e1 <- rchisq(length(z1), df = 3) - 3
+#'           y1 <- 0.5 * x1 + e1
+#'
+#'           ## --- y -> x when m > 0
+#'           y2 <- rchisq(length(z2), df = 4) - 4
+#'           e2 <- rchisq(length(z2), df = 3) - 3
+#'           x2 <- 0.25 * y2 + e2
+#'
+#'           y <- c(y1, y2); x <- c(x1, x2)
+#'
+#'           dat <- data.frame(x, y, z)
+#'
+#'           cdda.indep(y ~ x * z, pred = "x", mod = "z",
+#'                      diff = TRUE, nlfun = 2, data = dat)
+#'           ## OR
+#'           m <- lm(y ~ x * z, data = dat)
+#'           test.cdda.indep <- cdda.indep(m, pred = "x", mod = "z", B = 500,
+#'                                        diff = TRUE, nlfun = 2, data = dat)
+#'           print(test.cdda.indep)
 #'
 #' @returns A list of class \code{cddaindep} containing with information on competing models under moderation
 #' @export

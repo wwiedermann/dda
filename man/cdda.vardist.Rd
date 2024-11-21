@@ -43,11 +43,31 @@ A list of class \code{cddavardist} containing the results of the conditional dir
 \code{cdda.vardist} provides information on competing models under moderation
 }
 \examples{
-         cdda.car.indep <- cdda.vardist(mpg ~ wt * hp + qsec, pred = "wt",
-                                                  mod = "hp", data = mtcars)
-                   cdda.car.indep
-                   # OR
-                   car.test.mod <- lm(mpg ~ wt * hp + qsec, data = mtcars)
-                   cdda.vardist(car.test.mod, pred = "wt", mod = "hp", data = mtcars)
+n <- 1000
 
+         ## --- generate moderator
+         z <- sort(rnorm(n))
+         z1 <- z[z <= 0]
+         z2 <- z[z > 0]
+
+         x1 <- rchisq(length(z1), df = 4) - 4
+         e1 <- rchisq(length(z1), df = 3) - 3
+         y1 <- 0.5 * x1 + e1
+
+         ## --- y -> x when m > 0
+         y2 <- rchisq(length(z2), df = 4) - 4
+         e2 <- rchisq(length(z2), df = 3) - 3
+         x2 <- 0.25 * y2 + e2
+
+         y <- c(y1, y2); x <- c(x1, x2)
+
+         dat <- data.frame(x, y, z)
+
+         cdda.vardist(y ~ x * z, pred = "x", mod = "z",
+                     B = 500, modval = "JN", data = dat)
+         ## OR
+         m <- lm(y ~ x * z, data = dat)
+         test.cdda.vardist<- cdda.vardist(m, pred = "x", mod = "z", data = dat,
+                                        B = 500, modval = "JN")
+print(test.cdda.vardist)
 }

@@ -8,10 +8,6 @@
 #' @param kurt          logical, default is \code{TRUE}, where kurtosis differences and Anscombe stats printed
 #' @param cokurt        logical, default is \code{FALSE}, where co-kurtosis differences and Chen-Chan stats printed
 #'
-#' @examples            car.var <- cdda.vardist(mpg ~ wt * hp + qsec, pred = "wt",
-#'                                               mod = "hp", data = mtcars)
-#'                      summary(car.var, coskew = TRUE, cokurt = TRUE)
-#'
 #' @returns             A summary of test statistic results from the \code{cdda.vardist} class object.
 #' @export
 #'

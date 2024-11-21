@@ -30,13 +30,22 @@ dda.resdist(
 An object of class \code{ddaresdist} containing the results of skewness and kurtosis tests, the difference in skewness and kurtosis, and bootstrap confidence intervals for the difference in skewness and kurtosis.
 }
 \description{
-This function tests the skewness and kurtosis of the residuals of two competing models. It also tests the difference in skewness and kurtosis between the residuals of the two models. The function also provides bootstrap confidence intervals for the difference in skewness and kurtosis.
+\code{dda.resdist} evaluates patterns of competing error distributions by evaluating asymmetry in error shape between competing models x \rightarrow y and y \rightarrow x.
 }
 \examples{
-        dda.car.resdist <- dda.resdist(mpg ~ wt + qsec, pred = "wt",
-                                                boot.type = "bca", data = mtcars)
-                  #OR
-                  car.test <- lm(mpg ~ wt + qsec, data = mtcars)
-                  dda.resdist(car.test, pred = "wt", boot.type = "bca", data = mtcars)
+n <- 1000
+          x1 <- rchisq(length(z1), df = 4) - 4
+          e1 <- rchisq(length(z1), df = 3) - 3
+          y1 <- 0.5 * x1 + e1
+
+          ## --- y -> x when m > 0
+          y2 <- rchisq(length(z2), df = 4) - 4
+          e2 <- rchisq(length(z2), df = 3) - 3
+          x2 <- 0.25 * y2 + e2
+
+          y <- c(y1, y2); x <- c(x1, x2)
+
+          m <- lm(y ~ x)
+          dda.resdist(y ~ x, pred = "x", data = data.frame(x, y), B = 500, conf.level = 0.99)
 
 }

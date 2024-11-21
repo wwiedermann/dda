@@ -27,9 +27,3 @@ A plot of a test statistic result from the \code{cdda.vardist} class object.
 \description{
 \code{plot} returns test statistic results from the \code{cdda.vardist} class object.
 }
-\examples{
-    car.var <- cdda.vardist(mpg ~ wt * hp + qsec, pred = "wt",
-                                      mod = "hp", data = mtcars)
-              plot(car.var, stat = "rcc")
-
-}

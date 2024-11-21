@@ -1,5 +1,5 @@
 #' @title Direction Dependence Analysis: Variable Distributions
-#' @description \code{dda.vardist} tests the skewness and kurtosis of the variables of two competing models. It also tests the difference in skewness and kurtosis between the residuals of the two models. The function also provides bootstrap confidence intervals for the difference in skewness and kurtosis.
+#' @description \code{dda.vardist} tests observed variable distribution properties including skewness and kurtosis properties in competing models x \rightarrow y and y \rightarrow x.
 #' @name dda.vardist
 #'
 #' @param formula     symbolic formula of the model to be tested or a \code{lm} object
@@ -9,14 +9,23 @@
 #' @param B           number of bootstrap samples
 #' @param boot.type   A vector of character strings representing the type of bootstrap confidence intervals required. Must be one of the two values \code{c("perc", "bca")}. \code{boot.type = "bca"} is the default.
 #'
-#' @examples          dda.car.vardist <- dda.vardist(mpg ~ wt + qsec, pred = "wt",
-#'                                                   B = 500, data = mtcars)
-#'                    dda.car.vardist
-#'                    # OR
-#'                    car.test <- lm(mpg ~ wt + qsec, data = mtcars)
-#'                    dda.vardist(car.test, pred = "wt", B = 500, data = mtcars)
+#' @examples n <- 1000
 #'
-#' @returns           An object of class \code{ddavardist} containing the results of skewness and kurtosis tests, and bootstrap confidence intervals for the difference in skewness and kurtosis.
+#'           x1 <- rchisq(length(z1), df = 4) - 4
+#'           e1 <- rchisq(length(z1), df = 3) - 3
+#'           y1 <- 0.5 * x1 + e1
+#'
+#'           ## --- y -> x when m > 0
+#'           y2 <- rchisq(length(z2), df = 4) - 4
+#'           e2 <- rchisq(length(z2), df = 3) - 3
+#'           x2 <- 0.25 * y2 + e2
+#'
+#'           y <- c(y1, y2); x <- c(x1, x2)
+#'
+#'           m <- lm(y ~ x)
+#'           dda.vardist(y ~ x, pred = "x", data = data.frame(x, y), B = 500, boot.type = "perc")
+#'
+#' @returns  An object of class \code{ddavardist} containing the results of skewness and kurtosis tests, and bootstrap confidence intervals for the difference in skewness and kurtosis.
 #' @export
 dda.vardist <- function(formula, pred = NULL, data = list(),
                         B = 100, boot.type = "bca", conf.level = 0.95){
