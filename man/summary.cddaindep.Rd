@@ -39,9 +39,3 @@ A summary of test statistic results from the \code{cdda.indep} class object.
 \description{
 \code{summary} returns test statistic results from the \code{cdda.indep} class object.
 }
-\examples{
-             car.indep <- cdda.indep(mpg ~ wt * hp + qsec, pred = "wt",
-                                               mod = "hp", diff = TRUE, data = mtcars)
-                       summary(car.indep, hsic.diff = TRUE, mi.diff = TRUE)
-
-}

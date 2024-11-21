@@ -19,9 +19,3 @@ A plot of a test statistic result from the \code{cdda.indep} class object.
 \description{
 \code{plot} returns test statistic results from the \code{cdda.indep} class object.
 }
-\examples{
-           car.indep <- cdda.indep(mpg ~ wt * hp + qsec, pred = "wt",
-                                             mod = "hp", diff = TRUE, data = mtcars)
-                     plot(car.indep, stat = "mi.diff")
-
-}

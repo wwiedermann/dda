@@ -5,14 +5,8 @@
 #' @param obj    a \code{cddavardist} class object
 #' @param stat   a character indicating the statistic to be plotted, default is \code{"rhs"}, with options \code{c("rhs", "cokurt", "rcc", "rtanh")}
 #' @param ylim   a numeric vector of length 2 indicating the y-axis limits if \code{NULL}, the function will set the limits automatically
-#'
-#' @examples     car.var <- cdda.vardist(mpg ~ wt * hp + qsec, pred = "wt",
-#'                                       mod = "hp", data = mtcars)
-#'               plot(car.var, stat = "rcc")
-#'
 #' @returns      A plot of a test statistic result from the \code{cdda.vardist} class object.
 #' @export
-
 plot.cddavardist <- function(obj = NULL, stat = NULL,
                              ylim =  NULL, alpha = 0.05,
                              xlab = NULL, ylab = NULL, ...){

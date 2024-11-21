@@ -11,10 +11,6 @@
 #' @param dcor.diff       logical, default is \code{FALSE}, includes dCor differences
 #' @param mi.diff         logical, default is \code{FALSE}, includes Mutual Information (MI) differences
 #'
-#' @examples              car.indep <- cdda.indep(mpg ~ wt * hp + qsec, pred = "wt",
-#'                                                mod = "hp", diff = TRUE, data = mtcars)
-#'                        summary(car.indep, hsic.diff = TRUE, mi.diff = TRUE)
-#'
 #' @returns               A summary of test statistic results from the \code{cdda.indep} class object.
 #' @export
 summary.cddaindep <- function(cdda.output, nlfun = FALSE, hetero = TRUE,

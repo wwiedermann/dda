@@ -49,14 +49,24 @@ dda.indep(
 An object of class \code{ddaindep} containing the results of the independence tests.
 }
 \description{
-\code{dda.indep} tests the skewness and kurtosis of the variables of two competing models. It also tests the difference in skewness and kurtosis to assess independence properties of the two models. The function also provides bootstrap confidence intervals for the difference in skewness and kurtosis.
+\code{dda.indep} can compute and return statistics that target asymmetry in the independence components (predictor-error) competing models x \rightarrow y and y \rightarrow x.
 }
 \examples{
-dda.car.indep <- dda.indep(mpg ~ wt + qsec, pred = "wt",
-                                     diff = TRUE, data = mtcars)
-          dda.car.indep
-          #OR
-          car.test <- lm(mpg ~ wt + qsec, data = mtcars)
-          dda.indep(car.test, pred = "wt", diff = TRUE, data = mtcars)
+n <- 1000
+
+          x1 <- rchisq(length(z1), df = 4) - 4
+          e1 <- rchisq(length(z1), df = 3) - 3
+          y1 <- 0.5 * x1 + e1
+
+          ## --- y -> x when m > 0
+          y2 <- rchisq(length(z2), df = 4) - 4
+          e2 <- rchisq(length(z2), df = 3) - 3
+          x2 <- 0.25 * y2 + e2
+
+          y <- c(y1, y2); x <- c(x1, x2)
+
+          m <- lm(y ~ x)
+          dda.indep(y ~ x, pred = "x", data = data.frame(x, y), nlfun = 2,
+                    B = 500, hetero = TRUE, diff = TRUE)
 
 }

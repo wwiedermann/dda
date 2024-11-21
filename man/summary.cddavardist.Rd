@@ -31,9 +31,3 @@ A summary of test statistic results from the \code{cdda.vardist} class object.
 \description{
 \code{summary} returns test statistic results from the \code{cdda.vardist} class object.
 }
-\examples{
-           car.var <- cdda.vardist(mpg ~ wt * hp + qsec, pred = "wt",
-                                              mod = "hp", data = mtcars)
-                     summary(car.var, coskew = TRUE, cokurt = TRUE)
-
-}

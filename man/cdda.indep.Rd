@@ -56,11 +56,32 @@ A list of class \code{cddaindep} containing with information on competing models
 \code{cdda.indep} tests the skewness and kurtosis of the variables of two competing models. It also tests the difference in skewness and kurtosis to assess independence properties of the two models. The function also provides bootstrap confidence intervals for the difference in skewness and kurtosis.
 }
 \examples{
-cdda.car.indep <- cdda.indep(mpg ~ wt * hp + qsec, pred = "wt",
-                                   mod = "hp", diff = TRUE, data = mtcars)
-          cdda.car.indep
-          #OR
-          car.test.mod <- lm(mpg ~ wt * hp + qsec, data = mtcars)
-          cdda.indep(car.test.mod, pred = "wt", mod = "hp", diff = TRUE, data = mtcars)
+n <- 1000
+
+          ## --- generate moderator
+          z <- sort(rnorm(n))
+          z1 <- z[z <= 0]
+          z2 <- z[z > 0]
+
+          x1 <- rchisq(length(z1), df = 4) - 4
+          e1 <- rchisq(length(z1), df = 3) - 3
+          y1 <- 0.5 * x1 + e1
+
+          ## --- y -> x when m > 0
+          y2 <- rchisq(length(z2), df = 4) - 4
+          e2 <- rchisq(length(z2), df = 3) - 3
+          x2 <- 0.25 * y2 + e2
+
+          y <- c(y1, y2); x <- c(x1, x2)
+
+          dat <- data.frame(x, y, z)
+
+          cdda.indep(y ~ x * z, pred = "x", mod = "z",
+                     diff = TRUE, nlfun = 2, data = dat)
+          ## OR
+          m <- lm(y ~ x * z, data = dat)
+          test.cdda.indep <- cdda.indep(m, pred = "x", mod = "z", B = 500,
+                                       diff = TRUE, nlfun = 2, data = dat)
+          print(test.cdda.indep)
 
 }
