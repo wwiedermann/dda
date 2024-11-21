@@ -53,7 +53,10 @@ cdda.indep(
 A list of class \code{cddaindep} containing with information on competing models under moderation
 }
 \description{
-\code{cdda.indep} tests the skewness and kurtosis of the variables of two competing models. It also tests the difference in skewness and kurtosis to assess independence properties of the two models. The function also provides bootstrap confidence intervals for the difference in skewness and kurtosis.
+\code{cdda.indep} computes and returns statistics that target
+asymmetry in the independence components (predictor-error) competing models
+\code{y ~ x | m} and \code{x ~ y | m} where \code{m} is a moderator. The function
+is designed to handle different moderator cases, both categorical and continuous.
 }
 \examples{
 n <- 1000

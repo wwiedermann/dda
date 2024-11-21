@@ -40,7 +40,11 @@ interaction term in models.}
 A list of class \code{cddavardist} containing the results of the conditional directional dependence analysis.
 }
 \description{
-\code{cdda.vardist} provides information on competing models under moderation
+\code{cdda.vardist} tests observed variable distribution properties
+             including skewness and kurtosis properties in competing models
+             \code{y ~ x} and \code{x ~ y} where \code{m} is a moderator. The
+             function is designed to handle different moderator cases, both
+             categorical and continuous.
 }
 \examples{
 n <- 1000
