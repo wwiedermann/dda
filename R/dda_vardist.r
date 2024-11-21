@@ -1,5 +1,7 @@
 #' @title Direction Dependence Analysis: Variable Distributions
-#' @description \code{dda.vardist} tests observed variable distribution properties including skewness and kurtosis properties in competing models x \rightarrow y and y \rightarrow x.
+#' @description \code{dda.vardist} tests observed variable distribution properties
+#'              including skewness and kurtosis properties in competing models
+#'              \code{y ~ x} and \code{x ~ y}.
 #' @name dda.vardist
 #'
 #' @param formula     symbolic formula of the model to be tested or a \code{lm} object
@@ -11,13 +13,13 @@
 #'
 #' @examples n <- 1000
 #'
-#'           x1 <- rchisq(length(z1), df = 4) - 4
-#'           e1 <- rchisq(length(z1), df = 3) - 3
+#'           x1 <- rchisq(length(n * 0.5), df = 4) - 4
+#'           e1 <- rchisq(length(n * 0.5), df = 3) - 3
 #'           y1 <- 0.5 * x1 + e1
 #'
 #'           ## --- y -> x when m > 0
-#'           y2 <- rchisq(length(z2), df = 4) - 4
-#'           e2 <- rchisq(length(z2), df = 3) - 3
+#'           y2 <- rchisq(length(n * 0.5), df = 4) - 4
+#'           e2 <- rchisq(length(n * 0.5), df = 3) - 3
 #'           x2 <- 0.25 * y2 + e2
 #'
 #'           y <- c(y1, y2); x <- c(x1, x2)

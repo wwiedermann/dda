@@ -1,5 +1,9 @@
 #' @title Conditional Directional Dependence Analysis: Variable Distribution
-#' @description \code{cdda.vardist} provides information on competing models under moderation
+#' @description \code{cdda.vardist} tests observed variable distribution properties
+#'              including skewness and kurtosis properties in competing models
+#'              \code{y ~ x} and \code{x ~ y} where \code{m} is a moderator. The
+#'              function is designed to handle different moderator cases, both
+#'              categorical and continuous.
 #' @name cdda.vardist
 #'
 #' @param formula     symbolic formula of the model to be tested or a \code{lm} object
@@ -39,7 +43,7 @@
 #'          test.cdda.vardist<- cdda.vardist(m, pred = "x", mod = "z", data = dat,
 #'                                         B = 500, modval = "JN")
 #' print(test.cdda.vardist)
-#' @returns          A list of class \code{cddavardist} containing the results of the conditional directional dependence analysis.
+#' @returns A list of class \code{cddavardist} containing the results of the conditional directional dependence analysis.
 #' @export
 
 cdda.vardist <- function(formula = NULL, pred = NULL, mod = NULL, modval = "mean",
