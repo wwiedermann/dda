@@ -8,7 +8,15 @@ Authors@R: c(
     person("Megan", "Hirni", email = "mj.hirni@outlook.com", role = "aut")
            )
 Maintainer: Wolfgang Wiedermann <wiedermannw@missouri.edu>
-Description: The dda (Direction Dependence Analysis) package provides functions to analyze the direction dependence of competing linear models. The package includes functions to calculate test independence, residual, and variable distribution property statistics for competing models that are conditioned upon different moderator levels. Plotting and summary generic capabilities are also available for `cdda` class objects.
+Description: Functions to analyze the direction dependence of competing linear models
+             (Wiedermann, W., & von Eye, A., 2015) <doi.org/10.1177/0165025415582056>
+             notably building upon Dodge & Rousson's (2001) correlation coefficient 
+             asymetry property framework <doi.org/10.1198/000313001300339932>.
+             The package includes functions to calculate test independence, residual,
+             and variable distribution property statistics for competing models that
+             are conditioned upon different moderator levels. Plotting and summary generic 
+             capabilities are also available for conditional models. For more information
+             and code for SPSS implementation, see <https://www.ddaproject.com>.
 License: MIT 
 Imports: 
     boot,
@@ -21,8 +29,7 @@ Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.3.2
 Suggests: 
-    knitr,
-    rmarkdown,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 VignetteBuilder: knitr
+URL: https://github.com/wwiedermann/dda

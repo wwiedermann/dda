@@ -72,3 +72,6 @@ n <- 1000
                     B = 500, hetero = TRUE, diff = TRUE)
 
 }
+\seealso{
+\code{\link{cdda.indep}} for a conditional version of the function.
+}

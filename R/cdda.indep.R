@@ -38,8 +38,8 @@
 #'
 #'           dat <- data.frame(x, y, z)
 #'
-#'           cdda.indep(y ~ x * z, pred = "x", mod = "z",
-#'                      diff = TRUE, nlfun = 2, data = dat)
+#'           #cdda.indep(y ~ x * z, pred = "x", mod = "z", B = 500,
+#'           #           diff = TRUE, nlfun = 2, data = dat)
 #'           ## OR
 #'           m <- lm(y ~ x * z, data = dat)
 #'           test.cdda.indep <- cdda.indep(m, pred = "x", mod = "z", B = 500,
@@ -47,6 +47,8 @@
 #'           print(test.cdda.indep)
 #'
 #' @returns A list of class \code{cddaindep} containing with information on competing models under moderation
+# #' @references
+#' @seealso \code{\link{dda.indep}} for a non-conditional version of the function.
 #' @export
 cdda.indep <- function(formula = NULL, pred = NULL, mod = NULL, modval = "mean",
                        data = list(), hetero = TRUE, diff = FALSE,

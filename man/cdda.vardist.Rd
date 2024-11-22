@@ -36,9 +36,6 @@ interaction term in models.}
 
 \item{conf.level}{confidence level for boostrap confidence intervals}
 }
-\value{
-A list of class \code{cddavardist} containing the results of the conditional directional dependence analysis.
-}
 \description{
 \code{cdda.vardist} tests observed variable distribution properties
              including skewness and kurtosis properties in competing models
@@ -74,4 +71,8 @@ n <- 1000
          test.cdda.vardist<- cdda.vardist(m, pred = "x", mod = "z", data = dat,
                                         B = 500, modval = "JN")
 print(test.cdda.vardist)
+
+}
+\seealso{
+\code{\link{dda.vardist}} for a non-conditional version of the function.
 }

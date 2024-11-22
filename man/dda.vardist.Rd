@@ -52,3 +52,6 @@ n <- 1000
           dda.vardist(y ~ x, pred = "x", data = data.frame(x, y), B = 500, boot.type = "perc")
 
 }
+\seealso{
+\code{\link{dda.vardist}} for a conditional version of the function.
+}
