@@ -110,7 +110,7 @@ dda.resdist(y ~ x, pred = "x", data = data.frame(x, y), B = 500)
 dda.vardist(y ~ x, pred = "x", data = data.frame(x, y), B = 500, boot.type = "perc")
 ```
 
-```{r Intermediate only, echo = FALSE, include = FALSE, eval = FALSE}
+```{r Intermediate only contin, echo = FALSE, include = FALSE, eval = FALSE}
 ### For use in the example files: dda.indep, dda.resdist, dda.vardist
 n <- 1000
 

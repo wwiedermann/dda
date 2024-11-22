@@ -43,8 +43,11 @@
 #'          test.cdda.vardist<- cdda.vardist(m, pred = "x", mod = "z", data = dat,
 #'                                         B = 500, modval = "JN")
 #' print(test.cdda.vardist)
-#' @returns A list of class \code{cddavardist} containing the results of the conditional directional dependence analysis.
+#'
+# #' @references
+#' @seealso \code{\link{dda.vardist}} for a non-conditional version of the function.
 #' @export
+
 
 cdda.vardist <- function(formula = NULL, pred = NULL, mod = NULL, modval = "mean",
                          data = list(), B = 200, boot.type = "perc", conf.level = 0.95,

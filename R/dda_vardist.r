@@ -28,6 +28,8 @@
 #'           dda.vardist(y ~ x, pred = "x", data = data.frame(x, y), B = 500, boot.type = "perc")
 #'
 #' @returns  An object of class \code{ddavardist} containing the results of skewness and kurtosis tests, and bootstrap confidence intervals for the difference in skewness and kurtosis.
+# #' @references
+#' @seealso \code{\link{dda.vardist}} for a conditional version of the function.
 #' @export
 dda.vardist <- function(formula, pred = NULL, data = list(),
                         B = 100, boot.type = "bca", conf.level = 0.95){

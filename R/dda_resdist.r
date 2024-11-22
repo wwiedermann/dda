@@ -26,6 +26,7 @@
 #'           m <- lm(y ~ x)
 #'           dda.resdist(y ~ x, pred = "x", data = data.frame(x, y), B = 500, conf.level = 0.99)
 #'
+# #' @references
 #' @returns  An object of class \code{ddaresdist} containing the results of skewness and kurtosis tests, the difference in skewness and kurtosis, and bootstrap confidence intervals for the difference in skewness and kurtosis.
 #' @export
 dda.resdist <- function(formula, pred = NULL, data = list(), B = 100, boot.type = "bca", conf.level = 0.95){

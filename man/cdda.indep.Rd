@@ -79,12 +79,15 @@ n <- 1000
 
           dat <- data.frame(x, y, z)
 
-          cdda.indep(y ~ x * z, pred = "x", mod = "z",
-                     diff = TRUE, nlfun = 2, data = dat)
+          #cdda.indep(y ~ x * z, pred = "x", mod = "z", B = 500,
+          #           diff = TRUE, nlfun = 2, data = dat)
           ## OR
           m <- lm(y ~ x * z, data = dat)
           test.cdda.indep <- cdda.indep(m, pred = "x", mod = "z", B = 500,
                                        diff = TRUE, nlfun = 2, data = dat)
           print(test.cdda.indep)
 
+}
+\seealso{
+\code{\link{dda.indep}} for a non-conditional version of the function.
 }

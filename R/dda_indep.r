@@ -34,6 +34,8 @@
 #'                     B = 500, hetero = TRUE, diff = TRUE)
 #'
 #' @returns  An object of class \code{ddaindep} containing the results of the independence tests.
+# #' @references
+#' @seealso \code{\link{cdda.indep}} for a conditional version of the function.
 #' @export
 dda.indep <- function(formula, pred = NULL, data = list(), nlfun = NULL,
                       hetero = FALSE, hsic.method = "gamma", diff = FALSE,
