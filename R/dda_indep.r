@@ -1,4 +1,4 @@
-#' @title Direction Dependence Analysis: Independence Distribution
+#' @title Direction Dependence Analysis: Independence Properties
 #' @description \code{dda.indep} computes and returns statistics that target
 #'              asymmetry in the independence components (predictor-error)
 #'              competing models \code{y ~ x} and \code{x ~ y}.
@@ -56,8 +56,8 @@ dda.indep <- function(formula, pred = NULL, data = list(), nlfun = NULL,
            k1 <- 79.047
            k2 <- 7.412889
            g  <- 0.37457
-           GaussE <- log(2*pi)/2+1/2
-           NegE <- k1 * (mean(log(cosh(x))) - g)^2 + k2 * mean(x * exp(-x^2/2))^2
+           GaussE <- log(2 * pi) / 2 + 1 / 2
+           NegE <- k1 * (mean(log(cosh(x))) - g) ^ 2 + k2 * mean(x * exp(-x ^ 2 / 2)) ^ 2
            entropy <- GaussE - NegE + log(sdx)
            return(entropy)
     }
@@ -108,7 +108,7 @@ dda.indep <- function(formula, pred = NULL, data = list(), nlfun = NULL,
         } # end if
      else {
 
-           func <- paste(substitute(fun))
+         func <- paste(substitute(fun))
 
 	       test.run <- suppressWarnings( c(fun(x), fun(y) ) )
 
@@ -134,14 +134,12 @@ dda.indep <- function(formula, pred = NULL, data = list(), nlfun = NULL,
      output <- list(t1 = c(r1, tval1, n - 2, pval1),
                     t2 = c(r2, tval2, n - 2, pval2),
                     t3 = c(r3, tval3, n - 2, pval3),
-	                func = fname,
-        		    varnames = varnames)
-
+	                  func = fname,
+        		        varnames = varnames)
     }
 
 
    ### --- start checking validity of input
-
 
 	if(is.null(pred)) stop( "Tentative predictor is missing." )
 	if(B <= 0) stop( "Number of resamples 'B' must be positive." )

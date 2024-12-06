@@ -2,7 +2,7 @@
 % Please edit documentation in R/dda_indep.r
 \name{dda.indep}
 \alias{dda.indep}
-\title{Direction Dependence Analysis: Independence Distribution}
+\title{Direction Dependence Analysis: Independence Properties}
 \usage{
 dda.indep(
   formula,

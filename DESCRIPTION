@@ -8,15 +8,12 @@ Authors@R: c(
     person("Megan", "Hirni", email = "mj.hirni@outlook.com", role = "aut")
            )
 Maintainer: Wolfgang Wiedermann <wiedermannw@missouri.edu>
-Description: Functions to analyze the direction dependence of competing linear models
-             (Wiedermann, W., & von Eye, A., 2015) <doi.org/10.1177/0165025415582056>
-             notably building upon Dodge & Rousson's (2001) correlation coefficient 
-             asymetry property framework <doi.org/10.1198/000313001300339932>.
-             The package includes functions to calculate test independence, residual,
-             and variable distribution property statistics for competing models that
-             are conditioned upon different moderator levels. Plotting and summary generic 
-             capabilities are also available for conditional models. For more information
-             and code for SPSS implementation, see <https://www.ddaproject.com>.
+Description: Functions to analyze the directional dependence of causally competing 
+             linear models
+             (Wiedermann, W., & von Eye, A., 2025).
+             The package includes functions to compute DDA statistics for 
+             conditional and unconditional linear models. For more information
+             see <https://www.ddaproject.com>.
 License: MIT 
 Imports: 
     boot,

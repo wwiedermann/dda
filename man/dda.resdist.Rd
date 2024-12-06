@@ -24,7 +24,10 @@ dda.resdist(
 
 \item{boot.type}{A vector of character strings representing the type of bootstrap confidence intervals required. Must be one of the two values \code{c("perc", "bca")}; \code{boot.type = "bca" }is the default.}
 
-\item{conf.level}{confidence level for boostrap confidence intervals}
+\item{conf.level}{confidence level for bootstrap confidence intervals}
+
+\item{prob.trans:}{A logical evaluating to TRUE or FALSE indicating whether a probability integral transformation
+should be performed prior computation of skewness and kurtosis difference tests.}
 }
 \value{
 An object of class \code{ddaresdist} containing the results of skewness and kurtosis tests, the difference in skewness and kurtosis, and bootstrap confidence intervals for the difference in skewness and kurtosis.

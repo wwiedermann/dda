@@ -55,21 +55,21 @@ dda.vardist <- function(formula, pred = NULL, data = list(),
               y <- dat[, 2]  # "purified" outcome
 
               x <- as.vector(scale(x))
-			  y <- as.vector(scale(y))
+			        y <- as.vector(scale(y))
 
               skew.diff <- (skewness(x)^2) - (skewness(y)^2)
               kurt.diff <- (kurtosis(x)-3)^2 - (kurtosis(y)-3)^2
               cor12.diff <- (cor.ij(x, y, i = 2, j = 1)^2) - (cor.ij(x, y, i = 1, j = 2)^2)
-			  cor13.diff <- ((cor.ij(x, y, i = 3, j = 1)^2) - (cor.ij(x, y, i = 1, j = 3)^2)) * sign(kurtosis(x)-3)
+			        cor13.diff <- ((cor.ij(x, y, i = 3, j = 1)^2) - (cor.ij(x, y, i = 1, j = 3)^2)) * sign(kurtosis(x)-3)
 
               Rtanh <- cor(x, y) * mean(x * tanh(y) - tanh(x) * y)
 
-			  Cxy <- mean(x^3 * y) - 3*cor(x,y)*var(x)
-			  Cyx <- mean(x * y^3) - 3*cor(x,y)*var(y)
+			        Cxy <- mean(x^3 * y) - 3*cor(x,y)*var(x)
+			        Cyx <- mean(x * y^3) - 3*cor(x,y)*var(y)
               RCC <- (Cxy + Cyx) * (Cxy - Cyx)
 
               xx <- sign(skewness(x)) * x
-			  yy <- sign(skewness(y)) * y
+			        yy <- sign(skewness(y)) * y
               RHS <- cor(xx, yy) * mean( (xx^2 * yy) - (xx * yy^2) )
 
               result <- c(skew.diff, kurt.diff, cor12.diff, cor13.diff, RHS, RCC, Rtanh)
@@ -98,7 +98,7 @@ dda.vardist <- function(formula, pred = NULL, data = list(),
 		   if ( !is.matrix(X) ) X <- as.matrix(X)
 	}
 	else {
-           mf <- model.frame(formula, data = data)
+       mf <- model.frame(formula, data = data)
 		   y <- model.response(mf)   # tentative outcome
 		   X <- model.matrix(formula, data = data)
 
@@ -133,7 +133,7 @@ dda.vardist <- function(formula, pred = NULL, data = list(),
 	output <- list(agostino.out, anscombe.out)
 	names(output) <- c("agostino", "anscombe")
 
-    output$anscombe$outcome$statistic[1] <- output$anscombe$outcome$statistic[1] - 3     # change kurtosis to ex-kurtosis
+  output$anscombe$outcome$statistic[1] <- output$anscombe$outcome$statistic[1] - 3     # change kurtosis to ex-kurtosis
 	output$anscombe$predictor$statistic[1] <- output$anscombe$predictor$statistic[1] - 3 # change kurtosis to ex-kurtosis
 
     ### --- run bootstrap confidence intervals
@@ -154,7 +154,7 @@ dda.vardist <- function(formula, pred = NULL, data = list(),
 			 ci.Rtanh     <- unclass(boot.out$Rtanh)[[4]][4:5] ; names(ci.Rtanh) <- c("lower", "upper")
 
 			 output <- c(output,
-			             list(skewdiff = c(boot.res$t0[1], ci.skewdiff)),
+			       list(skewdiff = c(boot.res$t0[1], ci.skewdiff)),
 						 list(kurtdiff = c(boot.res$t0[2], ci.kurtdiff)),
 						 list(cor12diff = c(boot.res$t0[3], ci.cor12diff)),
 						 list(cor13diff = c(boot.res$t0[4], ci.cor13diff)),
