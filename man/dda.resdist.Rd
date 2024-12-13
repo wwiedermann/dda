@@ -8,49 +8,50 @@ dda.resdist(
   formula,
   pred = NULL,
   data = list(),
-  B = 100,
-  boot.type = "bca",
+  B = 200,
+  boot.type = "perc",
+  prob.trans = FALSE,
   conf.level = 0.95
 )
 }
 \arguments{
-\item{formula}{symbolic formula of the target model to be tested or a \code{lm} object}
+\item{formula}{Symbolic formula of the target model to be tested or a \code{lm} object}
 
-\item{pred}{variable name of the predictor which serves as the outcome in the alternative model}
+\item{pred}{Variable name of the predictor which serves as the outcome in the alternative model}
 
-\item{data}{an optional data frame containing the variables in the model (by default variables are taken from the environment which \code{dda.vardist} is called from)}
+\item{data}{An optional data frame containing the variables in the model (by default variables are taken from the environment which \code{dda.vardist} is called from)}
 
-\item{B}{number of bootstrap samples}
+\item{B}{Number of bootstrap samples}
 
 \item{boot.type}{A vector of character strings representing the type of bootstrap confidence intervals required. Must be one of the two values \code{c("perc", "bca")}; \code{boot.type = "bca" }is the default.}
 
-\item{conf.level}{confidence level for bootstrap confidence intervals}
-
-\item{prob.trans:}{A logical evaluating to TRUE or FALSE indicating whether a probability integral transformation
+\item{prob.trans}{A logical evaluating to TRUE or FALSE indicating whether a probability integral transformation
 should be performed prior computation of skewness and kurtosis difference tests.}
+
+\item{conf.level}{Confidence level for bootstrap confidence intervals}
 }
 \value{
-An object of class \code{ddaresdist} containing the results of skewness and kurtosis tests, the difference in skewness and kurtosis, and bootstrap confidence intervals for the difference in skewness and kurtosis.
+An object of class \code{ddaresdist} containing the results of DDA
+          tests of asymmetry patterns of error distributions obtained from
+          the causally competing models.
 }
 \description{
-\code{dda.resdist} evaluates patterns of competing error
-             distributions by evaluating asymmetry in error shape between
-             directional models \code{y ~ x} and \code{x ~ y}.
+\code{dda.resdist} evaluates patterns of asymmetry of error
+             distributions of causally competing models
+             (\code{y ~ x} vs. \code{x ~ y}).
 }
 \examples{
-n <- 1000
-          x1 <- rchisq(length(n * 0.5), df = 4) - 4
-          e1 <- rchisq(length(n * 0.5), df = 3) - 3
-          y1 <- 0.5 * x1 + e1
+set.seed(123)
+n <- 500
+x <- rchisq(n, df = 4) - 4
+e <- rchisq(n, df = 3) - 3
+y <- 0.5 * x + e
+d <- data.frame(x, y)
 
-          ## --- y -> x when m > 0
-          y2 <- rchisq(length(n * 0.5), df = 4) - 4
-          e2 <- rchisq(length(n * 0.5), df = 3) - 3
-          x2 <- 0.25 * y2 + e2
+dda.resdist(y ~ x, pred = "x", data = d,
+            B = 500, conf.level = 0.90, prob.trans = TRUE)
 
-          y <- c(y1, y2); x <- c(x1, x2)
-
-          m <- lm(y ~ x)
-          dda.resdist(y ~ x, pred = "x", data = data.frame(x, y), B = 500, conf.level = 0.99)
-
+}
+\references{
+Wiedermann, W., & von Eye, A. (2025). Direction Dependence Analysis: Foundations and Statistical Methods. Cambridge, UK: Cambridge University Press.
 }

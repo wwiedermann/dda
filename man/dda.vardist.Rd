@@ -8,8 +8,8 @@ dda.vardist(
   formula,
   pred = NULL,
   data = list(),
-  B = 100,
-  boot.type = "bca",
+  B = 200,
+  boot.type = "perc",
   conf.level = 0.95
 )
 }
@@ -27,30 +27,28 @@ dda.vardist(
 \item{conf.level}{confidence level for boostrap confidence intervals}
 }
 \value{
-An object of class \code{ddavardist} containing the results of skewness and kurtosis tests, and bootstrap confidence intervals for the difference in skewness and kurtosis.
+An object of class \code{ddavardist} containing the results of
+          of DDA tests of asymmetry patterns of variable distributions.
 }
 \description{
-\code{dda.vardist} tests observed variable distribution properties
-             including skewness and kurtosis properties in competing models
-             \code{y ~ x} and \code{x ~ y}.
+\code{dda.vardist} evaluates patterns of asymmetry of variable
+             distributions for causally competing models
+             (\code{y ~ x} vs. \code{x ~ y}).
 }
 \examples{
-n <- 1000
+set.seed(123)
+n <- 500
 
-          x1 <- rchisq(length(n * 0.5), df = 4) - 4
-          e1 <- rchisq(length(n * 0.5), df = 3) - 3
-          y1 <- 0.5 * x1 + e1
+x <- rchisq(n, df = 4) - 4
+e <- rchisq(n, df = 3) - 3
+y <- 0.5 * x + e
+d <- data.frame(x, y)
+dda.vardist(y ~ x, pred = "x", data = d,
+           B = 2000, boot.type = "bca")
 
-          ## --- y -> x when m > 0
-          y2 <- rchisq(length(n * 0.5), df = 4) - 4
-          e2 <- rchisq(length(n * 0.5), df = 3) - 3
-          x2 <- 0.25 * y2 + e2
-
-          y <- c(y1, y2); x <- c(x1, x2)
-
-          m <- lm(y ~ x)
-          dda.vardist(y ~ x, pred = "x", data = data.frame(x, y), B = 500, boot.type = "perc")
-
+}
+\references{
+Wiedermann, W., & von Eye, A. (2025). Direction Dependence Analysis: Foundations and Statistical Methods. Cambridge, UK: Cambridge University Press.
 }
 \seealso{
 \code{\link{dda.vardist}} for a conditional version of the function.
