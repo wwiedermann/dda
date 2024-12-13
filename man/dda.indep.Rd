@@ -21,56 +21,52 @@ dda.indep(
 )
 }
 \arguments{
-\item{formula:}{symbolic formula of the model to be tested or a \code{lm} object.}
+\item{formula}{Symbolic formula of the model to be tested or a \code{lm} object.}
 
-\item{pred:}{a character indicating the variable name of the predictor which serves as the outcome in the alternative model.}
+\item{pred}{A character indicating the variable name of the predictor which serves as the outcome in the alternative model.}
 
-\item{data:}{an optional data frame containing the variables in the model (by default variables are taken from the environment which \code{dda.indep} is called from)}
+\item{data}{An optional data frame containing the variables in the model (by default variables are taken from the environment which \code{dda.indep} is called from)}
 
-\item{nlfun:}{Either a numeric value or a function of .Primitive type used for non-linear correlation tests. When \code{nlfun} is numeric the value is used in a power tranformation.}
+\item{nlfun}{Either a numeric value or a function of .Primitive type used for non-linear correlation tests. When \code{nlfun} is numeric the value is used in a power tranformation.}
 
-\item{hetero:}{A logical value indicating whether separate homoscedasticity tests (i.e., standard and robust Breusch-Pagan tests) should be computed.}
+\item{hetero}{A logical value indicating whether separate homoscedasticity tests (i.e., standard and robust Breusch-Pagan tests) should be computed.}
 
-\item{hsic.method:}{a character indicating the inference method for Hilbert-Schmidt Independence Criterion (HSIC). Must be one of the four values \code{c("gamma", "eigenvalue", "boot", "permutation")}. \code{hsic.method = "gamma"} is the default.}
+\item{hsic.method}{A character indicating the inference method for Hilbert-Schmidt Independence Criterion (HSIC). Must be one of the four values \code{c("gamma", "eigenvalue", "boot", "permutation")}. \code{hsic.method = "gamma"} is the default.}
 
-\item{diff:}{A logical value indicating whether differences in HSIC, Distance Correlation (dCor), and MI values should be computed. Bootstrap confidence intervals are computed using \code{B} bootstrap samples.}
+\item{diff}{A logical value indicating whether differences in HSIC, Distance Correlation (dCor), and MI values should be computed. Bootstrap confidence intervals are computed using \code{B} bootstrap samples.}
 
-\item{B:}{Number of permutations for separate dCor tests and number of resamples if \code{hsic.method = c("boot", "permutation")} or \code{diff = TRUE}}
+\item{B}{Number of permutations for separate dCor tests and number of resamples if \code{hsic.method = c("boot", "permutation")} or \code{diff = TRUE}}
 
-\item{boot.type:}{A vector of character strings representing the type of bootstrap confidence intervals required. Must be one of the two values \code{c("perc", "bca")}. \code{boot.type = "perc"} is the default.}
+\item{boot.type}{A vector of character strings representing the type of bootstrap confidence intervals required. Must be one of the two values \code{c("perc", "bca")}. \code{boot.type = "perc"} is the default.}
 
-\item{conf.level:}{confidence level for bootstrap confidence intervals}
+\item{conf.level}{Confidence level for bootstrap confidence intervals}
 
-\item{parallelize:}{A logical value indicating whether boostrapping is performed on multiple cores. Only used if \code{diff = TRUE.}}
+\item{parallelize}{A logical value indicating whether boostrapping is performed on multiple cores. Only used if \code{diff = TRUE.}}
 
-\item{cores:}{a numeric value indicating the number of cores. Only used if parallelize = TRUE}
+\item{cores}{A numeric value indicating the number of cores. Only used if parallelize = TRUE}
 }
 \value{
-An object of class \code{ddaindep} containing the results of the independence tests.
+An object of class \code{ddaindep} containing the results of DDA independence tests.
 }
 \description{
-\code{dda.indep} computes and returns statistics that target
-             asymmetry in the independence components (predictor-error)
-             competing models \code{y ~ x} and \code{x ~ y}.
+\code{dda.indep} computes DDA test statistics to
+evaluate asymmetries of predictor-error independence of causally competing
+models (\code{y ~ x} vs. \code{x ~ y}).
 }
 \examples{
-n <- 1000
+set.seed(123)
+n <- 500
+x <- rchisq(n, df = 4) - 4
+e <- rchisq(n, df = 3) - 3
+y <- 0.5 * x + e
+d <- data.frame(x, y)
 
-          x1 <- rchisq(length(n * 0.5), df = 4) - 4
-          e1 <- rchisq(length(n * 0.5), df = 3) - 3
-          y1 <- 0.5 * x1 + e1
+dda.indep(y ~ x, pred = "x", data = d,
+         nlfun = 2, B = 500, hetero = TRUE, diff = TRUE)
 
-          ## --- y -> x when m > 0
-          y2 <- rchisq(length(n * 0.5), df = 4) - 4
-          e2 <- rchisq(length(n * 0.5, df = 3) - 3
-          x2 <- 0.25 * y2 + e2
-
-          y <- c(y1, y2); x <- c(x1, x2)
-
-          m <- lm(y ~ x)
-          dda.indep(y ~ x, pred = "x", data = data.frame(x, y), nlfun = 2,
-                    B = 500, hetero = TRUE, diff = TRUE)
-
+}
+\references{
+Wiedermann, W., & von Eye, A. (2025). Direction Dependence Analysis: Foundations and Statistical Methods. Cambridge, UK: Cambridge University Press.
 }
 \seealso{
 \code{\link{cdda.indep}} for a conditional version of the function.

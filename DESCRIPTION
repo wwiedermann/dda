@@ -8,12 +8,7 @@ Authors@R: c(
     person("Megan", "Hirni", email = "mj.hirni@outlook.com", role = "aut")
            )
 Maintainer: Wolfgang Wiedermann <wiedermannw@missouri.edu>
-Description: Functions to analyze the directional dependence of causally competing 
-             linear models
-             (Wiedermann, W., & von Eye, A., 2025).
-             The package includes functions to compute DDA statistics for 
-             conditional and unconditional linear models. For more information
-             see <https://www.ddaproject.com>.
+Description: Functions to analyze the causal direction of dependence in linear models (Wiedermann, W., & von Eye, A., 2025). The package includes functions to compute DDA test statistics for variable distributions, residual distributions, and independence properties of predictors and residuals in competing causal models. In addition, the package contains functions to test the causal direction of dependence in conditional models (i.e., models with interaction terms) For more information see https://www.ddaproject.com.
 License: MIT 
 Imports: 
     boot,

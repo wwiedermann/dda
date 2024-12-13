@@ -1,37 +1,37 @@
 #' @title Direction Dependence Analysis: Residual Distributions
-#' @description \code{dda.resdist} evaluates patterns of competing error
-#'              distributions by evaluating asymmetry in error shape between
-#'              directional models \code{y ~ x} and \code{x ~ y}.
+#' @description \code{dda.resdist} evaluates patterns of asymmetry of error
+#'              distributions of causally competing models
+#'              (\code{y ~ x} vs. \code{x ~ y}).
 #' @name dda.resdist
 #'
-#' @param formula     symbolic formula of the target model to be tested or a \code{lm} object
-#' @param pred        variable name of the predictor which serves as the outcome in the alternative model
-#' @param data        an optional data frame containing the variables in the model (by default variables are taken from the environment which \code{dda.vardist} is called from)
-#' @param B           number of bootstrap samples
+#' @param formula     Symbolic formula of the target model to be tested or a \code{lm} object
+#' @param pred        Variable name of the predictor which serves as the outcome in the alternative model
+#' @param data        An optional data frame containing the variables in the model (by default variables are taken from the environment which \code{dda.vardist} is called from)
+#' @param B           Number of bootstrap samples
 #' @param boot.type   A vector of character strings representing the type of bootstrap confidence intervals required. Must be one of the two values \code{c("perc", "bca")}; \code{boot.type = "bca" }is the default.
-#' @param conf.level  confidence level for bootstrap confidence intervals
-#' @param prob.trans: A logical evaluating to TRUE or FALSE indicating whether a probability integral transformation
+#' @param conf.level  Confidence level for bootstrap confidence intervals
+#' @param prob.trans  A logical evaluating to TRUE or FALSE indicating whether a probability integral transformation
 #'                    should be performed prior computation of skewness and kurtosis difference tests.
 #'
-#' @examples n <- 1000
-#'           x1 <- rchisq(length(n * 0.5), df = 4) - 4
-#'           e1 <- rchisq(length(n * 0.5), df = 3) - 3
-#'           y1 <- 0.5 * x1 + e1
+#' @returns  An object of class \code{ddaresdist} containing the results of DDA
+#'           tests of asymmetry patterns of error distributions obtained from
+#'           the causally competing models.
 #'
-#'           ## --- y -> x when m > 0
-#'           y2 <- rchisq(length(n * 0.5), df = 4) - 4
-#'           e2 <- rchisq(length(n * 0.5), df = 3) - 3
-#'           x2 <- 0.25 * y2 + e2
+#' @examples
+#' set.seed(123)
+#' n <- 500
+#' x <- rchisq(n, df = 4) - 4
+#' e <- rchisq(n, df = 3) - 3
+#' y <- 0.5 * x + e
+#' d <- data.frame(x, y)
 #'
-#'           y <- c(y1, y2); x <- c(x1, x2)
+#' dda.resdist(y ~ x, pred = "x", data = d,
+#'             B = 500, conf.level = 0.90, prob.trans = TRUE)
 #'
-#'           m <- lm(y ~ x)
-#'           dda.resdist(y ~ x, pred = "x", data = data.frame(x, y), B = 500, conf.level = 0.99)
-#'
-# #' @references
-#' @returns  An object of class \code{ddaresdist} containing the results of skewness and kurtosis tests, the difference in skewness and kurtosis, and bootstrap confidence intervals for the difference in skewness and kurtosis.
+#' @references Wiedermann, W., & von Eye, A. (2025). Direction Dependence Analysis: Foundations and Statistical Methods. Cambridge, UK: Cambridge University Press.
 #' @export
-dda.resdist <- function(formula, pred = NULL, data = list(), B = 100, boot.type = "bca", conf.level = 0.95){
+dda.resdist <- function(formula, pred = NULL, data = list(), B = 200,
+                        boot.type = "perc", prob.trans = FALSE, conf.level = 0.95){
 
   library(boot)
   library(moments)
