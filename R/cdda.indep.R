@@ -20,7 +20,6 @@
 #' @param conf.level  Confidence level for bootstrap confidence intervals
 #' @param parallelize A logical value indicating whether bootstrapping is performed on multiple cores. Only used if \code{diff = TRUE}.
 #' @param cores       A numeric value indicating the number of cores. Only used if parallelize = TRUE
-#' @param JN.length   A numeric value indicating the number of Johnson-Neyman points to be computed. Only used if \code{modval = "JN"}.
 #'
 #' @returns A list of class \code{cddaindep} containing the results of CDDA
 #'          independence tests for pre-specific moderator values.
@@ -52,8 +51,9 @@
 ## OR
 #'
 #' m <- lm(y ~ x * z, data = d)
-#' result <- cdda.indep(m, pred = "x", mod = "z", B = 500,
-#'                      diff = TRUE, nlfun = 2, data = d)
+#' result <- cdda.indep(m, pred = "x", mod = "z", B = 500, modval = c(-0.5, 0.5),
+#'                     diff = TRUE, nlfun = 2, data = d)
+#' summary(result, hsic.diff = TRUE)
 #' print(result)
 #'
 #' @references Wiedermann, W., & von Eye, A. (2025). Direction Dependence Analysis: Foundations and Statistical Methods. Cambridge, UK: Cambridge University Press.
@@ -63,7 +63,7 @@ cdda.indep <- function(formula = NULL, pred = NULL, mod = NULL, modval = "mean",
                        data = list(), hetero = TRUE, diff = FALSE,
                        nlfun = NULL, hsic.method = "gamma",
                        B = 200, boot.type = "perc", conf.level = 0.95,
-                       parallelize = FALSE, cores = 1, JN.length = 3, ...) {
+                       parallelize = FALSE, cores = 1, ...) {
   library(boot)
   library(dHSIC)
   library(energy)
@@ -237,9 +237,18 @@ cdda.indep <- function(formula = NULL, pred = NULL, mod = NULL, modval = "mean",
       twobounds <- jnoutput[["bounds"]]
 
       # Needs labeling, use values[i]  & round to 3 digits
-      lwr <- max(twobounds[1], min(moderator))
-      upr <- min(twobounds[2], max(moderator))
-      values <- seq(from = lwr, to = upr, length.out = JN.length)
+      #theoretical min vs estimated lower bound
+      #if minimum is not observed or does not come with significance, then only use the max, vice versa
+      #theoretical max vs estimated upper bound
+
+      if(twobounds[1] < min(moderator) & twobounds[2] > max(moderator)) values <- NA #stop("No moderation effects detected for the moderator range.")
+      if(twobounds[1] > min(moderator) & twobounds[2] > max(moderator)) values <- c(min(moderator), twobounds[1])
+      if(twobounds[1] < min(moderator) & twobounds[2] < max(moderator)) values <- c(twobounds[2], max(moderator))
+      if(twobounds[1] > min(moderator) & twobounds[2] < max(moderator)) values <- c(min(moderator), twobounds[1], twobounds[2], max(moderator))
+
+      # lwr <- max(twobounds[1], min(moderator))
+      # upr <- min(twobounds[2], max(moderator))
+      #values <- seq(from = lwr, to = upr) # no need for jn.length (rm in argument)
 
       modmat <- data.frame( matrix(NA, length(moderator), length(values)) )
       for( i in seq_along(values) ){ modmat[,i] <- moderator - values[i] }  # compute transformed moderator for each value
