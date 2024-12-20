@@ -13,10 +13,8 @@
 #' @param conf.level  Confidence level for boostrap confidence intervals.
 #' @param B           Number of bootstrap samples.
 #' @param boot.type   A character indicating the type of bootstrap confidence intervals. Must be one of the two values \code{c("perc", "bca")}. \code{boot.type = "bca"} is the default.
-#' @param JN.length   A numeric value indicating the number of Johnson-Neyman points to be computed. Only used if \code{modval = "JN"}.
-
 #'
-#' @returns A list of class \code{ddavardist} containing the results of CDDA
+#' @returns A list of class \code{cddavardist} containing the results of CDDA
 #'          tests to evaluate distributional properties of observed variables
 #'          for pre-specified moderator values.
 #'
@@ -47,9 +45,15 @@
 #' ## OR
 #'
 #' m <- lm(y ~ x * z, data = d)
+#' results <- cdda.vardist(y ~ x * z, pred = "x", mod = "z",
+#'              B = 500, modval = c(-0.5, 0.5), data = d)
+#' summary(results, skew = FALSE, coskew = TRUE, kurt = FALSE)
+#'
 #' results <- cdda.vardist(m, pred = "x",
 #'                         mod = "z", data = d, B = 500, modval = "JN")
 #' print(results)
+#'
+#' summary(results, skew = FALSE, coskew = TRUE, kurt = FALSE)
 #'
 #' @references Wiedermann, W., & von Eye, A. (2025). Direction Dependence Analysis: Foundations and Statistical Methods. Cambridge, UK: Cambridge University Press.
 #' @seealso \code{\link{dda.vardist}} for a non-conditional version of the function.
@@ -58,7 +62,7 @@
 
 cdda.vardist <- function(formula = NULL, pred = NULL, mod = NULL, modval = "mean",
                          data = list(), B = 200, boot.type = "perc",
-                         conf.level = 0.95, JN.length = 3, ...) {
+                         conf.level = 0.95, ...) {
 
   library(boot)
   library(dHSIC)
@@ -229,9 +233,19 @@ cdda.vardist <- function(formula = NULL, pred = NULL, mod = NULL, modval = "mean
                                          modx = moderator, control.fdr = FALSE ) )
       twobounds <- unwrpjn[["bounds"]]
 
-      lwr <- max(twobounds[1], min(moderator))
-      upr <- min(twobounds[2], max(moderator))
-      values <- seq(from = lwr, to = upr, length.out = JN.length)
+      if(twobounds[1] < min(moderator) & twobounds[2] > max(moderator)) values <- NA #stop("No moderation effects detected for the moderator range.")
+      if(twobounds[1] > min(moderator) & twobounds[2] > max(moderator)) values <- c(min(moderator), twobounds[1])
+      if(twobounds[1] < min(moderator) & twobounds[2] < max(moderator)) values <- c(twobounds[2], max(moderator))
+      if(twobounds[1] > min(moderator) & twobounds[2] < max(moderator)) values <- c(min(moderator), twobounds[1], twobounds[2], max(moderator))
+
+
+      if(lwr.jn < min.mod & upp.jn > max.mod) values <- NA
+      if(lwr.jn > min.mod & upp.jn > max.mod) values <- c(min.mod, lwr.jn)
+      if(lwr.jn < min.mod & upp.jn < max.mod) values <- c(upp.jn, max.mod)
+      if(lwr.jn > min.mod & upp.jn < max.mod) values <- c(min.mod, lwr.jn, upp.jn, max.mod)
+      # lwr <- max(twobounds[1], min(moderator))
+      # upr <- min(twobounds[2], max(moderator))
+      # values <- seq(from = lwr, to = upr, length.out = JN.length)
 
       modmat <- data.frame( matrix(NA, length(moderator), length(values)) )
       for( i in seq_along(values) ){ modmat[,i] <- moderator - values[i] }  # compute transformed moderator for each value
