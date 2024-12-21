@@ -51,9 +51,16 @@
 ## OR
 #'
 #' m <- lm(y ~ x * z, data = d)
+#'
+#' #' result <- cdda.indep(m, pred = "x", mod = "z", B = 500,
+#'                      diff = TRUE, nlfun = 2, data = d)
+#'  print(results)
+#'  summary(result, hsic.diff = TRUE)
+#'
 #' result <- cdda.indep(m, pred = "x", mod = "z", B = 500, modval = c(-0.5, 0.5),
 #'                     diff = TRUE, nlfun = 2, data = d)
 #' summary(result, hsic.diff = TRUE)
+#'
 #' print(result)
 #'
 #' @references Wiedermann, W., & von Eye, A. (2025). Direction Dependence Analysis: Foundations and Statistical Methods. Cambridge, UK: Cambridge University Press.
@@ -236,17 +243,22 @@ cdda.indep <- function(formula = NULL, pred = NULL, mod = NULL, modval = "mean",
                                           modx = moderator, control.fdr = FALSE ) )
       twobounds <- jnoutput[["bounds"]]
 
-      # Needs labeling, use values[i]  & round to 3 digits
-      #theoretical min vs estimated lower bound
-      #if minimum is not observed or does not come with significance, then only use the max, vice versa
-      #theoretical max vs estimated upper bound
+      if(twobounds[1] < min(moderator, na.rm = TRUE) &
+         twobounds[2] > max(moderator, na.rm = TRUE)) values <- NA #stop("No moderation effects detected for the moderator range.")
+    #  if(lwr.jn < min.mod & upp.jn > max.mod) values <- NA
 
-      if(twobounds[1] < min(moderator) & twobounds[2] > max(moderator)) values <- NA #stop("No moderation effects detected for the moderator range.")
-      if(twobounds[1] > min(moderator) & twobounds[2] > max(moderator)) values <- c(min(moderator), twobounds[1])
-      if(twobounds[1] < min(moderator) & twobounds[2] < max(moderator)) values <- c(twobounds[2], max(moderator))
-      if(twobounds[1] > min(moderator) & twobounds[2] < max(moderator)) values <- c(min(moderator), twobounds[1], twobounds[2], max(moderator))
+       if(twobounds[1] > min(moderator, na.rm = TRUE) &
+         twobounds[2] > max(moderator, na.rm = TRUE)) values <- c(min(moderator), twobounds[1])
+    #      if(lwr.jn > min.mod & upp.jn > max.mod) values <- c(min.mod, lwr.jn)
 
-      # lwr <- max(twobounds[1], min(moderator))
+       if(twobounds[1] < min(moderator, na.rm = TRUE) &
+         twobounds[2] < max(moderator, na.rm = TRUE)) values <- c(twobounds[2], max(moderator))
+    #      if(lwr.jn < min.mod & upp.jn < max.mod) values <- c(upp.jn, max.mod)
+
+       if(twobounds[1] > min(moderator, na.rm = TRUE) &
+         twobounds[2] < max(moderator, na.rm = TRUE)) values <- c(min(moderator), twobounds[1], twobounds[2], max(moderator))
+   #   if(lwr.jn > min.mod & upp.jn < max.mod) values <- c(min.mod, lwr.jn, upp.jn, max.mod)
+
       # upr <- min(twobounds[2], max(moderator))
       #values <- seq(from = lwr, to = upr) # no need for jn.length (rm in argument)
 

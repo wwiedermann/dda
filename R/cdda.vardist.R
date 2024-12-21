@@ -59,7 +59,7 @@
 #' @seealso \code{\link{dda.vardist}} for a non-conditional version of the function.
 #' @export
 
-
+remotes::install_github("wwiedermann/DDA")
 cdda.vardist <- function(formula = NULL, pred = NULL, mod = NULL, modval = "mean",
                          data = list(), B = 200, boot.type = "perc",
                          conf.level = 0.95, ...) {
