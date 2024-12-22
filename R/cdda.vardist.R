@@ -233,16 +233,26 @@ cdda.vardist <- function(formula = NULL, pred = NULL, mod = NULL, modval = "mean
                                          modx = moderator, control.fdr = FALSE ) )
       twobounds <- unwrpjn[["bounds"]]
 
-      if(twobounds[1] < min(moderator) & twobounds[2] > max(moderator)) values <- NA #stop("No moderation effects detected for the moderator range.")
-      if(twobounds[1] > min(moderator) & twobounds[2] > max(moderator)) values <- c(min(moderator), twobounds[1])
-      if(twobounds[1] < min(moderator) & twobounds[2] < max(moderator)) values <- c(twobounds[2], max(moderator))
-      if(twobounds[1] > min(moderator) & twobounds[2] < max(moderator)) values <- c(min(moderator), twobounds[1], twobounds[2], max(moderator))
+      if(twobounds[1] < min(moderator, na.rm = TRUE) &
+         twobounds[2] > max(moderator, na.rm = TRUE)) values <- NA #stop("No moderation effects detected for the moderator range.")
+      #  if(lwr.jn < min.mod & upp.jn > max.mod) values <- NA
 
+      if(twobounds[1] > min(moderator, na.rm = TRUE) &
+         twobounds[2] > max(moderator, na.rm = TRUE)) values <- c(min(moderator), twobounds[1])
+      #      if(lwr.jn > min.mod & upp.jn > max.mod) values <- c(min.mod, lwr.jn)
 
-      if(lwr.jn < min.mod & upp.jn > max.mod) values <- NA
-      if(lwr.jn > min.mod & upp.jn > max.mod) values <- c(min.mod, lwr.jn)
-      if(lwr.jn < min.mod & upp.jn < max.mod) values <- c(upp.jn, max.mod)
-      if(lwr.jn > min.mod & upp.jn < max.mod) values <- c(min.mod, lwr.jn, upp.jn, max.mod)
+      if(twobounds[1] < min(moderator, na.rm = TRUE) &
+         twobounds[2] < max(moderator, na.rm = TRUE)) values <- c(twobounds[2], max(moderator))
+      #      if(lwr.jn < min.mod & upp.jn < max.mod) values <- c(upp.jn, max.mod)
+
+      if(twobounds[1] > min(moderator, na.rm = TRUE) &
+         twobounds[2] < max(moderator, na.rm = TRUE)) values <- c(min(moderator), twobounds[1], twobounds[2], max(moderator))
+      #   if(lwr.jn > min.mod & upp.jn < max.mod) values <- c(min.mod, lwr.jn, upp.jn, max.mod)
+
+      # if(lwr.jn < min.mod & upp.jn > max.mod) values <- NA
+      # if(lwr.jn > min.mod & upp.jn > max.mod) values <- c(min.mod, lwr.jn)
+      # if(lwr.jn < min.mod & upp.jn < max.mod) values <- c(upp.jn, max.mod)
+      # if(lwr.jn > min.mod & upp.jn < max.mod) values <- c(min.mod, lwr.jn, upp.jn, max.mod)
       # lwr <- max(twobounds[1], min(moderator))
       # upr <- min(twobounds[2], max(moderator))
       # values <- seq(from = lwr, to = upr, length.out = JN.length)
