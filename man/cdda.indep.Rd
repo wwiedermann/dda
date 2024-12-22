@@ -19,7 +19,6 @@ cdda.indep(
   conf.level = 0.95,
   parallelize = FALSE,
   cores = 1,
-  JN.length = 3,
   ...
 )
 }
@@ -51,8 +50,6 @@ cdda.indep(
 \item{parallelize}{A logical value indicating whether bootstrapping is performed on multiple cores. Only used if \code{diff = TRUE}.}
 
 \item{cores}{A numeric value indicating the number of cores. Only used if parallelize = TRUE}
-
-\item{JN.length}{A numeric value indicating the number of Johnson-Neyman points to be computed. Only used if \code{modval = "JN"}.}
 }
 \value{
 A list of class \code{cddaindep} containing the results of CDDA
@@ -90,8 +87,16 @@ cdda.indep(y ~ x * z, pred = "x", mod = "z",
            diff = TRUE, nlfun = 2, data = d)
 
 m <- lm(y ~ x * z, data = d)
-result <- cdda.indep(m, pred = "x", mod = "z", B = 500,
+
+#' result <- cdda.indep(m, pred = "x", mod = "z", B = 500,
                      diff = TRUE, nlfun = 2, data = d)
+ print(results)
+ summary(result, hsic.diff = TRUE)
+
+result <- cdda.indep(m, pred = "x", mod = "z", B = 500, modval = c(-0.5, 0.5),
+                    diff = TRUE, nlfun = 2, data = d)
+summary(result, hsic.diff = TRUE)
+
 print(result)
 
 }

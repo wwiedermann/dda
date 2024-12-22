@@ -3,20 +3,6 @@
 \name{cdda.vardist}
 \alias{cdda.vardist}
 \title{Conditional Directional Dependence Analysis: Variable Distribution}
-\usage{
-cdda.vardist(
-  formula = NULL,
-  pred = NULL,
-  mod = NULL,
-  modval = "mean",
-  data = list(),
-  B = 200,
-  boot.type = "perc",
-  conf.level = 0.95,
-  JN.length = 3,
-  ...
-)
-}
 \arguments{
 \item{formula}{Symbolic formula of the model to be tested or a \code{lm} object}
 
@@ -28,16 +14,14 @@ cdda.vardist(
 
 \item{data}{A required data frame containing the variables in the model.}
 
+\item{conf.level}{Confidence level for boostrap confidence intervals.}
+
 \item{B}{Number of bootstrap samples.}
 
 \item{boot.type}{A character indicating the type of bootstrap confidence intervals. Must be one of the two values \code{c("perc", "bca")}. \code{boot.type = "bca"} is the default.}
-
-\item{conf.level}{Confidence level for boostrap confidence intervals.}
-
-\item{JN.length}{A numeric value indicating the number of Johnson-Neyman points to be computed. Only used if \code{modval = "JN"}.}
 }
 \value{
-A list of class \code{ddavardist} containing the results of CDDA
+A list of class \code{cddavardist} containing the results of CDDA
          tests to evaluate distributional properties of observed variables
          for pre-specified moderator values.
 }
@@ -74,9 +58,15 @@ cdda.vardist(y ~ x * z, pred = "x", mod = "z",
 ## OR
 
 m <- lm(y ~ x * z, data = d)
+results <- cdda.vardist(y ~ x * z, pred = "x", mod = "z",
+             B = 500, modval = c(-0.5, 0.5), data = d)
+summary(results, skew = FALSE, coskew = TRUE, kurt = FALSE)
+
 results <- cdda.vardist(m, pred = "x",
                         mod = "z", data = d, B = 500, modval = "JN")
 print(results)
+
+summary(results, skew = FALSE, coskew = TRUE, kurt = FALSE)
 
 }
 \references{
