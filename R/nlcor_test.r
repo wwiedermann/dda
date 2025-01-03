@@ -5,6 +5,7 @@
 #' @param x     a numeric vector representing the tentative predictor.
 #' @param y     a numeric vector representing the tentative outcome.
 #' @param fun   a numeric value or a function of .Primitive type used for non-linear correlation tests. When \code{fun} is numeric the value is used in a power transformation.
+#' @param ...         Additional arguments to be passed to the function
 #'
 #' @returns     An object of class \code{dda.nlcor} containing the correlation coefficient, t-value, degrees of freedom, and p-value for three different tests.
 #' @export

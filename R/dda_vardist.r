@@ -4,15 +4,18 @@
 #'              (\code{y ~ x} vs. \code{x ~ y}).
 #' @name dda.vardist
 #'
-#' @param formula     symbolic formula of the model to be tested or a \code{lm} object
-#' @param pred        variable name of the predictor which serves as the outcome in the alternative model
-#' @param data        an optional data frame containing the variables in the model (by default variables are taken from the environment which \code{dda.vardist} is called from)
-#' @param conf.level  confidence level for boostrap confidence intervals
-#' @param B           number of bootstrap samples
-#' @param boot.type   A vector of character strings representing the type of bootstrap confidence intervals required. Must be one of the two values \code{c("perc", "bca")}. \code{boot.type = "bca"} is the default.
+#' @param formula     Symbolic formula of the model to be tested or a \code{lm}object.
+#' @param pred        Variable name of the predictor which serves as the outcome in the alternative model.
+#' @param data        An optional data frame containing the variables in the
+#'                    model (by default variables are taken from the environment
+#'                    which \code{dda.vardist} is called from).
+#' @param B           Number of bootstrap samples.
+#' @param boot.type   A vector of character strings representing the type of bootstrap confidence intervals required. Must be one of the two specifications c("perc", "bca"). boot.type = "perc" is the default.
+#' @param conf.level  Confidence level for bootstrap confidence intervals.
+#' @param ...         Additional arguments to be passed to the function.
 #'
-#' @returns  An object of class \code{ddavardist} containing the results of
-#'           of DDA tests of asymmetry patterns of variable distributions.
+#' @returns  An object of class \code{ddavardist} containing the results of DDA tests
+#'           of asymmetry patterns of variable distributions.
 #'
 #' @examples
 #' set.seed(123)
@@ -23,13 +26,19 @@
 #' y <- 0.5 * x + e
 #' d <- data.frame(x, y)
 #' dda.vardist(y ~ x, pred = "x", data = d,
-#'            B = 2000, boot.type = "bca")
+#'             B = 2000, boot.type = "bca")
 #'
-#' @references Wiedermann, W., & von Eye, A. (2025). Direction Dependence Analysis: Foundations and Statistical Methods. Cambridge, UK: Cambridge University Press.
-#' @seealso \code{\link{dda.vardist}} for a conditional version of the function.
+#' @references Wiedermann, W., & von Eye, A. (2025). \emph{Direction Dependence Analysis: Foundations and Statistical Methods}. Cambridge, UK: Cambridge University Press.
+#' @seealso \code{\link{dda.vardist}} for a conditional version.
 #' @export
-dda.vardist <- function(formula, pred = NULL, data = list(),
-                        B = 200, boot.type = "perc", conf.level = 0.95){
+dda.vardist <- function(
+   formula,
+   pred = NULL,
+   data = list(),
+   B = 200,
+   boot.type = "perc",
+   conf.level = 0.95
+  ){
 
   library(boot)
   library(moments)

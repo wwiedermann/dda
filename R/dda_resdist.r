@@ -1,17 +1,23 @@
 #' @title Direction Dependence Analysis: Residual Distributions
 #' @description \code{dda.resdist} evaluates patterns of asymmetry of error
-#'              distributions of causally competing models
-#'              (\code{y ~ x} vs. \code{x ~ y}).
+#' distributions of causally competing models (\code{y ~ x} vs. \code{x ~ y}).
 #' @name dda.resdist
 #'
-#' @param formula     Symbolic formula of the target model to be tested or a \code{lm} object
-#' @param pred        Variable name of the predictor which serves as the outcome in the alternative model
-#' @param data        An optional data frame containing the variables in the model (by default variables are taken from the environment which \code{dda.vardist} is called from)
-#' @param B           Number of bootstrap samples
-#' @param boot.type   A vector of character strings representing the type of bootstrap confidence intervals required. Must be one of the two values \code{c("perc", "bca")}; \code{boot.type = "bca" }is the default.
-#' @param conf.level  Confidence level for bootstrap confidence intervals
-#' @param prob.trans  A logical evaluating to TRUE or FALSE indicating whether a probability integral transformation
-#'                    should be performed prior computation of skewness and kurtosis difference tests.
+#' @param formula     Symbolic formula of the target model to be tested or a \code{lm} object.
+#' @param pred        Variable name of the predictor which serves as the outcome in the alternative model.
+#' @param data        An optional data frame containing the variables in the
+#'                    model (by default variables are taken from the environment
+#'                    which \code{dda.resdist} is called from).
+#' @param B           Number of bootstrap samples.
+#' @param boot.type   A vector of character strings representing the type of
+#'                    bootstrap confidence intervals required. Must be one of
+#'                    the two values \code{c("perc", "bca")};
+#'                    \code{boot.type = "perc"} is the default.
+#' @param prob.trans  A logical value indicating whether a probability integral
+#'                    transformation should be performed prior computation of
+#'                    skewness and kurtosis difference tests.
+#' @param conf.level  Confidence level for bootstrap confidence intervals.
+#' @param ...         Additional arguments to be passed to the function.
 #'
 #' @returns  An object of class \code{ddaresdist} containing the results of DDA
 #'           tests of asymmetry patterns of error distributions obtained from

@@ -14,21 +14,25 @@ dda.vardist(
 )
 }
 \arguments{
-\item{formula}{symbolic formula of the model to be tested or a \code{lm} object}
+\item{formula}{Symbolic formula of the model to be tested or a \code{lm}object.}
 
-\item{pred}{variable name of the predictor which serves as the outcome in the alternative model}
+\item{pred}{Variable name of the predictor which serves as the outcome in the alternative model.}
 
-\item{data}{an optional data frame containing the variables in the model (by default variables are taken from the environment which \code{dda.vardist} is called from)}
+\item{data}{An optional data frame containing the variables in the
+model (by default variables are taken from the environment
+which \code{dda.vardist} is called from).}
 
-\item{B}{number of bootstrap samples}
+\item{B}{Number of bootstrap samples.}
 
-\item{boot.type}{A vector of character strings representing the type of bootstrap confidence intervals required. Must be one of the two values \code{c("perc", "bca")}. \code{boot.type = "bca"} is the default.}
+\item{boot.type}{A vector of character strings representing the type of bootstrap confidence intervals required. Must be one of the two specifications c("perc", "bca"). boot.type = "perc" is the default.}
 
-\item{conf.level}{confidence level for boostrap confidence intervals}
+\item{conf.level}{Confidence level for bootstrap confidence intervals.}
+
+\item{...}{Additional arguments to be passed to the function.}
 }
 \value{
-An object of class \code{ddavardist} containing the results of
-          of DDA tests of asymmetry patterns of variable distributions.
+An object of class \code{ddavardist} containing the results of DDA tests
+          of asymmetry patterns of variable distributions.
 }
 \description{
 \code{dda.vardist} evaluates patterns of asymmetry of variable
@@ -44,12 +48,12 @@ e <- rchisq(n, df = 3) - 3
 y <- 0.5 * x + e
 d <- data.frame(x, y)
 dda.vardist(y ~ x, pred = "x", data = d,
-           B = 2000, boot.type = "bca")
+            B = 2000, boot.type = "bca")
 
 }
 \references{
-Wiedermann, W., & von Eye, A. (2025). Direction Dependence Analysis: Foundations and Statistical Methods. Cambridge, UK: Cambridge University Press.
+Wiedermann, W., & von Eye, A. (2025). \emph{Direction Dependence Analysis: Foundations and Statistical Methods}. Cambridge, UK: Cambridge University Press.
 }
 \seealso{
-\code{\link{dda.vardist}} for a conditional version of the function.
+\code{\link{dda.vardist}} for a conditional version.
 }

@@ -2,15 +2,15 @@
 % Please edit documentation in R/cdda.indep.R
 \name{cdda.indep}
 \alias{cdda.indep}
-\title{Conditional Direction Dependence Analysis: Independence Assumptions}
+\title{Conditional Direction Dependence Analysis: Independence Properties}
 \usage{
 cdda.indep(
   formula = NULL,
   pred = NULL,
   mod = NULL,
-  modval = "mean",
+  modval = NULL,
   data = list(),
-  hetero = TRUE,
+  hetero = FALSE,
   diff = FALSE,
   nlfun = NULL,
   hsic.method = "gamma",
@@ -29,7 +29,17 @@ cdda.indep(
 
 \item{mod}{A character indicating the variable name of the moderator.}
 
-\item{modval}{Characters or a numeric sequence specifying the moderator values used in post-hoc probing. Possible characters include \code{c("mean", "median", "JN")}. \code{modval = "mean"} tests the interaction effect at the moderator values M – 1SD, M, and M + 1SD; \code{modval = "median"} uses Q1, Md, and Q3. The Johnson-Neyman approach is applied when \code{modval = "JN"}. When a numeric sequence is specified, the pick-a-point approach will be utilized for the selected numeric values.}
+\item{modval}{Characters or a numeric sequence specifying the moderator
+values used in post-hoc probing. Possible characters include
+\code{c("mean", "median", "JN")}.\code{modval = "mean"}
+tests the interaction effect at the moderator values
+\code{M – 1SD}, \code{M}, and \code{M + 1SD};
+\code{modval = "median"} uses \code{Q1}, \code{Md},
+and \code{Q3}. The Johnson-Neyman approach is applied
+when \code{modval = "JN"} with conditional effect being
+evaluated at the boundary values of the significance
+regions. When a numeric sequence is specified,the
+pick-a-point approach is used for the selected numeric values.}
 
 \item{data}{A required data frame containing the variables in the model.}
 
@@ -37,28 +47,30 @@ cdda.indep(
 
 \item{diff}{A logical value indicating whether differences in HSIC, dCor, and MI values should be computed. Bootstrap confidence intervals are computed using B bootstrap samples.}
 
-\item{nlfun}{Either a numeric value or a function of .Primitive type used for non-linear correlation tests. When nlfun is numeric the value is used in a power tranformation.}
+\item{nlfun}{Either a numeric value or a function of .Primitive type used for non-linear correlation tests. When nlfun is numeric the value is used in a power transformation.}
 
-\item{hsic.method}{A character indicating the inference method for Hilbert-Schmidt Independence Criterion. Must be one of the four values \code{c("gamma", "eigenvalue", "boot", "permutation")}.\code{hsic.method = "gamma"}is the default.}
+\item{hsic.method}{A character indicating the inference method for the Hilbert-Schmidt Independence Criterion. Must be one of the four specifications \code{c("gamma", "eigenvalue", "boot", "permutation")}.\code{hsic.method = "gamma"} is the default.}
 
-\item{B}{Number of permutations for separate dCor tests and number of resamples when \code{hsic.method = c("boot", "permutation")} or \code{diff = TRUE}}
+\item{B}{Number of permutations for separate dCor tests and number of resamples when \code{hsic.method = c("boot", "permutation")} or \code{diff = TRUE}.}
 
-\item{boot.type}{A vector of character strings representing the type of bootstrap confidence intervals required. Must be one of the two values \code{c("perc", "bca")}. \code{boot.type = "bca"} is the default.}
+\item{boot.type}{A vector of character strings representing the type of bootstrap confidence intervals. Must be one of the two specifications \code{c("perc", "bca")}.\code{boot.type = "perc"} is the default.}
 
-\item{conf.level}{Confidence level for bootstrap confidence intervals}
+\item{conf.level}{Confidence level for bootstrap confidence intervals.}
 
 \item{parallelize}{A logical value indicating whether bootstrapping is performed on multiple cores. Only used if \code{diff = TRUE}.}
 
-\item{cores}{A numeric value indicating the number of cores. Only used if parallelize = TRUE}
+\item{cores}{A numeric value indicating the number of cores. Only used if \code{parallelize = TRUE}.}
+
+\item{...}{Additional arguments to be passed to the function.}
 }
 \value{
-A list of class \code{cddaindep} containing the results of CDDA
-         independence tests for pre-specific moderator values.
+A list of class \class{cddaindep} containing the results of CDDA
+         independence tests for pre-specified moderator values.
 }
 \description{
-\code{cdda.indep} computes CDDA test statistics to evaluate
-             asymmetries of predictor-error independence of competing
-             conditional models (\code{y ~ x | m} vs. \code{x ~ y | m}
+\code{cdda.indep} computes CDDA test statistics to
+             evaluate asymmetries of predictor-error independence of competing
+             conditional models (\code{y \sim x \ast m} vs. \code{x \sim y \ast m}
              with \code{m} being a continuous or categorical moderator).
 }
 \examples{
@@ -70,11 +82,14 @@ z <- sort(rnorm(n))
 z1 <- z[z <= 0]
 z2 <- z[z > 0]
 
+## --- x -> y when z <= 0
+
 x1 <- rchisq(length(z1), df = 4) - 4
 e1 <- rchisq(length(z1), df = 3) - 3
 y1 <- 0.5 * x1 + e1
 
-## --- y -> x when m > 0
+## --- y -> x when m z > 0
+
 y2 <- rchisq(length(z2), df = 4) - 4
 e2 <- rchisq(length(z2), df = 3) - 3
 x2 <- 0.25 * y2 + e2
@@ -83,26 +98,20 @@ y <- c(y1, y2); x <- c(x1, x2)
 
 d <- data.frame(x, y, z)
 
-cdda.indep(y ~ x * z, pred = "x", mod = "z",
-           diff = TRUE, nlfun = 2, data = d)
+cdda.indep(y ~ x * z, pred = "x", mod = "z", modval = "JN",
+           hetero = TRUE, diff = TRUE, nlfun = 2, data = d)
 
 m <- lm(y ~ x * z, data = d)
 
-#' result <- cdda.indep(m, pred = "x", mod = "z", B = 500,
-                     diff = TRUE, nlfun = 2, data = d)
- print(results)
- summary(result, hsic.diff = TRUE)
-
-result <- cdda.indep(m, pred = "x", mod = "z", B = 500, modval = c(-0.5, 0.5),
-                    diff = TRUE, nlfun = 2, data = d)
-summary(result, hsic.diff = TRUE)
-
+result <- cdda.indep(m, pred = "x", mod = "z", B = 500, modval = "JN",
+                     hetero = TRUE, diff = TRUE, nlfun = 2, data = d)
 print(result)
+summary(result, hsic.diff = TRUE)
 
 }
 \references{
-Wiedermann, W., & von Eye, A. (2025). Direction Dependence Analysis: Foundations and Statistical Methods. Cambridge, UK: Cambridge University Press.
+Wiedermann, W., & von Eye, A. (2025). \emph{Direction Dependence Analysis: Foundations and Statistical Methods}. Cambridge, UK: Cambridge University Press.
 }
 \seealso{
-\code{\link{dda.indep}} for a non-conditional version of the function.
+\code{\link{dda.indep}} for an unconditional version.
 }
