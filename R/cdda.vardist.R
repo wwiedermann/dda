@@ -1,22 +1,33 @@
-#' @title Conditional Directional Dependence Analysis: Variable Distribution
+#' @title Conditional Directional Dependence Analysis: Variable Distributions
 #' @description \code{cdda.vardist} computes DDA test statistics for observed
-#'              variable distributions of competing conditional models (
-#'              \code{y ~ x | m} vs. \code{x ~ y | m} with \code{m} being a
-#'              continuous or categorical moderator).
+#'              variable distributions of competing conditional models
+#'              (\code{y ~ x \ast m} vs.\code{x ~ y \ast m} with \code{m}
+#'              being a continuous or categorical moderator).
 #' @name cdda.vardist
 #'
 #' @param formula     Symbolic formula of the model to be tested or a \code{lm} object
 #' @param pred        A character indicating the variable name of the predictor which serves as the outcome in the alternative model.
-#' @param mod         A character indicating the variable name of the moderator which serves as an interaction term in models.
-#' @param modval      Characters or a numeric sequence specifying the moderator values used in post-hoc probing. Possible characters include \code{c("mean", "median", "JN")}. \code{modval = "mean"} tests the interaction effect at the moderator values M – 1SD, M, and M + 1SD; \code{modval = "median"} uses Q1, Md, and Q3. The Johnson-Neyman approach is applied when \code{modval = "JN"}. When a numeric sequence is specified, the pick-a-point approach will be utilized for the selected numeric values.
+#' @param mod         A character indicating the variable name of the moderator.
+#' @param modval      Characters or a numeric sequence specifying the moderator
+#'                    values used in post-hoc probing. Possible characters
+#'                    include \code{c("mean", "median", "JN")}. \code{modval = "mean"}
+#'                    tests the interaction effect at the moderator values
+#'                    \code{M - 1SD},\code{M}, and \code{M + 1SD};
+#'                    \code{modval = "median"} uses \code{Q1}, \code{Md},
+#'                    and \code{Q3}. The Johnson-Neyman approach is applied
+#'                    when \code{modval = "JN"} with conditional effect being
+#'                    evaluated at the boundary values of the significance
+#'                    regions. When a numeric sequence is specified, the
+#'                    pick-a-point approach is used for the selected numeric values.
 #' @param data        A required data frame containing the variables in the model.
-#' @param conf.level  Confidence level for boostrap confidence intervals.
+#' @param conf.level  Confidence level for bootstrap confidence intervals.
 #' @param B           Number of bootstrap samples.
-#' @param boot.type   A character indicating the type of bootstrap confidence intervals. Must be one of the two values \code{c("perc", "bca")}. \code{boot.type = "bca"} is the default.
+#' @param boot.type  A character indicating the type of bootstrap confidence intervals. Must be one of the two values \code{c("perc", "bca")}. \code{boot.type = "bca"} is the default.
+#' @param ...         Additional arguments to be passed to the function.
 #'
-#' @returns A list of class \code{cddavardist} containing the results of CDDA
-#'          tests to evaluate distributional properties of observed variables
-#'          for pre-specified moderator values.
+#' @returns A list of class \code{cddavardist} containing the results of
+#'          CDDA tests to evaluate distributional properties of observed
+#'          variables for pre-specified moderator values.
 #'
 #' @examples
 #' set.seed(123)
@@ -27,11 +38,14 @@
 #' z1 <- z[z <= 0]
 #' z2 <- z[z > 0]
 #'
+#' ## --- x -> y when z <= 0
+#'
 #' x1 <- rchisq(length(z1), df = 4) - 4
 #' e1 <- rchisq(length(z1), df = 3) - 3
 #' y1 <- 0.5 * x1 + e1
 #'
-#' ## --- y -> x when m > 0
+#' ## --- y -> x when z > 0
+#'
 #' y2 <- rchisq(length(z2), df = 4) - 4
 #' e2 <- rchisq(length(z2), df = 3) - 3
 #' x2 <- 0.25 * y2 + e2
@@ -40,29 +54,28 @@
 #'
 #' d <- data.frame(x, y, z)
 #'
-#' cdda.vardist(y ~ x * z, pred = "x", mod = "z",
-#'              B = 500, modval = "JN", data = d)
-#' ## OR
 #'
 #' m <- lm(y ~ x * z, data = d)
-#' results <- cdda.vardist(y ~ x * z, pred = "x", mod = "z",
-#'              B = 500, modval = c(-0.5, 0.5), data = d)
-#' summary(results, skew = FALSE, coskew = TRUE, kurt = FALSE)
 #'
-#' results <- cdda.vardist(m, pred = "x",
+#' result <- cdda.vardist(m, pred = "x",
 #'                         mod = "z", data = d, B = 500, modval = "JN")
-#' print(results)
+#' print(result)
 #'
-#' summary(results, skew = FALSE, coskew = TRUE, kurt = FALSE)
+#' summary(result, skew = FALSE, coskew = TRUE, kurt = FALSE)
 #'
-#' @references Wiedermann, W., & von Eye, A. (2025). Direction Dependence Analysis: Foundations and Statistical Methods. Cambridge, UK: Cambridge University Press.
-#' @seealso \code{\link{dda.vardist}} for a non-conditional version of the function.
+#' @references Wiedermann, W., & von Eye, A. (2025). \emph{Direction Dependence Analysis: Foundations and Statistical Methods}. Cambridge, UK: Cambridge University Press.
+#' @seealso \code{\link{dda.vardist}} for an unconditional version.
 #' @export
-
-remotes::install_github("wwiedermann/DDA")
-cdda.vardist <- function(formula = NULL, pred = NULL, mod = NULL, modval = "mean",
-                         data = list(), B = 200, boot.type = "perc",
-                         conf.level = 0.95, ...) {
+cdda.vardist <- function(formula,
+                         pred = NULL,
+                         mod = NULL,
+                         data = list(),
+                         modval = NULL,
+                         B = 200,
+                         boot.type = "perc",
+                         conf.level = 0.95,
+                         ...
+                      ){
 
   library(boot)
   library(dHSIC)

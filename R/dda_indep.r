@@ -1,23 +1,24 @@
 #' @title Direction Dependence Analysis: Independence Properties
 #' @description \code{dda.indep} computes DDA test statistics to
-#' evaluate asymmetries of predictor-error independence of causally competing
-#' models (\code{y ~ x} vs. \code{x ~ y}).
+#'              evaluate asymmetries of predictor-error independence of
+#'              causally competing models (\code{y ~ x} vs. \code{x ~ y}).
 #'
 #' @param formula      Symbolic formula of the model to be tested or a \code{lm} object.
 #' @param pred         A character indicating the variable name of the predictor which serves as the outcome in the alternative model.
-#' @param data         An optional data frame containing the variables in the model (by default variables are taken from the environment which \code{dda.indep} is called from)
-#' @param nlfun        Either a numeric value or a function of .Primitive type used for non-linear correlation tests. When \code{nlfun} is numeric the value is used in a power tranformation.
+#' @param data         An optional data frame containing the variables in the model (by default variables are taken from the environment which \code{dda.indep}is called from).
+#' @param nlfun        Either a numeric value or a function of .Primitive type used for non-linear correlation tests. When \code{nlfun} is numeric the value is used in a power transformation.
 #' @param hetero       A logical value indicating whether separate homoscedasticity tests (i.e., standard and robust Breusch-Pagan tests) should be computed.
-#' @param hsic.method  A character indicating the inference method for Hilbert-Schmidt Independence Criterion (HSIC). Must be one of the four values \code{c("gamma", "eigenvalue", "boot", "permutation")}. \code{hsic.method = "gamma"} is the default.
-#' @param diff         A logical value indicating whether differences in HSIC, Distance Correlation (dCor), and MI values should be computed. Bootstrap confidence intervals are computed using \code{B} bootstrap samples.
-#' @param B            Number of permutations for separate dCor tests and number of resamples if \code{hsic.method = c("boot", "permutation")} or \code{diff = TRUE}
-#' @param boot.type    A vector of character strings representing the type of bootstrap confidence intervals required. Must be one of the two values \code{c("perc", "bca")}. \code{boot.type = "perc"} is the default.
-#' @param conf.level   Confidence level for bootstrap confidence intervals
-#' @param parallelize  A logical value indicating whether boostrapping is performed on multiple cores. Only used if \code{diff = TRUE.}
-#' @param cores        A numeric value indicating the number of cores. Only used if parallelize = TRUE
+#' @param hsic.method  A character indicating the inference method for the Hilbert-Schmidt Independence Criterion (HSIC). Must be one of the four specifications \code{c("gamma", "eigenvalue", "boot", "permutation")}. \code{hsic.method = "gamma"}is the default.
+#' @param diff         A logical value indicating whether differences in HSIC, Distance Correlation (dCor), and MI values should be computed. Bootstrap confidence intervals are computed using B bootstrap samples.
+#' @param B            Number of permutations for separate dCor tests and number of resamples if \code{hsic.method = c("boot", "permutation")} or \code{diff = TRUE}.
+#' @param boot.type    A vector of character strings representing the type of bootstrap confidence intervals. Must be one of the two specifications \code{c("perc", "bca")}.\code{boot.type = "perc"} is the default.
+#' @param conf.level   Confidence level for bootstrap confidence intervals.
+#' @param parallelize  A logical value indicating whether bootstrapping is performed on multiple cores. Only used if \code{diff = TRUE}.
+#' @param cores        A numeric value indicating the number of cores. Only used if \code{parallelize = TRUE}.
+#' @param ...          Additional arguments to be passed to the function.
 #'
 #' @returns  An object of class \code{ddaindep} containing the results of DDA independence tests.
-#' @references Wiedermann, W., & von Eye, A. (2025). Direction Dependence Analysis: Foundations and Statistical Methods. Cambridge, UK: Cambridge University Press.
+#' @references Wiedermann, W., & von Eye, A. (2025). \emph{Direction Dependence Analysis: Foundations and Statistical Methods}. Cambridge, UK: Cambridge University Press.
 #'
 #' @examples
 #' set.seed(123)
@@ -28,14 +29,24 @@
 #' d <- data.frame(x, y)
 #'
 #' dda.indep(y ~ x, pred = "x", data = d,
-#'          nlfun = 2, B = 500, hetero = TRUE, diff = TRUE)
+#'           nlfun = 2, B = 500, diff = TRUE)
 #'
-#' @seealso \code{\link{cdda.indep}} for a conditional version of the function.
+#' @seealso \code{\link{cdda.indep}} for a conditional version.
 #' @export
-dda.indep <- function(formula, pred = NULL, data = list(), nlfun = NULL,
-                      hetero = FALSE, hsic.method = "gamma", diff = FALSE,
-                      B = 200,  boot.type = "perc", conf.level = 0.95,
-                      parallelize = FALSE, cores = 1, ...) {
+dda.indep <- function(
+             formula,
+             pred = NULL,
+             data = list(),
+             nlfun = NULL,
+             hetero = FALSE,
+             hsic.method = "gamma",
+             diff = FALSE,
+             B = 200,
+             boot.type = "perc",
+             conf.level = 0.95,
+             parallelize = FALSE,
+             cores = 1)
+  {
   #setClass("dda.Ind", representation("list"))
 
   library(dHSIC)

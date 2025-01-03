@@ -10,6 +10,8 @@
 \item{y}{a numeric vector representing the tentative outcome.}
 
 \item{fun}{a numeric value or a function of .Primitive type used for non-linear correlation tests. When \code{fun} is numeric the value is used in a power transformation.}
+
+\item{...}{Additional arguments to be passed to the function}
 }
 \value{
 An object of class \code{dda.nlcor} containing the correlation coefficient, t-value, degrees of freedom, and p-value for three different tests.

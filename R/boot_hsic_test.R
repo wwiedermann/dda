@@ -8,6 +8,8 @@
 #' @param B           Numeric value specifying the number of resamples used to compute the HSIC p-value.
 #' @param parallelize A logical value indicating whether boostrapping is performed on multiple cores.
 #' @param cores       A numeric value indicating the number of cores. Only used if parallelize = TRUE.
+#' @param ...         Additional arguments to be passed to the function
+#'
 #' @examples    m <- lm(y ~ x + z)
 #'              hsic.test(m, x, B = 500, parallelize = TRUE, cores = 4)
 #' @noRd

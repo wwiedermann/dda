@@ -16,7 +16,10 @@ output:
     fig_height: 9
     fig_caption: true
     number_sections: true
-vignette: "%\\VignetteIndexEntry{Introduction to Direction Dependence Analysis (dda)} %\\VignetteEngine{knitr::rmarkdown} %\\VignetteEncoding{UTF-8}\n"
+vignette: >
+  %\VignetteIndexEntry{Package 'dda'}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 ---
 
 ```{r, include = FALSE}
