@@ -231,7 +231,7 @@ cdda.indep <- function(
 
     if (is.numeric(modval)){
 
-      if( is.null(modval) ) stop("No moderation values identified for pick-a-point approach.")
+      #if( is.null(modval) ) stop("No moderation values identified for pick-a-point approach.")
 
       modmat <- data.frame( matrix(NA, length(moderator), length(modval)) )
 
