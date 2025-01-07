@@ -2,6 +2,7 @@
 % Please edit documentation in R/dda_indep.r
 \name{dda.indep}
 \alias{dda.indep}
+\alias{print.dda.indep}
 \title{Direction Dependence Analysis: Independence Properties}
 \usage{
 dda.indep(
@@ -18,6 +19,8 @@ dda.indep(
   parallelize = FALSE,
   cores = 1
 )
+
+\method{print}{dda.indep}(x, ...)
 }
 \arguments{
 \item{formula}{Symbolic formula of the model to be tested or a \code{lm} object.}
@@ -44,15 +47,24 @@ dda.indep(
 
 \item{cores}{A numeric value indicating the number of cores. Only used if \code{parallelize = TRUE}.}
 
+\item{x}{An object of class \code{dda.indep}.}
+
 \item{...}{Additional arguments to be passed to the function.}
 }
 \value{
-An object of class \code{ddaindep} containing the results of DDA independence tests.
+An object of class \code{dda.indep} containing the results of DDA independence tests.
+
+An object of class \code{dda.indep} with readable linear model
+         coefficients for competing models.
 }
 \description{
 \code{dda.indep} computes DDA test statistics to
              evaluate asymmetries of predictor-error independence of
              causally competing models (\code{y ~ x} vs. \code{x ~ y}).
+
+Displays the results of the independence properties. If
+             If bootstrap confidence intervals are computed,
+             the independence test differences are reported.
 }
 \examples{
 set.seed(123)

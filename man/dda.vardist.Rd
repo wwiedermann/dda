@@ -2,6 +2,7 @@
 % Please edit documentation in R/dda_vardist.r
 \name{dda.vardist}
 \alias{dda.vardist}
+\alias{print.dda.vardist}
 \title{Direction Dependence Analysis: Variable Distributions}
 \usage{
 dda.vardist(
@@ -12,6 +13,8 @@ dda.vardist(
   boot.type = "perc",
   conf.level = 0.95
 )
+
+\method{print}{dda.vardist}(x)
 }
 \arguments{
 \item{formula}{Symbolic formula of the model to be tested or a \code{lm}object.}
@@ -28,16 +31,24 @@ which \code{dda.vardist} is called from).}
 
 \item{conf.level}{Confidence level for bootstrap confidence intervals.}
 
+\item{x}{An object of class \code{dda.vardist}.}
+
 \item{...}{Additional arguments to be passed to the function.}
 }
 \value{
-An object of class \code{ddavardist} containing the results of DDA tests
+An object of class \code{dda.vardist} containing the results of DDA tests
           of asymmetry patterns of variable distributions.
+
+An object of class \code{dda.vardist} with readable linear model
+         coefficients for competing models.
 }
 \description{
 \code{dda.vardist} evaluates patterns of asymmetry of variable
              distributions for causally competing models
              (\code{y ~ x} vs. \code{x ~ y}).
+
+Displays the results of results DDA tests
+            of asymmetry patterns of variable distributions.
 }
 \examples{
 set.seed(123)

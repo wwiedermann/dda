@@ -1,6 +1,6 @@
-#' @title Summary of \code{cdda.indep} class object
+#' @title Summary for \code{cdda.indep} Objects
 #' @description \code{summary} returns test statistic results from the \code{cdda.indep} class object.
-#' @name summary.cddaindep
+#' @name summary.cdda.indep
 #'
 #' @param cdda.output     output from \code{cdda.indep} object
 #' @param nlfun           logical, default is \code{FALSE}, includes non-linear correlation test
@@ -12,8 +12,11 @@
 #' @param mi.diff         logical, default is \code{FALSE}, includes Mutual Information (MI) differences
 #'
 #' @returns               A summary of test statistic results from the \code{cdda.indep} class object.
+#'
 #' @export
-summary.cddaindep <- function(cdda.output, nlfun = FALSE, hetero = TRUE,
+#' @rdname cdda.indep
+#' @method summary cdda.indep
+summary.cdda.indep <- function(cdda.output, nlfun = FALSE, hetero = TRUE,
                               hsic = TRUE, hsic.diff = FALSE, dcor = TRUE,
                               dcor.diff = FALSE, mi.diff = FALSE, ...) {
 
@@ -175,14 +178,44 @@ if (hsic.diff == TRUE){
 }
 
   ### Distance Correlation ### -------------------------------------------------
-  if (dcor.diff == TRUE){
+
+  ## dcor ## -------------------------------------------------------------------
+  if (dcor == TRUE){
+
+    dcor <- matrix(NA, length(mod_names), 4)
+
+    for (i in 1:length(mod_names)) {
+      tar.dcor <- unlist(c(cdda.output[[1]][[i]]$distance_cor.dcor_yx$statistic,
+                           cdda.output[[1]][[i]]$distance_cor.dcor_yx$p.value))
+      alt.dcor <- unlist(c(cdda.output[[2]][[i]]$distance_cor.dcor_yx$statistic,
+                         cdda.output[[2]][[i]]$distance_cor.dcor_yx$p.value))
+      dcor[i, ] <- c(tar.dcor, alt.dcor)
+    }
+
+    rownames(dcor) <- mod_names
+    colnames(dcor) <- rep(c("dCor", "p-value"), 2)
+    dcor <- round(dcor, 3)
+
+    cat(boot_print)
+
+    cat(paste("Distance Correlation", "\n"))
+    cat(paste0("---------------------------------------------------------------------", "\n"))
+    cat(paste0("            Target Model           Alternative Model ", "\n"))
+    cat(paste0("---------------------------------------------------------------------", "\n"))
+
+    print(dcor)
+    cat("---", "\n", "\n")
+  }
+
+  ## dcor.diff ## --------------------------------------------------------------
+    if (dcor.diff == TRUE){
 
     dcortests <- matrix(NA, length(mod_names), 6)
 
     for (i in 1:length(mod_names)) {
-      tar.dcor <- unlist(cdda.output[[1]][[i]]$out.diff[2, ])
-      alt.dcor <- unlist(cdda.output[[2]][[i]]$out.diff[2, ])
-      dcortests[i, ] <- c(tar.dcor, alt.dcor)
+      tar.dcor.diff <- unlist(cdda.output[[1]][[i]]$out.diff[2, ])
+      alt.dcor.diff <- unlist(cdda.output[[2]][[i]]$out.diff[2, ])
+      dcortests[i, ] <- c(tar.dcor.diff, alt.dcor.diff)
     }
 
     rownames(dcortests) <- mod_names
