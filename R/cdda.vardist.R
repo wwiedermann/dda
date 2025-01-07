@@ -25,7 +25,7 @@
 #' @param boot.type  A character indicating the type of bootstrap confidence intervals. Must be one of the two values \code{c("perc", "bca")}. \code{boot.type = "bca"} is the default.
 #' @param ...         Additional arguments to be passed to the function.
 #'
-#' @returns A list of class \code{cddavardist} containing the results of
+#' @returns A list of class \code{cdda.vardist} containing the results of
 #'          CDDA tests to evaluate distributional properties of observed
 #'          variables for pre-specified moderator values.
 #'
@@ -65,7 +65,9 @@
 #'
 #' @references Wiedermann, W., & von Eye, A. (2025). \emph{Direction Dependence Analysis: Foundations and Statistical Methods}. Cambridge, UK: Cambridge University Press.
 #' @seealso \code{\link{dda.vardist}} for an unconditional version.
+#'
 #' @export
+#' @rdname cdda.vardist
 cdda.vardist <- function(formula,
                          pred = NULL,
                          mod = NULL,
@@ -321,17 +323,24 @@ cdda.vardist <- function(formula,
                            "mod_data" = data[,mod] #raw for categ, not for contin?
   )
   names(cdda.var.output) <- c("cdda_target", "cdda_alternative", "models", "df_original")
-  class(cdda.var.output) <- "cddavardist"
+  class(cdda.var.output) <- "cdda.vardist"
   return(cdda.var.output)
 
 }
 
-#' @name print.cddavardist
-#' @title Print method for \code{cddavardist} objects
-#' @description Calling \code{print} on a \code{cddavardist} object will display the output of the standard linear model coefficients for competing models.
+#' @name print.cdda.vardist
+#' @title Print Method for \code{cdda.vardist} Objects
+#' @description Displays the output of the standard linear model coefficients
+#'             for target and alternative models.
+#' @param x   An object of class \code{cdda.vardist}.
+#' @param ... Additional arguments to be passed to the function.
 #'
 #' @export
-print.cddavardist <- function(cdda.var.output){
+#' @rdname cdda.vardist
+#' @method print cdda.vardist
+print.cdda.vardist <- function(x, ...){
+
+  cdda.var.output <- x
 
   cat(paste("-----------------------------------------------------"))
   cat("\n")

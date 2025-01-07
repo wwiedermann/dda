@@ -36,6 +36,7 @@
 #'
 #' @references Wiedermann, W., & von Eye, A. (2025). Direction Dependence Analysis: Foundations and Statistical Methods. Cambridge, UK: Cambridge University Press.
 #' @export
+#' @rdname cdda.vardist
 dda.resdist <- function(formula, pred = NULL, data = list(), B = 200,
                         boot.type = "perc", prob.trans = FALSE, conf.level = 0.95){
 
@@ -369,12 +370,20 @@ dda.resdist <- function(formula, pred = NULL, data = list(), B = 200,
   return(output)
 }
 
-#' @name print.ddaresdist
-#' @title Print method for \code{ddaresdist} objects
-#' @description Calling \code{print} on a \code{ddaresdist} object will display the test statistics and p-values for the difference in skewness and kurtosis between the residuals of the two competing models. If bootstrap confidence intervals are computed, the lower and upper bounds of the confidence intervals will also be displayed.
+#' @name print.dda.resdist
+#' @title Print Method for \code{dda.resdist} Objects
+#' @description Displays the test statistics and p-values for the difference
+#'              in skewness and kurtosis between the residuals of the two
+#'              competing models. If bootstrap confidence intervals are computed,
+#'              the lower and upper bounds of the confidence intervals will also be displayed.
+#'
+#' @param object An object of class \code{dda.resdist}.
+#' @param ...    Additional arguments to be passed to the function.
 #'
 #' @export
-print.ddaresdist <- function(object){
+#' @rdname dda.resdist
+#' @method print dda.resdist
+print.dda.resdist <- function(object, ...){
   varnames <- object$var.names
 
   cat("\n")

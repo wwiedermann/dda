@@ -2,16 +2,15 @@
 #' @description \code{plot} returns test statistic results from the \code{cdda.indep} class object.
 #' @name plot.cddaindep
 #'
-#' @param obj           a \code{cddaindep} class object
+#' @param obj           a \code{cdda.indep} class object
 #' @param stat          a character indicating the stat of statistic to be plotted with options \code{c("hsic.diff", "dcor.diff", "mi.diff")}
 #' @param ylim          a numeric vector of length 2 indicating the y-axis limits if \code{NULL}, the function will set the limits automatically
 #' @returns             A plot of a test statistic result from the \code{cdda.indep} class object.
+#'
 #' @export
-plot.cddaindep <- function(obj = NULL, stat = NULL, ylim =  NULL){ #alpha = 0.05,
-
-  if(class(obj) != "cddaindep"){
-    stop("Object must be of class 'cddaindep' or 'cddavardist'.")
-  }
+#' @rdname cdda.indep
+#' @method plot cdda.indep
+plot.cdda.indep <- function(obj = NULL, stat = NULL, ylim =  NULL){ #alpha = 0.05,
 
   if(is.null(stat)){
     stop("stat argument must be specified. as 'hsic.diff', 'dcor.diff', or 'mi.diff'")
@@ -25,11 +24,6 @@ plot.cddaindep <- function(obj = NULL, stat = NULL, ylim =  NULL){ #alpha = 0.05
     mod.levels <- x.axis.labels <- obj[[4]][["mod_levels"]] #"modval levels for pick-a-point, not raw data"
     y.title <- obj[[3]][[1]] #Test statistic CI header
     ci.level <- as.numeric(obj[[1]][[1]]$boot.args[2]) * 100
-
-    tar.model.label <- paste0(obj[[4]]["response_name"], "|", obj[[4]]["mod_name"],
-                              "\u2192", obj[[4]]["pred_name"]) # y ~ x | m
-    alt.model.label <- paste0(obj[[4]]["pred_name"], "|", obj[[4]]["mod_name"],
-                              "\u2192", obj[[4]]["response_name"]) # x ~ y | m
 
     ### Limits for X-axis ####
 
@@ -101,7 +95,7 @@ plot.cddaindep <- function(obj = NULL, stat = NULL, ylim =  NULL){ #alpha = 0.05
 
     plot(plot.axis, out.tar$out.mean, type = "n",
          ylim = y.range, xlim = x.range, xaxt = "n",
-         xlab = tar.model.label, ylab = y.title, main = "Target Model")
+         xlab = "Moderator Values", ylab = y.title, main = "Target Model")
     axis(1, at = 1:length(out.tar$condition), labels = x.axis.labels)
     polygon(x = c(out.tar$condition, rev(out.tar$condition)),
             y = c(out.tar$out.low, rev(out.tar$out.upp)),
@@ -111,7 +105,7 @@ plot.cddaindep <- function(obj = NULL, stat = NULL, ylim =  NULL){ #alpha = 0.05
 
     plot(plot.axis, out.alt$out.mean, type = "n",
          ylim = y.range, xlim = x.range, xaxt = "n",
-         xlab = alt.model.label, ylab = y.title, main = "Alternative Model")
+         xlab = "Moderator Values", ylab = y.title, main = "Alternative Model")
     axis(1, at = 1:length(out.tar$condition), labels = x.axis.labels)
     polygon(x = c(out.alt$condition, rev(out.alt$condition)),
             y = c(out.alt$out.low, rev(out.alt$out.upp)),

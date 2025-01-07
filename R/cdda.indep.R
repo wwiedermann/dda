@@ -32,7 +32,7 @@
 #' @param cores       A numeric value indicating the number of cores. Only used if \code{parallelize = TRUE}.
 #' @param ...         Additional arguments to be passed to the function.
 #'
-#' @returns A list of class \class{cddaindep} containing the results of CDDA
+#' @returns A list of class \class{cdda.indep} containing the results of CDDA
 #'          independence tests for pre-specified moderator values.
 #'
 #' @examples
@@ -66,13 +66,15 @@
 #' m <- lm(y ~ x * z, data = d)
 #'
 #' result <- cdda.indep(m, pred = "x", mod = "z", B = 500, modval = "JN",
-#'                      hetero = TRUE, diff = TRUE, nlfun = 2, data = d)
+#'                      hetero = TRUE, nlfun = 2, data = d)
 #' print(result)
-#' summary(result, hsic.diff = TRUE)
+#' summary(result)
 #'
 #' @references Wiedermann, W., & von Eye, A. (2025). \emph{Direction Dependence Analysis: Foundations and Statistical Methods}. Cambridge, UK: Cambridge University Press.
 #' @seealso \code{\link{dda.indep}} for an unconditional version.
+#'
 #' @export
+#' @rdname cdda.indep
 cdda.indep <- function(
   formula = NULL,
   pred = NULL,
@@ -212,12 +214,12 @@ cdda.indep <- function(
       #DDA Implementation
       indep.temp.yx[[i]] <- unclass(dda.indep(ry.aux.tar ~ rx.aux.tar, pred = "rx.aux.tar",
                                               hsic.method = hsic.method, nlfun = nlfun,
-                                              B = B, boot.type = boot.type,
+                                              B = B, boot.type = boot.type, parallelize = parallelize,
                                               conf.level = conf.level, diff = diff, hetero = hetero
       ))
       indep.temp.xy[[i]] <- unclass(dda.indep(rx.aux.alt ~ ry.aux.alt, pred = "ry.aux.alt",
                                               hsic.method = hsic.method, nlfun = nlfun,
-                                              B = B, boot.type = boot.type,
+                                              B = B, boot.type = boot.type, parallelize = parallelize,
                                               conf.level = conf.level, diff = diff, hetero = hetero
       ))
     }
@@ -345,16 +347,18 @@ cdda.indep <- function(
                            )
 
   names(cdda.output) <- c("cdda_target", "cdda_alternative", "models", "df_original")
-  class(cdda.output) <- "cddaindep"
+  class(cdda.output) <- "cdda.indep"
   return(cdda.output)
 }
 
-#' @title Print method for "cddaindep" class
-#' @description Calling `print` on a `cddaindep` object will display the output of the standard linear model coefficients for competing models.
-#' @param x An object of class `cddaindep`
-#' @returns An object of class \code{cddaindep} with readable ols coefficients for competing models
+#' @title Print method for \code{cdda.indep}
+#' @description Displays the output of standard linear model coefficients for competing target and alternative models.
+#' @param x     An object of class \code{cdda.indep}.
+#' @param ...   Additional arguments to be passed to the function.
+#'
+#' @returns An object of class \code{cdda.indep} with readable OLS coefficients for competing models
 #' @export
-print.cddaindep <- function(x, ...){
+print.cdda.indep <- function(x, ...){
   cdda.output <- x
   cat("\n")
   cat(paste0("-----------------------------------------------------"))

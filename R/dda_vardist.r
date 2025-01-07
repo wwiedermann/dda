@@ -14,7 +14,7 @@
 #' @param conf.level  Confidence level for bootstrap confidence intervals.
 #' @param ...         Additional arguments to be passed to the function.
 #'
-#' @returns  An object of class \code{ddavardist} containing the results of DDA tests
+#' @returns  An object of class \code{dda.vardist} containing the results of DDA tests
 #'           of asymmetry patterns of variable distributions.
 #'
 #' @examples
@@ -176,41 +176,48 @@ dda.vardist <- function(
 	response.name <- all.vars(formula(formula))[1]  # get name of response variable
 	output <- c(output, list(var.names = c(response.name, pred)))
 
-	class(output) <- "ddavardist"
+	class(output) <- "dda.vardist"
 	return(output)
 
 }
 
-#' @name print.ddavardist
-#' @title Print method for \code{ddavardist} objects
-#' @description Calling \code{print} on a \code{ddavardist} object will display the results of the skewness and kurtosis tests, and bootstrap confidence intervals for the difference in skewness and kurtosis of the variables of two competing models.
+#' @name print.dda.vardist
+#' @title Print Method for \code{dda.vardist} Objects
+#' @description Displays the results of results DDA tests
+#'             of asymmetry patterns of variable distributions.
+#' @param x     An object of class \code{dda.vardist}.
+#' @param ...   Additional arguments to be passed to the function.
+#' @returns An object of class \code{dda.vardist} with readable linear model
+#'          coefficients for competing models.
 #'
 #' @export
-print.ddavardist <- function(object){
-   varnames <- object$var.names
+#' @rdname dda.vardist
+#' @method print dda.vardist
+print.dda.vardist <- function(x){
+   varnames <- x$var.names
 
 	 cat("\n")
      cat("DIRECTION DEPENDENCE ANALYSIS: Variable Distributions", "\n", "\n")
      cat("Skewness and kurtosis tests:", "\n")
 
-	     sigtests <- rbind( c(object[[1]]$outcome$statistic, object[[1]]$outcome$p.value, object[[1]]$predictor$statistic, object[[1]]$predictor$p.value),
-	                        c(object[[2]]$outcome$statistic, object[[2]]$outcome$p.value, object[[2]]$predictor$statistic, object[[2]]$predictor$p.value)
+	     sigtests <- rbind( c(x[[1]]$outcome$statistic, x[[1]]$outcome$p.value, x[[1]]$predictor$statistic, x[[1]]$predictor$p.value),
+	                        c(x[[2]]$outcome$statistic, x[[2]]$outcome$p.value, x[[2]]$predictor$statistic, x[[2]]$predictor$p.value)
 	                      )
          sigtests <- round(sigtests, 4)
          rownames(sigtests) <- c("Skewness", "Kurtosis")
 		     colnames(sigtests) <- c(varnames[1], " z-value", " Pr(>|z|)", varnames[2], " z-value", " Pr(>|z|)")
          print.default(format( sigtests, digits = max(3L, getOption("digits") - 3L)), print.gap = 2L, quote = FALSE)
 
-	 if(!is.null(object$boot.args)){
-	     ci.level <- as.numeric(object$boot.args[2]) * 100
+	 if(!is.null(x$boot.args)){
+	     ci.level <- as.numeric(x$boot.args[2]) * 100
 		   cat("\n")
 
 	       # Print Skewness and Kurtosis based measures
 
-		   if(object$boot.args[1] == "bca") cat(ci.level, "% ", "BCa bootstrap CIs for higher moment differences:", "\n", sep = "")
-       if(object$boot.args[1] == "perc") cat(ci.level, "% ", "Percentile bootstrap CIs for higher moment differences:", "\n", sep = "")
+		   if(x$boot.args[1] == "bca") cat(ci.level, "% ", "BCa bootstrap CIs for higher moment differences:", "\n", sep = "")
+       if(x$boot.args[1] == "perc") cat(ci.level, "% ", "Percentile bootstrap CIs for higher moment differences:", "\n", sep = "")
 
-	       citests <- rbind(object$skewdiff, object$kurtdiff)
+	       citests <- rbind(x$skewdiff, x$kurtdiff)
 		     citests <- round(citests, 4)
 	       rownames(citests) <- c("Skewness", "Kurtosis")
 	       colnames(citests) <- c("diff", "lower", "upper")
@@ -219,10 +226,10 @@ print.ddavardist <- function(object){
 
            # Print Co-Skewness and Co-Kurtosis based measures
 
-   	       if(object$boot.args[1] == "bca") cat(ci.level, "% ", "BCa bootstrap CIs for differences in higher-order correlations:", "\n", sep = "")
-           if(object$boot.args[1] == "perc") cat(ci.level, "% ", "Percentile bootstrap CIs for differences in higher-order correlations:", "\n", sep = "")
+   	       if(x$boot.args[1] == "bca") cat(ci.level, "% ", "BCa bootstrap CIs for differences in higher-order correlations:", "\n", sep = "")
+           if(x$boot.args[1] == "perc") cat(ci.level, "% ", "Percentile bootstrap CIs for differences in higher-order correlations:", "\n", sep = "")
 
-		   hoctests <- rbind(object$cor12diff, object$cor13diff)
+		   hoctests <- rbind(x$cor12diff, x$cor13diff)
 		   hoctests <- round(hoctests, 4)
 		   rownames(hoctests) <- c("Cor^2[2,1] - Cor^2[1,2]", "Cor^2[3,1] - Cor^2[1,3]" )
 		   colnames(hoctests) <- c("estimate", "lower", "upper")
@@ -231,23 +238,23 @@ print.ddavardist <- function(object){
 
            # Print LR approximative measures
 
-   	       if(object$boot.args[1] == "bca") cat(ci.level, "% ", "BCa bootstrap CIs for Likelihood Ratio approximations:", "\n", sep = "")
-           if(object$boot.args[1] == "perc") cat(ci.level, "% ", "Percentile bootstrap CIs for Likelihood Ratio approximations:", "\n", sep = "")
+   	       if(x$boot.args[1] == "bca") cat(ci.level, "% ", "BCa bootstrap CIs for Likelihood Ratio approximations:", "\n", sep = "")
+           if(x$boot.args[1] == "perc") cat(ci.level, "% ", "Percentile bootstrap CIs for Likelihood Ratio approximations:", "\n", sep = "")
 
-		   LRtests <- rbind(object$RHS, object$Rtanh, object$RCC )
+		   LRtests <- rbind(x$RHS, x$Rtanh, x$RCC )
 		   LRtests <- round(LRtests, 4)
 		   rownames(LRtests) <- c("Hyvarinen-Smith (co-skewness)", "Hyvarinen-Smith (tanh)", "Chen-Chan (co-kurtosis)")
 		   colnames(LRtests) <- c("estimate", "lower", "upper")
 		   print.default(format( LRtests, digits = max(3L, getOption("digits") - 3L)), print.gap = 2L, quote = FALSE)
 
 		     cat("\n")
-	       cat(paste("Number of resamples:", object$boot.args[3]))
+	       cat(paste("Number of resamples:", x$boot.args[3]))
 	       cat("\n")
 	       cat("---")
 	       cat("\n")
 	       cat(paste("Note: (Cor^2[i,j] - Cor^2[j,i]) > 0 suggests the model", varnames[2], "->", varnames[1], sep = " "))
 	       cat("\n")
-		   if(object$boot.warning) { cat("Warning: Excess-kurtosis values of", varnames[2], "and", varnames[1], "have unequal signs", "\n", "        Cor^2[3,1] - Cor^2[1,3] should also be computed for the model", varnames[1], "->", varnames[2], "\n") }
+		   if(x$boot.warning) { cat("Warning: Excess-kurtosis values of", varnames[2], "and", varnames[1], "have unequal signs", "\n", "        Cor^2[3,1] - Cor^2[1,3] should also be computed for the model", varnames[1], "->", varnames[2], "\n") }
       }
 }
 

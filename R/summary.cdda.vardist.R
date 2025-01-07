@@ -1,17 +1,18 @@
 #' @title Summary of \code{cdda.vardist} class object
 #' @description \code{summary} returns test statistic results from the \code{cdda.vardist} class object.
-#' @name summary.cddavardist
+#' @name summary.cdda.vardist
 #'
 #' @param cdda.output   output from \code{cdda.vardist} object
 #' @param skew          logical, default is \code{TRUE}, where skew differences and Agostino stats printed
 #' @param coskew        logical, default is \code{FALSE}, where co-skew differences and Hyvarinen-Smith stats printed
 #' @param kurt          logical, default is \code{TRUE}, where kurtosis differences and Anscombe stats printed
 #' @param cokurt        logical, default is \code{FALSE}, where co-kurtosis differences and Chen-Chan stats printed
-#'
 #' @returns             A summary of test statistic results from the \code{cdda.vardist} class object.
-#' @export
 #'
-summary.cddavardist <- function(cdda.output, skew = TRUE, coskew = FALSE,
+#' @export
+#' @rdname cdda.vardist
+#' @method summary cdda.vardist
+summary.cdda.vardist <- function(cdda.output, skew = TRUE, coskew = FALSE,
                         kurt = TRUE, cokurt = FALSE, plot = FALSE,
                          ...) {
 
@@ -58,7 +59,7 @@ summary.cddavardist <- function(cdda.output, skew = TRUE, coskew = FALSE,
         agos[i, ] <- round(agos[i, ], 3)
       }
 
-      cat(paste("D’Agostino Skewness Tests", "\n"))
+      cat(paste("D'Agostino Skewness Tests", "\n"))
       cat(paste("----------------------------------------------------------------------", "\n"))
       cat(paste("            Target Model                 Alternative Model ", "\n"))
       cat(paste("----------------------------------------------------------------------", "\n"))

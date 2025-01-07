@@ -1,19 +1,19 @@
-#' @title Plot of \code{cdda.vardist} class object
+#' @title Plots of \code{cdda.vardist} Objects
 #' @description \code{plot} returns test statistic results from the \code{cdda.vardist} class object.
-#' @name plot.cddavardist
+#' @name plot.cdda.vardist
 #'
-#' @param obj    a \code{cddavardist} class object
+#' @param obj    a \code{cdda.vardist} class object
 #' @param stat   a character indicating the statistic to be plotted, default is \code{"rhs"}, with options \code{c("rhs", "cokurt", "rcc", "rtanh")}
 #' @param ylim   a numeric vector of length 2 indicating the y-axis limits if \code{NULL}, the function will set the limits automatically
 #' @returns      A plot of a test statistic result from the \code{cdda.vardist} class object.
+#'
 #' @export
-plot.cddavardist <- function(obj = NULL, stat = NULL,
+#' @rdname cdda.vardist
+#' @method plot cdda.vardist
+plot.cdda.vardist <- function(obj = NULL, stat = NULL,
                              ylim =  NULL, alpha = 0.05,
                              xlab = NULL, ylab = NULL, ...){
 
-  if(class(obj) != "cddavardist"){
-    stop("Object must be of class 'cddaindep' or 'cddavardist'.")
-  }
   if(is.null(stat)){
     stop("stat argument must be specified. as 'rhs', 'cokurt', 'rcc', or 'rtanh'")
   }
@@ -25,11 +25,6 @@ plot.cddavardist <- function(obj = NULL, stat = NULL,
   mod.vals <- obj[[4]][["mod_data"]] #modvalues, raw data
   mod.levels <- x.axis.labels <- obj[[4]][["mod_levels"]] #"modval levels for pick-a-point, not raw data"
   y.title <- obj[[3]][[1]] #Test statistic CI header
-
-  tar.model.label <- paste0(obj[[4]]["response_name"], "|", obj[[4]]["mod_name"],
-                            "\u2192", obj[[4]]["pred_name"]) # y ~ x | m
-  alt.model.label <- paste0(obj[[4]]["pred_name"], "|", obj[[4]]["mod_name"],
-                            "\u2192", obj[[4]]["response_name"]) # x ~ y | m
 
   ### Limits for X-axis ####
 
@@ -111,7 +106,7 @@ plot.cddavardist <- function(obj = NULL, stat = NULL,
 
   plot(plot.axis, out.tar$out.mean, type = "n",
        ylim = y.range, xlim = x.range, xaxt = "n",
-       xlab = tar.model.label, ylab = y.title, main = "Target Model")
+       xlab = "Moderator Values", ylab = y.title, main = "Target Model")
   axis(1, at = 1:length(out.tar$condition), labels = x.axis.labels)
   polygon(x = c(out.tar$condition, rev(out.tar$condition)),
           y = c(out.tar$out.low, rev(out.tar$out.upp)),
@@ -122,7 +117,7 @@ plot.cddavardist <- function(obj = NULL, stat = NULL,
 
   plot(plot.axis, out.alt$out.mean, type = "n",
        ylim = y.range, xlim = x.range, xaxt = "n",
-       xlab = alt.model.label, ylab = y.title, main = "Alternative Model")
+       xlab = "Moderator Values", ylab = y.title, main = "Alternative Model")
   axis(1, at = 1:length(out.tar$condition), labels = x.axis.labels)
   polygon(x = c(out.alt$condition, rev(out.alt$condition)),
           y = c(out.alt$out.low, rev(out.alt$out.upp)),

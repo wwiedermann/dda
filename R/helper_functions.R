@@ -2,7 +2,7 @@
 #' @description
 #' Calculates the standard deviation of a vector.
 #' @param x a vector
-#' @param ... other arguments not used by this method.
+#' @param ...   Additional arguments to be passed to the function.
 #' @returns Invisibly returns the standard deviation of a vector
 #' @noRd
 mysd <- function(x){sqrt(sum((x-mean(x))^2)/length(x))} #dda.vardist
@@ -64,7 +64,7 @@ boot.diff <- function(dat, g){ #dda.indep & dda.vardist
 #' @param x a vector
 #' @param ... other arguments not used by this method.
 #' @returns Invisibly returns the entropy of a vector
-#' @export
+#' @noRd
 max.entropy <- function(x){ #dda.indep
   sdx <- sd(x)
   x  <- as.vector(scale(x))
