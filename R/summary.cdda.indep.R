@@ -152,7 +152,7 @@ if (hsic == TRUE) {
 if (hsic.diff == TRUE){
 
     ### HSIC Diff ### ----------------------------------------------------------
-    if(is.null(cdda.output[[1]][[1]]$hsic.yx)) stop("Difference tests not found, set 'diff = TRUE'.")
+    if(is.null(cdda.output[[1]][[1]]$out.diff)) stop("Difference tests not found, set 'diff = TRUE'.")
 
     hsicdiff <- matrix(NA, length(mod_names), 6)
 
@@ -210,6 +210,8 @@ if (hsic.diff == TRUE){
   ## dcor.diff ## --------------------------------------------------------------
     if (dcor.diff == TRUE){
 
+    if(is.null(cdda.output[[1]][[1]]$out.diff)) stop("Difference tests not found, set 'diff = TRUE'.")
+
     dcortests <- matrix(NA, length(mod_names), 6)
 
     for (i in 1:length(mod_names)) {
@@ -234,6 +236,8 @@ if (hsic.diff == TRUE){
 }
   ### Mutual Information ### ---------------------------------------------------
   if (mi.diff == TRUE){
+
+    if(is.null(cdda.output[[1]][[1]]$out.diff)) stop("Difference tests not found, set 'diff = TRUE'.")
 
     mitests <- matrix(NA, length(mod_names), 6)
 

@@ -77,6 +77,7 @@ summary.cdda.vardist <- function(cdda.output, skew = TRUE, coskew = FALSE,
 
   if (coskew == TRUE){
 
+    if(is.null(cdda.output[[1]][[1]]$cor12diff)) { stop("Co-Skewness differences not found. Specify coskew = TRUE.") }
     hoctests.skew <-  matrix(NA, length(mod_names), 6)
 
     for(i in 1:length(mod_names)){
