@@ -25,6 +25,7 @@ plot.cdda.vardist <- function(obj = NULL, stat = NULL,
   mod.vals <- obj[[4]][["mod_data"]] #modvalues, raw data
   mod.levels <- x.axis.labels <- obj[[4]][["mod_levels"]] #"modval levels for pick-a-point, not raw data"
   y.title <- obj[[3]][[1]] #Test statistic CI header
+  ci.level <- as.numeric(obj[[1]][[1]]$boot.args[2]) * 100
 
   ### Limits for X-axis ####
 
@@ -39,7 +40,7 @@ plot.cdda.vardist <- function(obj = NULL, stat = NULL,
   out <- matrix(NA, length(plot.axis), 6)
 
   if (stat == "rhs"){
-    y.title <- "Hyvarinen-Smith Co-Skewness Differences (95% CI)" #make ci flexible
+    y.title <- paste0("Hyvarinen-Smith Co-Skewness Differences (", ci.level, "% CI)") #make ci flexible
     if(is.null(obj[[1]][[1]]$RHS)){
       stop( "Hyvarinen-Smith Co-Skewness not found. Specify coskew = TRUE." )
       y.title <- "RHS"
@@ -52,7 +53,7 @@ plot.cdda.vardist <- function(obj = NULL, stat = NULL,
 
   if (stat == "cokurt"){
 
-    y.title <- "Co-Kurtosis Differences (95% CI)"
+    y.title <- paste0("Co-Kurtosis Differences (", ci.level, "% CI)")
     if(is.null(obj[[1]][[1]]$cor13diff)){
       stop( "mitests not found. Specify cokurt = TRUE." )
       y.title <- "Co-Kurtosis"
@@ -63,8 +64,23 @@ plot.cdda.vardist <- function(obj = NULL, stat = NULL,
     }
   }
 
+  if (stat == "coskew"){
+
+    y.title <- paste0("Co-Skewness Differences (", ci.level, "% CI)")
+
+
+    if(is.null(cdda.output[[1]][[1]]$cor12diff)) {
+      stop("Co-Skewness differences not found. Specify coskew = TRUE.")
+      }
+    hoctests.skew <-  matrix(NA, length(mod_names), 6)
+
+    for(i in 1:length(plot.axis)){
+      out[i, ] <- c(obj[[1]][[i]]$cor12diff, obj[[2]][[i]]$cor12diff)
+    }
+  }
+
   if (stat == "rcc"){
-    y.title <- "Chen-Chan Co-Kurtosis Differences (95% CI)"
+    y.title <- paste0("Chen-Chan Co-Kurtosis Differences (", ci.level, "% CI)")
     if(is.null(obj[[1]][[1]]$RCC)){
       stop( "Chen-Chan Co-Kurtosis Differences not found. Specify cokurt = TRUE." )
     }
@@ -75,7 +91,7 @@ plot.cdda.vardist <- function(obj = NULL, stat = NULL,
   }
 
   if (stat == "rtanh"){ #check if the wrong stats are grabbed
-    y.title <- "Hyperbolic Tangent Differences (95% CI)"
+    y.title <- paste0("Hyperbolic Tangent Differences (", ci.level, "% CI)")
     if(is.null(obj[[1]][[1]]$Rtanh)){
       stop( "Hyperbolic Tangent Differences not found. Specify cokurt = TRUE." )
     }

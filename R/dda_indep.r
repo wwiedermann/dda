@@ -16,7 +16,6 @@
 #' @param parallelize  A logical value indicating whether bootstrapping is performed on multiple cores. Only used if \code{diff = TRUE}.
 #' @param cores        A numeric value indicating the number of cores. Only used if \code{parallelize = TRUE}.
 #' @param ...          Additional arguments to be passed to the function.
-#'
 #' @returns  An object of class \code{dda.indep} containing the results of DDA independence tests.
 #' @references Wiedermann, W., & von Eye, A. (2025). \emph{Direction Dependence Analysis: Foundations and Statistical Methods}. Cambridge, UK: Cambridge University Press.
 #'

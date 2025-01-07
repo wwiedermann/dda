@@ -54,7 +54,7 @@ plot.cdda.indep <- function(obj = NULL, stat = NULL, ylim =  NULL){ #alpha = 0.0
         stop( "dCor Differences not found. Specify diff = TRUE." )
       }
 
-      y.title <- "dCor Differences (95% CI)" #y-title CI flexible
+      y.title <- paste0("dCor Differences (", ci.level, "% CI)") #y-title CI flexible
       for (i in 1:length(plot.axis)) {
         out[i, ] <- c(obj[[1]][[i]]$out.diff[2, ],
                       obj[[2]][[i]]$out.diff[2, ])
