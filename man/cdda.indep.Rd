@@ -3,6 +3,7 @@
 %   R/summary.cdda.indep.R
 \name{cdda.indep}
 \alias{cdda.indep}
+\alias{print.cdda.indep}
 \alias{plot.cddaindep}
 \alias{plot.cdda.indep}
 \alias{summary.cdda.indep}
@@ -26,12 +27,14 @@ cdda.indep(
   ...
 )
 
+\method{print}{cdda.indep}(x, ...)
+
 \method{plot}{cdda.indep}(obj = NULL, stat = NULL, ylim = NULL)
 
 \method{summary}{cdda.indep}(
   cdda.output,
   nlfun = FALSE,
-  hetero = TRUE,
+  hetero = FALSE,
   hsic = TRUE,
   hsic.diff = FALSE,
   dcor = TRUE,
@@ -61,7 +64,7 @@ pick-a-point approach is used for the selected numeric values.}
 
 \item{data}{A required data frame containing the variables in the model.}
 
-\item{hetero}{logical, default is \code{TRUE}, includes Breusch-Pagan Homoscedasticity test}
+\item{hetero}{logical, default is \code{FALSE}, includes Breusch-Pagan Homoscedasticity test}
 
 \item{diff}{A logical value indicating whether differences in HSIC, dCor, and MI values should be computed. Bootstrap confidence intervals are computed using B bootstrap samples.}
 
@@ -81,11 +84,13 @@ pick-a-point approach is used for the selected numeric values.}
 
 \item{...}{Additional arguments to be passed to the function.}
 
-\item{obj}{a \code{cdda.indep} class object}
+\item{x}{An object of class \code{cdda.indep}.}
 
-\item{stat}{a character indicating the stat of statistic to be plotted with options \code{c("hsic.diff", "dcor.diff", "mi.diff")}}
+\item{obj}{a \code{cdda.indep} class object.}
 
-\item{ylim}{a numeric vector of length 2 indicating the y-axis limits if \code{NULL}, the function will set the limits automatically}
+\item{stat}{a character indicating the stat of statistic to be plotted with options \code{c("hsic.diff", "dcor.diff", "mi.diff")}.}
+
+\item{ylim}{a numeric vector of length 2 indicating the y-axis limits if \code{NULL}, the function will set the limits automatically.}
 
 \item{cdda.output}{output from \code{cdda.indep} object}
 
@@ -103,6 +108,8 @@ pick-a-point approach is used for the selected numeric values.}
 A list of class \class{cdda.indep} containing the results of CDDA
          independence tests for pre-specified moderator values.
 
+An object of class \code{cdda.indep} with readable OLS coefficients for competing models
+
 A plot of a test statistic result from the \code{cdda.indep} class object.
 
 A summary of test statistic results from the \code{cdda.indep} class object.
@@ -113,15 +120,18 @@ A summary of test statistic results from the \code{cdda.indep} class object.
              conditional models (\code{y \sim x \ast m} vs. \code{x \sim y \ast m}
              with \code{m} being a continuous or categorical moderator).
 
+Displays the output of standard linear model coefficients for competing target and alternative models.
+
 \code{plot} returns test statistic results from the \code{cdda.indep} class object.
 
 \code{summary} returns test statistic results from the \code{cdda.indep} class object.
 }
 \examples{
-set.seed(123)
-n <- 1000
+set.seed(321)
+n <- 700
 
 ## --- generate moderator
+
 z <- sort(rnorm(n))
 z1 <- z[z <= 0]
 z2 <- z[z > 0]
@@ -142,16 +152,19 @@ y <- c(y1, y2); x <- c(x1, x2)
 
 d <- data.frame(x, y, z)
 
-cdda.indep(y ~ x * z, pred = "x", mod = "z", modval = "JN",
-           hetero = TRUE, diff = TRUE, nlfun = 2, data = d)
-
 m <- lm(y ~ x * z, data = d)
 
-result <- cdda.indep(m, pred = "x", mod = "z", B = 500, modval = "JN",
-                     hetero = TRUE, nlfun = 2, data = d)
-print(result)
-summary(result)
 
+result <- cdda.indep(m, pred = "x", mod = "z",
+                     modval = c(-1, 1), data = d,
+                     hetero = TRUE, diff = TRUE,
+                     parallelize = TRUE, cores = 2)
+
+
+print(model)
+
+           plot(result, stat = "hsic.diff").
+             summary(result, hetero = FALSE, nlfun = TRUE)
 }
 \references{
 Wiedermann, W., & von Eye, A. (2025). \emph{Direction Dependence Analysis: Foundations and Statistical Methods}. Cambridge, UK: Cambridge University Press.

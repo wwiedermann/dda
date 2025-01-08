@@ -372,14 +372,14 @@ dda.resdist <- function(formula, pred = NULL, data = list(), B = 200,
 
 #' @name print.dda.resdist
 #' @title Print Method for \code{dda.resdist} Objects
-#' @description Displays the test statistics and p-values for the difference
-#'              in skewness and kurtosis between the residuals of the two
-#'              competing models. If bootstrap confidence intervals are computed,
-#'              the lower and upper bounds of the confidence intervals will also be displayed.
+#' @description Displays the test statistics and p-values for the asymmetry of error
+#'              distributions of causally competing models (\code{y ~ x} vs. \code{x ~ y}).
 #'
 #' @param object An object of class \code{dda.resdist}.
 #' @param ...    Additional arguments to be passed to the function.
+#' @examples print(x)
 #'
+#' @returns An object of class \code{dda.resdist}.
 #' @export
 #' @rdname dda.resdist
 #' @method print dda.resdist

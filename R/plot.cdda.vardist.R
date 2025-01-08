@@ -2,11 +2,11 @@
 #' @description \code{plot} returns test statistic results from the \code{cdda.vardist} class object.
 #' @name plot.cdda.vardist
 #'
-#' @param obj    a \code{cdda.vardist} class object
-#' @param stat   a character indicating the statistic to be plotted, default is \code{"rhs"}, with options \code{c("rhs", "cokurt", "rcc", "rtanh")}
-#' @param ylim   a numeric vector of length 2 indicating the y-axis limits if \code{NULL}, the function will set the limits automatically
+#' @param obj    a \code{cdda.vardist} class object.
+#' @param stat   a character indicating the statistic to be plotted, default is \code{"rhs"}, with options \code{c("rhs", "cokurt", "rcc", "rtanh")}.
+#' @param ylim   a numeric vector of length 2 indicating the y-axis limits if \code{NULL}, the function will set the limits automatically.
 #' @returns      A plot of a test statistic result from the \code{cdda.vardist} class object.
-#' @example      plot(result, stat = "rtanh", ylim = c(-0.05, 0.05))
+#' @examples     plot(result, stat = "rtanh", ylim = c(-0.05, 0.05))
 #'
 #' @export
 #' @rdname cdda.vardist

@@ -358,8 +358,12 @@ cdda.indep <- function(
 #' @param x     An object of class \code{cdda.indep}.
 #' @param ...   Additional arguments to be passed to the function.
 #'
+#' @examples print(model)
+#'
 #' @returns An object of class \code{cdda.indep} with readable OLS coefficients for competing models
 #' @export
+#' @rdname cdda.indep
+#' @method print cdda.indep
 print.cdda.indep <- function(x, ...){
   cdda.output <- x
   cat("\n")

@@ -4,20 +4,20 @@
 #'
 #' @param cdda.output     output from \code{cdda.indep} object
 #' @param nlfun           logical, default is \code{FALSE}, includes non-linear correlation test
-#' @param hetero          logical, default is \code{TRUE}, includes Breusch-Pagan Homoscedasticity test
+#' @param hetero          logical, default is \code{FALSE}, includes Breusch-Pagan Homoscedasticity test
 #' @param hsic            logical, default is \code{TRUE}, includes Hilbert-Schmidt Independence Criterion (HSIC) test
 #' @param hsic.diff       logical, default is \code{FALSE}, includes HSIC differences
 #' @param dcor            logical, default is \code{TRUE}, includes Distance Correlation (dCor) test
 #' @param dcor.diff       logical, default is \code{FALSE}, includes dCor differences
 #' @param mi.diff         logical, default is \code{FALSE}, includes Mutual Information (MI) differences
 #'
-#' @example               summary(result, hetero = FALSE, nlfun = TRUE)
+#' @examples              summary(result, hetero = FALSE, nlfun = TRUE)
 #' @returns               A summary of test statistic results from the \code{cdda.indep} class object.
 #'
 #' @export
 #' @rdname cdda.indep
 #' @method summary cdda.indep
-summary.cdda.indep <- function(cdda.output, nlfun = FALSE, hetero = TRUE,
+summary.cdda.indep <- function(cdda.output, nlfun = FALSE, hetero = FALSE,
                               hsic = TRUE, hsic.diff = FALSE, dcor = TRUE,
                               dcor.diff = FALSE, mi.diff = FALSE, ...) {
 
@@ -182,6 +182,9 @@ if (hsic.diff == TRUE){
 
   ## dcor ## -------------------------------------------------------------------
   if (dcor == TRUE){
+
+    if (is.null(cdda.output[[1]][[1]]$distance_cor.dcor_yx)) {
+      stop("Difference tests not found, set 'diff = TRUE'.")}
 
     dcor <- matrix(NA, length(mod_names), 4)
 

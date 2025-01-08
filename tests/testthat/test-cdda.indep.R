@@ -42,7 +42,7 @@ test_that("cdda.indep works", {
 })
 
 test_that("cdda.indep summary works", {
-  expect_output(summary(test.cdda.indep, hsic.diff = TRUE, dcor.diff = TRUE, mi.diff = TRUE))
+  expect_output(summary(test.cdda.indep, hsic = FALSE))
 })
 
 

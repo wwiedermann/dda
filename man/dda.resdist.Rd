@@ -11,9 +11,14 @@
 
 \item{...}{Additional arguments to be passed to the function.}
 }
+\value{
+An object of class \code{dda.resdist}.
+}
 \description{
-Displays the test statistics and p-values for the difference
-             in skewness and kurtosis between the residuals of the two
-             competing models. If bootstrap confidence intervals are computed,
-             the lower and upper bounds of the confidence intervals will also be displayed.
+Displays the test statistics and p-values for the asymmetry of error
+             distributions of causally competing models (\code{y ~ x} vs. \code{x ~ y}).
+}
+\examples{
+print(x)
+
 }
