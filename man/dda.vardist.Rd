@@ -39,8 +39,7 @@ which \code{dda.vardist} is called from).}
 An object of class \code{dda.vardist} containing the results of DDA tests
           of asymmetry patterns of variable distributions.
 
-An object of class \code{dda.vardist} with readable linear model
-         coefficients for competing models.
+An object of class \code{dda.vardist}.
 }
 \description{
 \code{dda.vardist} evaluates patterns of asymmetry of variable
@@ -58,9 +57,12 @@ x <- rchisq(n, df = 4) - 4
 e <- rchisq(n, df = 3) - 3
 y <- 0.5 * x + e
 d <- data.frame(x, y)
-dda.vardist(y ~ x, pred = "x", data = d,
-            B = 2000, boot.type = "bca")
 
+dda.vardist(y ~ x, pred = "x", data = d,
+            B = 1000, boot.type = "bca")
+
+
+print(x)
 }
 \references{
 Wiedermann, W., & von Eye, A. (2025). \emph{Direction Dependence Analysis: Foundations and Statistical Methods}. Cambridge, UK: Cambridge University Press.

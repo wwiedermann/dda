@@ -93,21 +93,21 @@ the two values \code{c("perc", "bca")};
 transformation should be performed prior computation of
 skewness and kurtosis difference tests.}
 
-\item{obj}{a \code{cdda.vardist} class object}
+\item{obj}{a \code{cdda.vardist} class object.}
 
-\item{stat}{a character indicating the statistic to be plotted, default is \code{"rhs"}, with options \code{c("rhs", "cokurt", "rcc", "rtanh")}}
+\item{stat}{a character indicating the statistic to be plotted, default is \code{"rhs"}, with options \code{c("rhs", "cokurt", "rcc", "rtanh")}.}
 
-\item{ylim}{a numeric vector of length 2 indicating the y-axis limits if \code{NULL}, the function will set the limits automatically}
+\item{ylim}{a numeric vector of length 2 indicating the y-axis limits if \code{NULL}, the function will set the limits automatically.}
 
-\item{cdda.output}{output from \code{cdda.vardist} object}
+\item{cdda.output}{output from \code{cdda.vardist} object.}
 
-\item{skew}{logical, default is \code{TRUE}, where skew differences and Agostino stats printed}
+\item{skew}{logical, default is \code{TRUE}, where skew differences and Agostino stats printed.}
 
-\item{coskew}{logical, default is \code{FALSE}, where co-skew differences and Hyvarinen-Smith stats printed}
+\item{coskew}{logical, default is \code{FALSE}, where co-skew differences and Hyvarinen-Smith stats printed.}
 
-\item{kurt}{logical, default is \code{TRUE}, where kurtosis differences and Anscombe stats printed}
+\item{kurt}{logical, default is \code{TRUE}, where kurtosis differences and Anscombe stats printed.}
 
-\item{cokurt}{logical, default is \code{FALSE}, where co-kurtosis differences and Chen-Chan stats printed}
+\item{cokurt}{logical, default is \code{FALSE}, where co-kurtosis differences and Chen-Chan stats printed.}
 }
 \value{
 A list of class \code{cdda.vardist} containing the results of
@@ -129,7 +129,7 @@ A summary of test statistic results from the \code{cdda.vardist} class object.
              being a continuous or categorical moderator).
 
 Displays the output of the standard linear model coefficients
-            for target and alternative models.
+             for target and alternative models.
 
 \code{dda.resdist} evaluates patterns of asymmetry of error
 distributions of causally competing models (\code{y ~ x} vs. \code{x ~ y}).
@@ -139,10 +139,11 @@ distributions of causally competing models (\code{y ~ x} vs. \code{x ~ y}).
 \code{summary} returns test statistic results from the \code{cdda.vardist} class object.
 }
 \examples{
-set.seed(123)
-n <- 1000
+set.seed(321)
+n <- 700
 
 ## --- generate moderator
+
 z <- sort(rnorm(n))
 z1 <- z[z <= 0]
 z2 <- z[z > 0]
@@ -153,7 +154,7 @@ x1 <- rchisq(length(z1), df = 4) - 4
 e1 <- rchisq(length(z1), df = 3) - 3
 y1 <- 0.5 * x1 + e1
 
-## --- y -> x when z > 0
+## --- y -> x when m z > 0
 
 y2 <- rchisq(length(z2), df = 4) - 4
 e2 <- rchisq(length(z2), df = 3) - 3
@@ -163,14 +164,12 @@ y <- c(y1, y2); x <- c(x1, x2)
 
 d <- data.frame(x, y, z)
 
-
 m <- lm(y ~ x * z, data = d)
 
-result <- cdda.vardist(m, pred = "x",
-                        mod = "z", data = d, B = 500, modval = "JN")
-print(result)
+result <- cdda.vardist(m, pred = "x", mod = "z",
+                      modval = c(-1, 1), data = d)
 
-summary(result, skew = FALSE, coskew = TRUE, kurt = FALSE)
+   print(model)
 
 set.seed(123)
 n <- 500
@@ -181,6 +180,12 @@ d <- data.frame(x, y)
 
 dda.resdist(y ~ x, pred = "x", data = d,
             B = 500, conf.level = 0.90, prob.trans = TRUE)
+
+    plot(result, stat = "rtanh", ylim = c(-0.05, 0.05))
+
+# example code
+
+summary(result, skew = FALSE, kurt = FALSE, coskew = TRUE)
 
 }
 \references{

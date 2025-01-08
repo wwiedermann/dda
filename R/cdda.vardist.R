@@ -30,10 +30,11 @@
 #'          variables for pre-specified moderator values.
 #'
 #' @examples
-#' set.seed(123)
-#' n <- 1000
+#' set.seed(321)
+#' n <- 700
 #'
 #' ## --- generate moderator
+#'
 #' z <- sort(rnorm(n))
 #' z1 <- z[z <= 0]
 #' z2 <- z[z > 0]
@@ -44,7 +45,7 @@
 #' e1 <- rchisq(length(z1), df = 3) - 3
 #' y1 <- 0.5 * x1 + e1
 #'
-#' ## --- y -> x when z > 0
+#' ## --- y -> x when m z > 0
 #'
 #' y2 <- rchisq(length(z2), df = 4) - 4
 #' e2 <- rchisq(length(z2), df = 3) - 3
@@ -54,14 +55,10 @@
 #'
 #' d <- data.frame(x, y, z)
 #'
-#'
 #' m <- lm(y ~ x * z, data = d)
 #'
-#' result <- cdda.vardist(m, pred = "x",
-#'                         mod = "z", data = d, B = 500, modval = "JN")
-#' print(result)
-#'
-#' summary(result, skew = FALSE, coskew = TRUE, kurt = FALSE)
+#' result <- cdda.vardist(m, pred = "x", mod = "z",
+#'                       modval = c(-1, 1), data = d)
 #'
 #' @references Wiedermann, W., & von Eye, A. (2025). \emph{Direction Dependence Analysis: Foundations and Statistical Methods}. Cambridge, UK: Cambridge University Press.
 #' @seealso \code{\link{dda.vardist}} for an unconditional version.
@@ -331,11 +328,13 @@ cdda.vardist <- function(formula,
 }
 
 #' @name print.cdda.vardist
-#' @title Print Method for \code{cdda.vardist} Objects
+#' @title       Print Method for \code{cdda.vardist} Objects
 #' @description Displays the output of the standard linear model coefficients
-#'             for target and alternative models.
-#' @param x   An object of class \code{cdda.vardist}.
-#' @param ... Additional arguments to be passed to the function.
+#'              for target and alternative models.
+#' @param x     An object of class \code{cdda.vardist}.
+#' @param ...   Additional arguments to be passed to the function.
+#'
+#' @examples    print(model)
 #'
 #' @export
 #' @rdname cdda.vardist

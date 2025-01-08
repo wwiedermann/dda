@@ -54,19 +54,19 @@ dda.indep(
 \value{
 An object of class \code{dda.indep} containing the results of DDA independence tests.
 
-An object of class \code{dda.indep} with readable linear model
-         coefficients for competing models.
+An object of class \code{dda.indep}.
 }
 \description{
 \code{dda.indep} computes DDA test statistics to
              evaluate asymmetries of predictor-error independence of
              causally competing models (\code{y ~ x} vs. \code{x ~ y}).
 
-Displays the results of the independence properties. If
-             If bootstrap confidence intervals are computed,
+Displays the results of the asymmetries of predictor-error
+             independence. If bootstrap confidence intervals are computed,
              the independence test differences are reported.
 }
 \examples{
+
 set.seed(123)
 n <- 500
 x <- rchisq(n, df = 4) - 4
@@ -74,9 +74,11 @@ e <- rchisq(n, df = 3) - 3
 y <- 0.5 * x + e
 d <- data.frame(x, y)
 
-dda.indep(y ~ x, pred = "x", data = d,
-          nlfun = 2, B = 500, diff = TRUE)
+dda.indep(y ~ x, pred = "x", data = d, parallelize = T, cores = 2,
+          nlfun = 2, B = 100, hetero = TRUE, diff = TRUE)
 
+
+print(x)
 }
 \references{
 Wiedermann, W., & von Eye, A. (2025). \emph{Direction Dependence Analysis: Foundations and Statistical Methods}. Cambridge, UK: Cambridge University Press.

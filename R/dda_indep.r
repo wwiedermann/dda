@@ -20,6 +20,7 @@
 #' @references Wiedermann, W., & von Eye, A. (2025). \emph{Direction Dependence Analysis: Foundations and Statistical Methods}. Cambridge, UK: Cambridge University Press.
 #'
 #' @examples
+#'
 #' set.seed(123)
 #' n <- 500
 #' x <- rchisq(n, df = 4) - 4
@@ -27,8 +28,9 @@
 #' y <- 0.5 * x + e
 #' d <- data.frame(x, y)
 #'
-#' dda.indep(y ~ x, pred = "x", data = d,
-#'           nlfun = 2, B = 500, diff = TRUE)
+#' dda.indep(y ~ x, pred = "x", data = d, parallelize = T, cores = 2,
+#'           nlfun = 2, B = 100, hetero = TRUE, diff = TRUE)
+#'
 #'
 #' @seealso \code{\link{cdda.indep}} for a conditional version.
 #' @export
@@ -304,13 +306,13 @@ dda.indep <- function(
 }
 
 #' @title Print Method for \code{dda.indep} Objects
-#' @description Displays the results of the independence properties. If
-#'              If bootstrap confidence intervals are computed,
+#' @description Displays the results of the asymmetries of predictor-error
+#'              independence. If bootstrap confidence intervals are computed,
 #'              the independence test differences are reported.
 #' @param x     An object of class \code{dda.indep}.
 #' @param ...   Additional arguments to be passed to the function.
-#' @returns An object of class \code{dda.indep} with readable linear model
-#'          coefficients for competing models.
+#' @examples print(x)
+#' @returns An object of class \code{dda.indep}.
 #'
 #' @export
 #' @rdname dda.indep
