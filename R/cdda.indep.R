@@ -36,10 +36,11 @@
 #'          independence tests for pre-specified moderator values.
 #'
 #' @examples
-#' set.seed(123)
-#' n <- 1000
+#' set.seed(321)
+#' n <- 700
 #'
 #' ## --- generate moderator
+#'
 #' z <- sort(rnorm(n))
 #' z1 <- z[z <= 0]
 #' z2 <- z[z > 0]
@@ -60,15 +61,14 @@
 #'
 #' d <- data.frame(x, y, z)
 #'
-#' cdda.indep(y ~ x * z, pred = "x", mod = "z", modval = "JN",
-#'            hetero = TRUE, diff = TRUE, nlfun = 2, data = d)
-#'
 #' m <- lm(y ~ x * z, data = d)
 #'
-#' result <- cdda.indep(m, pred = "x", mod = "z", B = 500, modval = "JN",
-#'                      hetero = TRUE, nlfun = 2, data = d)
-#' print(result)
-#' summary(result)
+#'
+#' result <- cdda.indep(m, pred = "x", mod = "z",
+#'                      modval = c(-1, 1), data = d,
+#'                      hetero = TRUE, diff = TRUE,
+#'                      parallelize = TRUE, cores = 2)
+#'
 #'
 #' @references Wiedermann, W., & von Eye, A. (2025). \emph{Direction Dependence Analysis: Foundations and Statistical Methods}. Cambridge, UK: Cambridge University Press.
 #' @seealso \code{\link{dda.indep}} for an unconditional version.
