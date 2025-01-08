@@ -11,6 +11,7 @@
 #' @param dcor.diff       logical, default is \code{FALSE}, includes dCor differences
 #' @param mi.diff         logical, default is \code{FALSE}, includes Mutual Information (MI) differences
 #'
+#' @example               summary(result, hetero = FALSE, nlfun = TRUE)
 #' @returns               A summary of test statistic results from the \code{cdda.indep} class object.
 #'
 #' @export
