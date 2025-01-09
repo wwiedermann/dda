@@ -1,7 +1,7 @@
 #' @title Conditional Directional Dependence Analysis: Variable Distributions
 #' @description \code{cdda.vardist} computes DDA test statistics for observed
 #'              variable distributions of competing conditional models
-#'              (\code{y ~ x \ast m} vs.\code{x ~ y \ast m} with \code{m}
+#'              (\code{y ~ x * m} vs.\code{x ~ y * m} with \code{m}
 #'              being a continuous or categorical moderator).
 #' @name cdda.vardist
 #'
@@ -75,12 +75,6 @@ cdda.vardist <- function(formula,
                          conf.level = 0.95,
                          ...
                       ){
-
-  library(boot)
-  library(dHSIC)
-  library(interactions)
-  library(lmtest)
-  library(moments)
 
   if (length(data) == 0) stop("Please specify a data frame.")
 
@@ -237,11 +231,10 @@ cdda.vardist <- function(formula,
 
 
     else if (modval == "JN"){
-      require(interactions)
 
       mdat <- data.frame(x, y, X, moderator)
 
-      unwrpjn <- unclass(johnson_neyman( lm(y ~ x + moderator + moderator:x + X, data = mdat), pred = x,
+      unwrpjn <- unclass(interactions::johnson_neyman( lm(y ~ x + moderator + moderator:x + X, data = mdat), pred = x,
                                          modx = moderator, control.fdr = FALSE ) )
       twobounds <- unwrpjn[["bounds"]]
 
@@ -329,8 +322,8 @@ cdda.vardist <- function(formula,
 
 #' @name print.cdda.vardist
 #' @title       Print Method for \code{cdda.vardist} Objects
-#' @description Displays the output of the standard linear model coefficients
-#'              for target and alternative models.
+#' @description Displays the output of standard linear model coefficients
+#'              for competing target and alternative models.
 #' @param x     An object of class \code{cdda.vardist}.
 #' @param ...   Additional arguments to be passed to the function.
 #'

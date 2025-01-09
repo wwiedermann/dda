@@ -1,7 +1,7 @@
 #' @title Conditional Direction Dependence Analysis: Independence Properties
 #' @description \code{cdda.indep} computes CDDA test statistics to
 #'              evaluate asymmetries of predictor-error independence of competing
-#'              conditional models (\code{y \sim x \ast m} vs. \code{x \sim y \ast m}
+#'              conditional models (\code{y ~ x * m} vs. \code{x ~ y * m}
 #'              with \code{m} being a continuous or categorical moderator).
 #'
 #' @name cdda.indep
@@ -32,7 +32,7 @@
 #' @param cores       A numeric value indicating the number of cores. Only used if \code{parallelize = TRUE}.
 #' @param ...         Additional arguments to be passed to the function.
 #'
-#' @returns A list of class \class{cdda.indep} containing the results of CDDA
+#' @returns A list of class \code{cdda.indep} containing the results of CDDA
 #'          independence tests for pre-specified moderator values.
 #'
 #' @examples
@@ -92,12 +92,6 @@ cdda.indep <- function(
     cores = 1,
     ...
 ){
-
-  library(boot)
-  library(dHSIC)
-  library(energy)
-  library(lmtest)
-  library(interactions)
 
   if (length(data) == 0) stop( "Please specify a data frame." )
 
@@ -257,11 +251,10 @@ cdda.indep <- function(
     }
 
     else if (modval == "JN"){
-      require(interactions)
 
       mdat <- data.frame(x, y, X, moderator)
 
-      jnoutput <- unclass(johnson_neyman( lm(y ~ x + moderator + moderator:x + X, data = mdat), pred = x,
+      jnoutput <- unclass(interactions::johnson_neyman( lm(y ~ x + moderator + moderator:x + X, data = mdat), pred = x,
                                           modx = moderator, control.fdr = FALSE ) )
       twobounds <- jnoutput[["bounds"]]
 
@@ -353,14 +346,14 @@ cdda.indep <- function(
   return(cdda.output)
 }
 
-#' @title Print method for \code{cdda.indep}
-#' @description Displays the output of standard linear model coefficients for competing target and alternative models.
+#' @title Print Method for \code{cdda.indep} Objects.
+#' @description Displays output of standard linear model coefficients for competing target and alternative models.
 #' @param x     An object of class \code{cdda.indep}.
 #' @param ...   Additional arguments to be passed to the function.
 #'
 #' @examples print(result)
 #'
-#' @returns An object of class \code{cdda.indep} with readable OLS coefficients for competing models
+#' @returns An object of class \code{cdda.indep} with competing model coefficients.
 #' @export
 #' @rdname cdda.indep
 #' @method print cdda.indep

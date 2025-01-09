@@ -49,12 +49,6 @@ dda.indep <- function(
              parallelize = FALSE,
              cores = 1)
   {
-  #setClass("dda.Ind", representation("list"))
-
-  library(dHSIC)
-  library(lmtest)
-  library(energy)
-  library(boot)
 
    ### --- helper functions for independence difference statistics
 
@@ -200,8 +194,8 @@ dda.indep <- function(
 
 	if(hsic.method %in% c("gamma", "eigenvalue")){
 
-	   hsic.yx <- dhsic.test(rx, err.yx, method = hsic.method, kernel = "gaussian")
-	   hsic.xy <- dhsic.test(ry, err.xy, method = hsic.method, kernel = "gaussian")
+	   hsic.yx <- dHSIC::dhsic.test(rx, err.yx, method = hsic.method, kernel = "gaussian")
+	   hsic.xy <- dHSIC::dhsic.test(ry, err.xy, method = hsic.method, kernel = "gaussian")
 
 	   output <- list(hsic.yx = hsic.yx, hsic.xy = hsic.xy, hsic.method = hsic.method)
 
@@ -210,8 +204,8 @@ dda.indep <- function(
 
 	if(hsic.method %in% c("boot", "permutation")){
 
-	   hsic.yx <- dhsic.test(rx, err.yx, method = hsic.method, kernel = "gaussian", B = B)
-	   hsic.xy <- dhsic.test(ry, err.xy, method = hsic.method, kernel = "gaussian", B = B)
+	   hsic.yx <- dHSIC::dhsic.test(rx, err.yx, method = hsic.method, kernel = "gaussian", B = B)
+	   hsic.xy <- dHSIC::dhsic.test(ry, err.xy, method = hsic.method, kernel = "gaussian", B = B)
 
 	   output <- list(hsic.yx = hsic.yx, hsic.xy = hsic.xy, hsic.method = c(hsic.method, as.character(B)) )
 
@@ -219,8 +213,8 @@ dda.indep <- function(
 
 	### --- separate dCor Tests
 
-	dcor_yx <- dcor.test(as.vector(rx), as.vector(err.yx), R = B) #rx & ry have an SPSS attribute?
-	dcor_xy <- dcor.test(as.vector(ry), as.vector(err.xy), R = B)
+	dcor_yx <- energy::dcor.test(as.vector(rx), as.vector(err.yx), R = B) #rx & ry have an SPSS attribute?
+	dcor_xy <- energy::dcor.test(as.vector(ry), as.vector(err.xy), R = B)
 
     output <- c(output,
 	            distance_cor = list(dcor_yx = dcor_yx, dcor_xy = dcor_xy, dcor.method = as.character(B))
@@ -230,11 +224,11 @@ dda.indep <- function(
 
     if(hetero){
 
-	  bp_yx <- bptest(m.yx, studentize = FALSE)
-	  bp_xy <- bptest(m.xy, studentize = FALSE)
+	  bp_yx <- lmtest::bptest(m.yx, studentize = FALSE)
+	  bp_xy <- lmtest::bptest(m.xy, studentize = FALSE)
 
-	  rbp_yx <- bptest(m.yx, studentize = TRUE)
-	  rbp_xy <- bptest(m.xy, studentize = TRUE)
+	  rbp_yx <- lmtest::bptest(m.yx, studentize = TRUE)
+	  rbp_xy <- lmtest::bptest(m.xy, studentize = TRUE)
 
 	  output <- c(output,
 	              list(breusch_pagan = list( bp_yx, rbp_yx, bp_xy, rbp_xy ) )
@@ -266,19 +260,19 @@ dda.indep <- function(
 
 	  if(!parallelize){
 
-	      boot.res <- boot(dat.tmp, boot.diff, R = B)
+	      boot.res <- boot::boot(dat.tmp, boot.diff, R = B)
 
 		}
 
 	  if(parallelize){
 
-	      boot.res <- boot(dat.tmp, boot.diff, R = B, parallel = "snow", ncpus = cores)
+	      boot.res <- boot::boot(dat.tmp, boot.diff, R = B, parallel = "snow", ncpus = cores)
 
 	    }
 
-      if( boot.type == "bca" && any( is.na( empinf( boot.res ) ) ) ) stop("Acceleration constant cannot be calculated. Increase the number of resamples or use boot.type = 'perc'")
+      if( boot.type == "bca" && any( is.na( boot::empinf( boot.res ) ) ) ) stop("Acceleration constant cannot be calculated. Increase the number of resamples or use boot.type = 'perc'")
 
-	  suppressWarnings(boot.out <- lapply(as.list(1:3), function(i, boot.res) boot.ci(boot.res, conf=conf.level, type=boot.type, t0=boot.res$t0[i], t=boot.res$t[,i]), boot.res=boot.res))
+	  suppressWarnings(boot.out <- lapply(as.list(1:3), function(i, boot.res) boot::boot.ci(boot.res, conf=conf.level, type=boot.type, t0=boot.res$t0[i], t=boot.res$t[,i]), boot.res=boot.res))
 
 	  names(boot.out) <- c("diff.hsic", "diff.dcor", "diff.mi")
 
@@ -306,13 +300,14 @@ dda.indep <- function(
 }
 
 #' @title Print Method for \code{dda.indep} Objects
-#' @description Displays the results of the asymmetries of predictor-error
-#'              independence. If bootstrap confidence intervals are computed,
-#'              the independence test differences are reported.
-#' @param x     An object of class \code{dda.indep}.
-#' @param ...   Additional arguments to be passed to the function.
-#' @examples print(x)
-#' @returns An object of class \code{dda.indep}.
+#'
+#' @description Prints the test statistics and p-values associated with \code{dda.indep} objects.
+#'
+#' @param x An object of class \code{dda.indep}.
+#' @param ... Additional arguments to be passed to the method.
+#'
+#' @examples
+#' print(x)
 #'
 #' @export
 #' @rdname dda.indep

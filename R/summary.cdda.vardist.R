@@ -2,24 +2,22 @@
 #' @description \code{summary} returns test statistic results from the \code{cdda.vardist} class object.
 #' @name summary.cdda.vardist
 #'
-#' @param cdda.output   output from \code{cdda.vardist} object.
-#' @param skew          logical, default is \code{TRUE}, where skew differences and Agostino stats printed.
-#' @param coskew        logical, default is \code{FALSE}, where co-skew differences and Hyvarinen-Smith stats printed.
-#' @param kurt          logical, default is \code{TRUE}, where kurtosis differences and Anscombe stats printed.
-#' @param cokurt        logical, default is \code{FALSE}, where co-kurtosis differences and Chen-Chan stats printed.
-#' @returns             A summary of test statistic results from the \code{cdda.vardist} class object.
+#' @param object        Output from \code{cdda.vardist} object.
+#' @param skew          Logical, default is \code{TRUE}, includes skew differences and Agostino statistics.
+#' @param coskew        Logical, default is \code{FALSE}, where co-skew differences and Hyvarinen-Smith statistics are printed.
+#' @param kurt          Logical, default is \code{TRUE}, where kurtosis differences and Anscombe statistics are printed.
+#' @param cokurt        Logical, default is \code{FALSE}, where co-kurtosis differences and Chen-Chan statistics are printed.
+#' @param ...           Additional arguments to be passed to the function.
 #'
-#' @examples
-#' # example code
-#'
-#' summary(result, skew = FALSE, kurt = FALSE, coskew = TRUE)
+#' @examples summary(result, skew = FALSE, kurt = FALSE, coskew = TRUE)
 #'
 #' @export
 #' @rdname cdda.vardist
 #' @method summary cdda.vardist
-summary.cdda.vardist <- function(cdda.output, skew = TRUE, coskew = FALSE,
-                        kurt = TRUE, cokurt = FALSE, plot = FALSE,
-                         ...) {
+summary.cdda.vardist <- function(object, skew = TRUE, coskew = FALSE,
+                        kurt = TRUE, cokurt = FALSE, ...)
+  {
+  cdda.output <- object
 
   varnames <- cdda.output[[1]][[1]]$var.names
   mod_names <- names(cdda.output[[1]])
@@ -248,8 +246,6 @@ summary.cdda.vardist <- function(cdda.output, skew = TRUE, coskew = FALSE,
     cat("---", "\n")
     }
 }
-
-
 
 
 

@@ -15,7 +15,7 @@ dda.resdist(
   conf.level = 0.95
 )
 
-\method{print}{dda.resdist}(object, ...)
+\method{print}{dda.resdist}(x, ...)
 }
 \arguments{
 \item{formula}{Symbolic formula of the target model to be tested or a \code{lm} object.}
@@ -39,23 +39,20 @@ skewness and kurtosis difference tests.}
 
 \item{conf.level}{Confidence level for bootstrap confidence intervals.}
 
-\item{object}{An object of class \code{dda.resdist}.}
+\item{x}{An object of class \code{dda.resdist}.}
 
-\item{...}{Additional arguments to be passed to the function.}
+\item{...}{Additional arguments to be passed to the method.}
 }
 \value{
 An object of class \code{ddaresdist} containing the results of DDA
           tests of asymmetry patterns of error distributions obtained from
           the causally competing models.
-
-An object of class \code{dda.resdist}.
 }
 \description{
 \code{dda.resdist} evaluates patterns of asymmetry of error
 distributions of causally competing models (\code{y ~ x} vs. \code{x ~ y}).
 
-Displays the test statistics and p-values for the asymmetry of error
-             distributions of causally competing models (\code{y ~ x} vs. \code{x ~ y}).
+Prints the test statistics and p-values associated with \code{dda.resdist} objects.
 }
 \examples{
 set.seed(123)

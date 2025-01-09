@@ -4,7 +4,7 @@
 \alias{print.dda.nlcor}
 \title{Print Method for \code{dda.nlcor} Objects}
 \usage{
-\method{print}{dda.nlcor}(x)
+\method{print}{dda.nlcor}(x, ...)
 }
 \arguments{
 \item{x}{An object of class \code{dda.nlcor}.}
@@ -12,8 +12,8 @@
 \item{...}{Additional arguments to be passed to the function.}
 }
 \value{
-An object of class \code{dda.nlcor}.
+\code{dda.nlcor} test statistics and p-values.
 }
 \description{
-Displays non-linear correlation tests between two variables.
+Displays non-linear correlation tests results between two variables.
 }

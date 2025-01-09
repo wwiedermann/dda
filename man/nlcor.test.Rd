@@ -12,11 +12,6 @@ nlcor.test(x, y, fun)
 \item{y}{a numeric vector representing the tentative outcome.}
 
 \item{fun}{a numeric value or a function of .Primitive type used for non-linear correlation tests. When \code{fun} is numeric the value is used in a power transformation.}
-
-\item{...}{Additional arguments to be passed to the function.}
-}
-\value{
-An object of class \code{dda.nlcor} containing the correlation coefficient, t-value, degrees of freedom, and p-value for three different tests.
 }
 \description{
 The function \code{nlcor.test} computes non-linear correlation tests between two variables. The function can be used to test for non-linear relationships between two variables. The function returns the correlation coefficient, t-value, degrees of freedom, and p-value for three different tests: (1) Correlation between x^fun and y, (2) Correlation between x and y^fun, and (3) Correlation between x^fun and y^fun. The function can be used to test for non-linear relationships between two variables. The function returns the correlation coefficient, t-value, degrees of freedom, and p-value for three different tests: (1) Correlation between x^fun and y, (2) Correlation between x and y^fun, and (3) Correlation between x^fun and y^fun.

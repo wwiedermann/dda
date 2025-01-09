@@ -1,3 +1,6 @@
+library(testthat)
+library(waldo)
+
 set.seed(123)
 
 n <- 500

@@ -31,7 +31,7 @@ m <- lm(y ~ x * z, data = dat)
 
 # --- Tests ---
 
-test_that("dda.vardist works", {
+testthat::test_that("dda.vardist works", {
   # Test the function and assign the result to test.dda.vardist
   test.dda.vardist <- dda.vardist(
     formula = m,
@@ -44,7 +44,7 @@ test_that("dda.vardist works", {
   expect_silent(test.dda.vardist)
 })
 
-test_that("dda.vardist print works", {
+testthat::test_that("dda.vardist print works", {
   # Test the print functionality
   test.dda.vardist <- dda.vardist(
     formula = m,
@@ -54,5 +54,5 @@ test_that("dda.vardist print works", {
   )
 
   # Verify that print can run without issues
-  expect_output(print(test.dda.vardist))
+  testthat::expect_output(print(test.dda.vardist))
 })

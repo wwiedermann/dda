@@ -1,6 +1,8 @@
 #' @title Hilbert-Schmidt Independence Criterion (HSIC) Test
 #' @description This function computes the Hilbert-Schmidt Independence Criterion (HSIC) test statistic for testing independence between two variables. The HSIC test is a non-parametric test that is based on the Hilbert-Schmidt norm of the cross-covariance operator. The null hypothesis is that the two variables are independent. The function also provides a p-value based on a bootstrap procedure.
-
+#'
+#' @importFrom foreach %dopar%
+#'
 #' @param model       An "lm" object representing the model to be tested.
 #' @param x           A vector specifying the target predictor that is used to test independence.
 #' @param hx          Numeric value specifying the bandwidth parameter for "x".
@@ -10,14 +12,21 @@
 #' @param cores       A numeric value indicating the number of cores. Only used if parallelize = TRUE.
 #' @param ...         Additional arguments to be passed to the function
 #'
-#' @examples    m <- lm(y ~ x + z)
-#'              hsic.test(m, x, B = 500, parallelize = TRUE, cores = 4)
+#' @examples
+#' set.seed(321)
+#' n <- 700
+#' x <- rchisq(n, df = 4) - 4
+#' e <- rchisq(n, df = 3) - 3
+#' y <- 0.5 * x + e
+#' z <- sort(rnorm(n))
+#' m <- lm(y ~ x + z)
+#' hsic.test(m, x, B = 500, parallelize = TRUE, cores = 4)
 #' @noRd
 
 ## Delete all hsic.test document
 hsic.test <- function(model, x = NULL, hx = 1, hy = 1, B = 1000, parallelize = FALSE, cores = 2)
 {
-    X <- model.matrix(model)
+  X <- model.matrix(model)
 	b <- as.matrix(coef(model))
 	n <- nobs(model)
 	e <- resid(model)
@@ -33,13 +42,12 @@ hsic.test <- function(model, x = NULL, hx = 1, hy = 1, B = 1000, parallelize = F
 
     if(parallelize){
 
-      require(doParallel)
-	  cl <- makeCluster(cores)
-      registerDoParallel(cl)
+	    cl <- parallel::makeCluster(cores)
+      doParallel::registerDoParallel(cl)
 
-         T_hat_B <- foreach(icount(B), .combine = c, .export = "HSIC") %dopar% {
+         T_hat_B <- foreach::foreach(iterators::icount(B), .combine = c, .export = "HSIC") %dopar% {
 
-               idx <- sample(n, n, replace=TRUE)    ## with replacement samples from the errors
+            idx <- sample(n, n, replace=TRUE)    ## with replacement samples from the errors
         	   e_B <- e_0[idx]
 
         	   idx2 <- sample(n, n, replace=TRUE)   ## with replacement samples from the predictors
@@ -54,7 +62,7 @@ hsic.test <- function(model, x = NULL, hx = 1, hy = 1, B = 1000, parallelize = F
         	   HSIC(x_B, e_hat_B, 2*hx_B*hx_B, 2*hy_B*hy_B)
                }
 
-	   stopCluster(cl)
+	   parallel::stopCluster(cl)
 
 	} else {
 
