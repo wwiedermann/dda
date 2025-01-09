@@ -58,15 +58,15 @@ e <- rchisq(n, df = 3) - 3
 y <- 0.5 * x + e
 d <- data.frame(x, y)
 
-dda.vardist(y ~ x, pred = "x", data = d,
+result <- dda.vardist(y ~ x, pred = "x", data = d,
             B = 1000, boot.type = "bca")
+result
 
-
-print(x)
+print(result)
 }
 \references{
 Wiedermann, W., & von Eye, A. (2025). \emph{Direction Dependence Analysis: Foundations and Statistical Methods}. Cambridge, UK: Cambridge University Press.
 }
 \seealso{
-\code{\link{dda.vardist}} for a conditional version.
+\code{\link{cdda.vardist}} for a conditional version.
 }

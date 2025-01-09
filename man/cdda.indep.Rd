@@ -158,13 +158,13 @@ m <- lm(y ~ x * z, data = d)
 result <- cdda.indep(m, pred = "x", mod = "z",
                      modval = c(-1, 1), data = d,
                      hetero = TRUE, diff = TRUE,
-                     parallelize = TRUE, cores = 2)
+                     parallelize = TRUE, cores = 2, nlfun = 2)
 
 
-print(model)
+print(result)
 
-           plot(result, stat = "hsic.diff").
-             summary(result, hetero = FALSE, nlfun = TRUE)
+           plot(result, stat = "hsic.diff")
+             summary(result, hetero = FALSE)
 }
 \references{
 Wiedermann, W., & von Eye, A. (2025). \emph{Direction Dependence Analysis: Foundations and Statistical Methods}. Cambridge, UK: Cambridge University Press.

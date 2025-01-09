@@ -67,7 +67,7 @@
 #' result <- cdda.indep(m, pred = "x", mod = "z",
 #'                      modval = c(-1, 1), data = d,
 #'                      hetero = TRUE, diff = TRUE,
-#'                      parallelize = TRUE, cores = 2)
+#'                      parallelize = TRUE, cores = 2, nlfun = 2)
 #'
 #'
 #' @references Wiedermann, W., & von Eye, A. (2025). \emph{Direction Dependence Analysis: Foundations and Statistical Methods}. Cambridge, UK: Cambridge University Press.
@@ -358,7 +358,7 @@ cdda.indep <- function(
 #' @param x     An object of class \code{cdda.indep}.
 #' @param ...   Additional arguments to be passed to the function.
 #'
-#' @examples print(model)
+#' @examples print(result)
 #'
 #' @returns An object of class \code{cdda.indep} with readable OLS coefficients for competing models
 #' @export
