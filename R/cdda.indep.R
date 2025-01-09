@@ -289,6 +289,8 @@ cdda.indep <- function(
       colnames(modmat) <- paste0(round(values, 2))
     }
 
+    else stop("Invalid or no moderator value specified.")
+
     moderator_levels <- colnames(modmat)
 
     indep.temp.yx <- list()
@@ -347,7 +349,7 @@ cdda.indep <- function(
   )
 
   names(cdda.output) <- c("cdda_target", "cdda_alternative", "models", "df_original")
-  class(cdda.output) <- "cddaindep"
+  class(cdda.output) <- "cdda.indep"
   return(cdda.output)
 }
 
