@@ -76,22 +76,22 @@
 #' @export
 #' @rdname cdda.indep
 cdda.indep <- function(
-  formula = NULL,
-  pred = NULL,
-  mod = NULL,
-  modval = NULL,
-  data = list(),
-  hetero = FALSE,
-  diff = FALSE,
-  nlfun = NULL,
-  hsic.method = "gamma",
-  B = 200,
-  boot.type = "perc",
-  conf.level = 0.95,
-  parallelize = FALSE,
-  cores = 1,
-  ...
-  ){
+    formula = NULL,
+    pred = NULL,
+    mod = NULL,
+    modval = NULL,
+    data = list(),
+    hetero = FALSE,
+    diff = FALSE,
+    nlfun = NULL,
+    hsic.method = "gamma",
+    B = 200,
+    boot.type = "perc",
+    conf.level = 0.95,
+    parallelize = FALSE,
+    cores = 1,
+    ...
+){
 
   library(boot)
   library(dHSIC)
@@ -111,7 +111,7 @@ cdda.indep <- function(
     if ( length(delete.pred) == 0 ) stop( "Specified predictor not found in the target model." )
 
     if(is.factor(data[,mod])){
-           delete.mod <- which(colnames(X) %in% paste(mod, levels(data[,mod]), sep ="")) # get position of moderator
+      delete.mod <- which(colnames(X) %in% paste(mod, levels(data[,mod]), sep ="")) # get position of moderator
     }
     if(is.numeric(data[,mod])){
       delete.mod <- which(colnames(X) == mod)
@@ -214,12 +214,12 @@ cdda.indep <- function(
       #DDA Implementation
       indep.temp.yx[[i]] <- unclass(dda.indep(ry.aux.tar ~ rx.aux.tar, pred = "rx.aux.tar",
                                               hsic.method = hsic.method, nlfun = nlfun,
-                                              B = B, boot.type = boot.type, parallelize = parallelize,
+                                              B = B, boot.type = boot.type,
                                               conf.level = conf.level, diff = diff, hetero = hetero
       ))
       indep.temp.xy[[i]] <- unclass(dda.indep(rx.aux.alt ~ ry.aux.alt, pred = "ry.aux.alt",
                                               hsic.method = hsic.method, nlfun = nlfun,
-                                              B = B, boot.type = boot.type, parallelize = parallelize,
+                                              B = B, boot.type = boot.type,
                                               conf.level = conf.level, diff = diff, hetero = hetero
       ))
     }
@@ -231,7 +231,7 @@ cdda.indep <- function(
 
     if (is.numeric(modval)){
 
-      #if( is.null(modval) ) stop("No moderation values identified for pick-a-point approach.")
+      if( is.null(modval) ) stop("No moderation values identified for pick-a-point approach.")
 
       modmat <- data.frame( matrix(NA, length(moderator), length(modval)) )
 
@@ -244,7 +244,7 @@ cdda.indep <- function(
       modmat <- data.frame( (moderator - (mean(moderator) - sd(moderator)) ),
                             (moderator - mean(moderator) ),
                             (moderator - (mean(moderator) + sd(moderator)) )
-                          )
+      )
 
       colnames(modmat) <- c("M-1SD", "M", "M+1SD")
     }
@@ -267,19 +267,19 @@ cdda.indep <- function(
 
       if(twobounds[1] < min(moderator, na.rm = TRUE) &
          twobounds[2] > max(moderator, na.rm = TRUE)) values <- NA #stop("No moderation effects detected for the moderator range.")
-    #  if(lwr.jn < min.mod & upp.jn > max.mod) values <- NA
+      #  if(lwr.jn < min.mod & upp.jn > max.mod) values <- NA
 
-       if(twobounds[1] > min(moderator, na.rm = TRUE) &
+      if(twobounds[1] > min(moderator, na.rm = TRUE) &
          twobounds[2] > max(moderator, na.rm = TRUE)) values <- c(min(moderator), twobounds[1])
-    #      if(lwr.jn > min.mod & upp.jn > max.mod) values <- c(min.mod, lwr.jn)
+      #      if(lwr.jn > min.mod & upp.jn > max.mod) values <- c(min.mod, lwr.jn)
 
-       if(twobounds[1] < min(moderator, na.rm = TRUE) &
+      if(twobounds[1] < min(moderator, na.rm = TRUE) &
          twobounds[2] < max(moderator, na.rm = TRUE)) values <- c(twobounds[2], max(moderator))
-    #      if(lwr.jn < min.mod & upp.jn < max.mod) values <- c(upp.jn, max.mod)
+      #      if(lwr.jn < min.mod & upp.jn < max.mod) values <- c(upp.jn, max.mod)
 
-       if(twobounds[1] > min(moderator, na.rm = TRUE) &
+      if(twobounds[1] > min(moderator, na.rm = TRUE) &
          twobounds[2] < max(moderator, na.rm = TRUE)) values <- c(min(moderator), twobounds[1], twobounds[2], max(moderator))
-   #   if(lwr.jn > min.mod & upp.jn < max.mod) values <- c(min.mod, lwr.jn, upp.jn, max.mod)
+      #   if(lwr.jn > min.mod & upp.jn < max.mod) values <- c(min.mod, lwr.jn, upp.jn, max.mod)
 
       # upr <- min(twobounds[2], max(moderator))
       #values <- seq(from = lwr, to = upr) # no need for jn.length (rm in argument)
@@ -288,8 +288,6 @@ cdda.indep <- function(
       for( i in seq_along(values) ){ modmat[,i] <- moderator - values[i] }  # compute transformed moderator for each value
       colnames(modmat) <- paste0(round(values, 2))
     }
-
-    else stop("Invalid or no moderator value specified.")
 
     moderator_levels <- colnames(modmat)
 
@@ -338,18 +336,18 @@ cdda.indep <- function(
   #output <- c(output, list(var.names = c(response.name, pred)))
 
   cdda.output <- list()
-  cdda.output[[1]] <- list(indep.temp.yx)
-  cdda.output[[2]] <- list(indep.temp.xy)
+  cdda.output[[1]] <- indep.temp.yx
+  cdda.output[[2]] <- indep.temp.xy
   cdda.output[[3]] <- list("target_model" = target_model, "alternate_model" = alternate_model)
   cdda.output[[4]] <- list("response_name" = response.name,
                            "pred_name"= pred,
                            "mod_name" = mod,
                            "mod_levels" = moderator_levels, # previously: modval,
                            "mod_data" = data[,mod] #raw for categ, not for contin?
-                           )
+  )
 
   names(cdda.output) <- c("cdda_target", "cdda_alternative", "models", "df_original")
-  class(cdda.output) <- "cdda.indep"
+  class(cdda.output) <- "cddaindep"
   return(cdda.output)
 }
 
