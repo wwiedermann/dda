@@ -1,5 +1,5 @@
 #' @title Plot of \code{cdda.indep} class object
-#' @description \code{plot} returns test statistic results from the \code{cdda.indep} class object.
+#' @description \code{plot}returns graphs from the \code{cdda.indep} competing conditional models.
 #' @name plot.cdda.indep
 #'
 #' @param x             a \code{cdda.indep} class object.
@@ -7,13 +7,12 @@
 #' @param ylim          a numeric vector of length 2 indicating the y-axis limits if \code{NULL}, the function will set the limits automatically.
 #' @param ...         Additional arguments to be passed to the function.
 #'
-#' @examples            plot(result, stat = "hsic.diff")
-#' @returns             A plot of a test statistic result from the \code{cdda.indep} class object.
+#' @examples plot(result, stat = "hsic.diff")
 #'
 #' @export
 #' @rdname cdda.indep
 #' @method plot cdda.indep
-plot.cdda.indep <- function(x = NULL, stat = NULL, ylim =  NULL, ...){ #alpha = 0.05,
+plot.cdda.indep <- function(x = NULL, stat = NULL, ylim =  NULL, ...){
 
   if(is.null(stat)){
     stop("stat argument must be specified. as 'hsic.diff', 'dcor.diff', or 'mi.diff'")
