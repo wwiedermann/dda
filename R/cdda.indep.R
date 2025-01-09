@@ -338,8 +338,8 @@ cdda.indep <- function(
   #output <- c(output, list(var.names = c(response.name, pred)))
 
   cdda.output <- list()
-  cdda.output[[1]] <- list("target" = indep.temp.yx)
-  cdda.output[[2]] <- list("alternative" = indep.temp.xy)
+  cdda.output[[1]] <- list(indep.temp.yx)
+  cdda.output[[2]] <- list(indep.temp.xy)
   cdda.output[[3]] <- list("target_model" = target_model, "alternate_model" = alternate_model)
   cdda.output[[4]] <- list("response_name" = response.name,
                            "pred_name"= pred,
