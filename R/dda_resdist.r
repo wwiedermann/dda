@@ -31,12 +31,12 @@
 #' y <- 0.5 * x + e
 #' d <- data.frame(x, y)
 #'
-#' dda.resdist(y ~ x, pred = "x", data = d,
+#' result <- dda.resdist(y ~ x, pred = "x", data = d,
 #'             B = 500, conf.level = 0.90, prob.trans = TRUE)
 #'
 #' @references Wiedermann, W., & von Eye, A. (2025). Direction Dependence Analysis: Foundations and Statistical Methods. Cambridge, UK: Cambridge University Press.
 #' @export
-#' @rdname cdda.vardist
+#' @rdname dda.resdist
 dda.resdist <- function(formula, pred = NULL, data = list(), B = 200,
                         boot.type = "perc", prob.trans = FALSE, conf.level = 0.95){
 
@@ -377,7 +377,7 @@ dda.resdist <- function(formula, pred = NULL, data = list(), B = 200,
 #'
 #' @param object An object of class \code{dda.resdist}.
 #' @param ...    Additional arguments to be passed to the function.
-#' @examples print(x)
+#' @examples print(result)
 #'
 #' @returns An object of class \code{dda.resdist}.
 #' @export

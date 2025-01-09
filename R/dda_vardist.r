@@ -26,13 +26,14 @@
 #' y <- 0.5 * x + e
 #' d <- data.frame(x, y)
 #'
-#' dda.vardist(y ~ x, pred = "x", data = d,
+#' result <- dda.vardist(y ~ x, pred = "x", data = d,
 #'             B = 1000, boot.type = "bca")
-#'
+#' result
 #'
 #' @references Wiedermann, W., & von Eye, A. (2025). \emph{Direction Dependence Analysis: Foundations and Statistical Methods}. Cambridge, UK: Cambridge University Press.
-#' @seealso \code{\link{dda.vardist}} for a conditional version.
+#' @seealso \code{\link{cdda.vardist}} for a conditional version.
 #' @export
+#' @rdname dda.vardist
 dda.vardist <- function(
    formula,
    pred = NULL,
@@ -189,7 +190,7 @@ dda.vardist <- function(
 #'             of asymmetry patterns of variable distributions.
 #' @param x     An object of class \code{dda.vardist}.
 #' @param ...   Additional arguments to be passed to the function.
-#' @examples print(x)
+#' @examples print(result)
 #' @returns An object of class \code{dda.vardist}.
 #'
 #' @export

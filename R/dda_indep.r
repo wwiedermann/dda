@@ -28,7 +28,7 @@
 #' y <- 0.5 * x + e
 #' d <- data.frame(x, y)
 #'
-#' dda.indep(y ~ x, pred = "x", data = d, parallelize = T, cores = 2,
+#' dda.indep(y ~ x, pred = "x", data = d, parallelize = TRUE, cores = 2,
 #'           nlfun = 2, B = 100, hetero = TRUE, diff = TRUE)
 #'
 #'
@@ -88,7 +88,7 @@ dda.indep <- function(
 
    ### --- non-linear correlation test function
 
-   nlcorTest <- function(x, y, fun, fname=NULL){
+   nlcor.test <- function(x, y, fun, fname=NULL){
 
       varnames <- c(deparse(substitute(x)), deparse(substitute(y)))
 
@@ -248,8 +248,8 @@ dda.indep <- function(
 
     fname = deparse(substitute(nlfun))
 
-    nlout_yx <- unclass( nlcorTest( err.yx, rx, fun = nlfun, fname=fname ) )
-	  nlout_xy <- unclass( nlcorTest( err.xy, ry, fun = nlfun, fname=fname ) )
+    nlout_yx <- unclass( nlcor.test( err.yx, rx, fun = nlfun, fname=fname ) )
+	  nlout_xy <- unclass( nlcor.test( err.xy, ry, fun = nlfun, fname=fname ) )
 
 	  output <- c(output,
 	              list(nlcor.yx = nlout_yx, nlcor.xy = nlout_xy, nlfun = nlfun)

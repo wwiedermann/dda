@@ -334,7 +334,7 @@ cdda.vardist <- function(formula,
 #' @param x     An object of class \code{cdda.vardist}.
 #' @param ...   Additional arguments to be passed to the function.
 #'
-#' @examples    print(model)
+#' @examples    print(result)
 #'
 #' @export
 #' @rdname cdda.vardist

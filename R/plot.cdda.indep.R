@@ -6,7 +6,7 @@
 #' @param stat          a character indicating the stat of statistic to be plotted with options \code{c("hsic.diff", "dcor.diff", "mi.diff")}.
 #' @param ylim          a numeric vector of length 2 indicating the y-axis limits if \code{NULL}, the function will set the limits automatically.
 #'
-#' @examples            plot(result, stat = "hsic.diff").
+#' @examples            plot(result, stat = "hsic.diff")
 #' @returns             A plot of a test statistic result from the \code{cdda.indep} class object.
 #'
 #' @export
