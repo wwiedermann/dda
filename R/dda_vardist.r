@@ -40,11 +40,9 @@ dda.vardist <- function(
    data = list(),
    B = 200,
    boot.type = "perc",
-   conf.level = 0.95
+   conf.level = 0.95,
+   ...
   ){
-
-  library(boot)
-  library(moments)
 
    ### --- helper functions for bootstrap CIs
 
@@ -66,10 +64,10 @@ dda.vardist <- function(
               x <- as.vector(scale(x))
 			        y <- as.vector(scale(y))
 
-              skew.diff <- (skewness(x)^2) - (skewness(y)^2)
-              kurt.diff <- (kurtosis(x)-3)^2 - (kurtosis(y)-3)^2
+              skew.diff <- (moments::skewness(x)^2) - (moments::skewness(y)^2)
+              kurt.diff <- (moments::kurtosis(x)-3)^2 - (moments::kurtosis(y)-3)^2
               cor12.diff <- (cor.ij(x, y, i = 2, j = 1)^2) - (cor.ij(x, y, i = 1, j = 2)^2)
-			        cor13.diff <- ((cor.ij(x, y, i = 3, j = 1)^2) - (cor.ij(x, y, i = 1, j = 3)^2)) * sign(kurtosis(x)-3)
+			        cor13.diff <- ((cor.ij(x, y, i = 3, j = 1)^2) - (cor.ij(x, y, i = 1, j = 3)^2)) * sign(moments::kurtosis(x)-3)
 
               Rtanh <- cor(x, y) * mean(x * tanh(y) - tanh(x) * y)
 
@@ -77,8 +75,8 @@ dda.vardist <- function(
 			        Cyx <- mean(x * y^3) - 3*cor(x,y)*var(y)
               RCC <- (Cxy + Cyx) * (Cxy - Cyx)
 
-              xx <- sign(skewness(x)) * x
-			        yy <- sign(skewness(y)) * y
+              xx <- sign(moments::skewness(x)) * x
+			        yy <- sign(moments::skewness(y)) * y
               RHS <- cor(xx, yy) * mean( (xx^2 * yy) - (xx * yy^2) )
 
               result <- c(skew.diff, kurt.diff, cor12.diff, cor13.diff, RHS, RCC, Rtanh)
@@ -129,12 +127,12 @@ dda.vardist <- function(
 
 	### --- run separate normality tests
 
-	agostino.out <- apply(dat, 2, agostino.test)
+	agostino.out <- apply(dat, 2, moments::agostino.test)
 	agostino.out <- lapply(agostino.out, unclass)
 	agostino.out$predictor[3:5] <- NULL
     agostino.out$outcome[3:5] <- NULL
 
-	anscombe.out <- apply(dat, 2, anscombe.test)
+	anscombe.out <- apply(dat, 2, moments::anscombe.test)
 	anscombe.out <- lapply(anscombe.out, unclass)
 	anscombe.out$predictor[3:5] <- NULL
     anscombe.out$outcome[3:5] <- NULL
@@ -148,9 +146,9 @@ dda.vardist <- function(
     ### --- run bootstrap confidence intervals
 
    if(B > 0){
-             boot.res <- boot(dat, boot.diff, R = B)
-             if( boot.type == "bca" && any( is.na( empinf( boot.res ) ) ) ) stop("Acceleration constant cannot be calculated. Increase the number of resamples or use boot.type = 'perc'")
-             suppressWarnings(boot.out <- lapply(as.list(1:7), function(i, boot.res) boot.ci(boot.res, conf=conf.level, type=boot.type, t0=boot.res$t0[i], t=boot.res$t[,i]), boot.res=boot.res))
+             boot.res <- boot::boot(dat, boot.diff, R = B)
+             if( boot.type == "bca" && any( is.na( boot::empinf( boot.res ) ) ) ) stop("Acceleration constant cannot be calculated. Increase the number of resamples or use boot.type = 'perc'")
+             suppressWarnings(boot.out <- lapply(as.list(1:7), function(i, boot.res) boot::boot.ci(boot.res, conf=conf.level, type=boot.type, t0=boot.res$t0[i], t=boot.res$t[,i]), boot.res=boot.res))
 
 			 names(boot.out) <- c("skew.diff", "kurt.diff", "cor12.diff", "cor13.diff", "RHS", "RCC", "Rtanh")
 
@@ -184,19 +182,21 @@ dda.vardist <- function(
 
 }
 
+#'
 #' @name print.dda.vardist
 #' @title Print Method for \code{dda.vardist} Objects
-#' @description Displays the results of results DDA tests
-#'             of asymmetry patterns of variable distributions.
+#'
+#' @description Prints the test statistics and p-values associated with \code{dda.vardist} objects.
 #' @param x     An object of class \code{dda.vardist}.
 #' @param ...   Additional arguments to be passed to the function.
+#'
 #' @examples print(result)
 #' @returns An object of class \code{dda.vardist}.
 #'
 #' @export
 #' @rdname dda.vardist
 #' @method print dda.vardist
-print.dda.vardist <- function(x){
+print.dda.vardist <- function(x, ...){
    varnames <- x$var.names
 
 	 cat("\n")

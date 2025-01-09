@@ -1,19 +1,20 @@
-#' @title Plots of \code{cdda.vardist} Objects
-#' @description \code{plot} returns test statistic results from the \code{cdda.vardist} class object.
+#' @title Plots of \code{cdda.vardist} Class Objects
+#' @description \code{plot} returns graphs from the \code{cdda.vardist} competing conditional models.
 #' @name plot.cdda.vardist
 #'
-#' @param obj    a \code{cdda.vardist} class object.
-#' @param stat   a character indicating the statistic to be plotted, default is \code{"rhs"}, with options \code{c("rhs", "cokurt", "rcc", "rtanh")}.
+#' @param x    a \code{cdda.vardist} class object.
+#' @param stat   a character indicating the statistic to be plotted, default is
+#'               \code{"rhs"}, with options \code{c("coskew", "cokurt", "rhs", "rcc", "rtanh")}.
 #' @param ylim   a numeric vector of length 2 indicating the y-axis limits if \code{NULL}, the function will set the limits automatically.
-#' @returns      A plot of a test statistic result from the \code{cdda.vardist} class object.
-#' @examples     plot(result, stat = "rtanh", ylim = c(-0.05, 0.05))
+#' @param ...         Additional arguments to be passed to the function.
+#'
+#' @examples  plot(result, stat = "rtanh", ylim = c(-0.05, 0.05))
 #'
 #' @export
 #' @rdname cdda.vardist
 #' @method plot cdda.vardist
-plot.cdda.vardist <- function(obj = NULL, stat = NULL,
-                             ylim =  NULL, alpha = 0.05,
-                             xlab = NULL, ylab = NULL, ...){
+plot.cdda.vardist <- function(x, stat = NULL,
+                              ylim =  NULL, ...){
 
   if(is.null(stat)){
     stop("stat argument must be specified. as 'rhs', 'cokurt', 'rcc', or 'rtanh'")
@@ -21,6 +22,8 @@ plot.cdda.vardist <- function(obj = NULL, stat = NULL,
   else if(stat != "rhs" & stat != "cokurt" & stat != "rcc" & stat != "rtanh"){
     stop("stat must be one of 'rhs', 'cokurt', 'rcc', or 'rtanh'.")
   }
+
+  obj <- x
 
   ## Plot Label and Assignment ##
   mod.vals <- obj[[4]][["mod_data"]] #modvalues, raw data
@@ -70,10 +73,10 @@ plot.cdda.vardist <- function(obj = NULL, stat = NULL,
     y.title <- paste0("Co-Skewness Differences (", ci.level, "% CI)")
 
 
-    if(is.null(cdda.output[[1]][[1]]$cor12diff)) {
+    if(is.null(obj[[1]][[1]]$cor12diff)) {
       stop("Co-Skewness differences not found. Specify coskew = TRUE.")
       }
-    hoctests.skew <-  matrix(NA, length(mod_names), 6)
+    hoctests.skew <-  matrix(NA, length(mod.levels), 6)
 
     for(i in 1:length(plot.axis)){
       out[i, ] <- c(obj[[1]][[i]]$cor12diff, obj[[2]][[i]]$cor12diff)

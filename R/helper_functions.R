@@ -39,10 +39,10 @@ boot.diff <- function(dat, g){ #dda.indep & dda.vardist
   x <- as.vector(scale(x))
   y <- as.vector(scale(y))
 
-  skew.diff <- (skewness(x)^2) - (skewness(y)^2)
-  kurt.diff <- (kurtosis(x)-3)^2 - (kurtosis(y)-3)^2
+  skew.diff <- (moments::skewness(x)^2) - (moments::skewness(y)^2)
+  kurt.diff <- (moments::kurtosis(x)-3)^2 - (moments::kurtosis(y)-3)^2
   cor12.diff <- (cor.ij(x, y, i = 2, j = 1)^2) - (cor.ij(x, y, i = 1, j = 2)^2)
-  cor13.diff <- ((cor.ij(x, y, i = 3, j = 1)^2) - (cor.ij(x, y, i = 1, j = 3)^2)) * sign(kurtosis(x)-3)
+  cor13.diff <- ((cor.ij(x, y, i = 3, j = 1)^2) - (cor.ij(x, y, i = 1, j = 3)^2)) * sign(moments::kurtosis(x)-3)
 
   Rtanh <- cor(x, y) * mean(x * tanh(y) - tanh(x) * y)
 
@@ -50,8 +50,8 @@ boot.diff <- function(dat, g){ #dda.indep & dda.vardist
   Cyx <- mean(x * y^3) - 3*cor(x,y)*var(y)
   RCC <- (Cxy + Cyx) * (Cxy - Cyx)
 
-  xx <- sign(skewness(x)) * x
-  yy <- sign(skewness(y)) * y
+  xx <- sign(moments::skewness(x)) * x
+  yy <- sign(moments::skewness(y)) * y
   RHS <- cor(xx, yy) * mean( (xx^2 * yy) - (xx * yy^2) )
 
   result <- c(skew.diff, kurt.diff, cor12.diff, cor13.diff, RHS, RCC, Rtanh)

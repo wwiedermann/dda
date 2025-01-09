@@ -5,9 +5,7 @@
 #' @param x     a numeric vector representing the tentative predictor.
 #' @param y     a numeric vector representing the tentative outcome.
 #' @param fun   a numeric value or a function of .Primitive type used for non-linear correlation tests. When \code{fun} is numeric the value is used in a power transformation.
-#' @param ...   Additional arguments to be passed to the function.
 #'
-#' @returns     An object of class \code{dda.nlcor} containing the correlation coefficient, t-value, degrees of freedom, and p-value for three different tests.
 #' @export
 nlcor.test <- function(x, y, fun) {
   varnames <- c(deparse(substitute(x)), deparse(substitute(y)))
@@ -67,15 +65,15 @@ nlcor.test <- function(x, y, fun) {
 }
 
 #' @title Print Method for \code{dda.nlcor} Objects
-#' @description Displays non-linear correlation tests between two variables.
+#' @description Displays non-linear correlation tests results between two variables.
 #' @param x     An object of class \code{dda.nlcor}.
 #' @param ...   Additional arguments to be passed to the function.
-#' @returns     An object of class \code{dda.nlcor}.
 #'
+#' @returns \code{dda.nlcor} test statistics and p-values.
 #' @export
 #' @rdname dda.nlcor
 #' @method print dda.nlcor
-print.dda.nlcor <- function(x) {
+print.dda.nlcor <- function(x, ...) {
   varnames <- x$varnames
   sigtests <- rbind(x$t1, x$t2, x$t3)
   sigtests <- round(sigtests, 4)

@@ -40,9 +40,6 @@
 dda.resdist <- function(formula, pred = NULL, data = list(), B = 200,
                         boot.type = "perc", prob.trans = FALSE, conf.level = 0.95){
 
-  library(boot)
-  library(moments)
-
   ### --- helper function for bootstrap CIs
   mysd <- function(x){sqrt(sum((x-mean(x))^2)/length(x))}
   cor.ij <- function(x,y, i=1, j=1){
@@ -92,27 +89,27 @@ dda.resdist <- function(formula, pred = NULL, data = list(), B = 200,
       xtrans <- as.vector(scale(resid(alt.boot.trans)))
       ytrans <- as.vector(scale(resid(tar.boot.trans)))
 
-      skew.diff <- (skewness(xtrans)^2) - (skewness(ytrans)^2)
-      kurt.diff <- (kurtosis(xtrans)-3)^2 - (kurtosis(ytrans)-3)^2
+      skew.diff <- (moments::skewness(xtrans)^2) - (moments::skewness(ytrans)^2)
+      kurt.diff <- (moments::kurtosis(xtrans)-3)^2 - (moments::kurtosis(ytrans)-3)^2
 
     } else{
 
-      skew.diff <- (skewness(x)^2) - (skewness(y)^2)
-      kurt.diff <- (kurtosis(x)-3)^2 - (kurtosis(y)-3)^2
+      skew.diff <- (moments::skewness(x)^2) - (moments::skewness(y)^2)
+      kurt.diff <- (moments::kurtosis(x)-3)^2 - (moments::kurtosis(y)-3)^2
     }
 
 
     #cor12.diff <- (cor.ij(x, y, i = 2, j = 1)^2) - (cor.ij(x, y, i = 1, j = 2)^2)
     cor12.diff <- (cor.ij(y, x, i = 2, j = 1)^2) - (cor.ij(y, x, i = 1, j = 2)^2)  # rescaled to ensure > 0 under target model
-    #cor13.diff <- ((cor.ij(x, y, i = 3, j = 1)^2) - (cor.ij(x, y, i = 1, j = 3)^2)) * sign(kurtosis(x)-3)
-    cor13.diff <- ((cor.ij(y, x, i = 3, j = 1)^2) - (cor.ij(y, x, i = 1, j = 3)^2)) * sign(kurtosis(y)-3)  # rescaled to ensure > 0 under target model
+    #cor13.diff <- ((cor.ij(x, y, i = 3, j = 1)^2) - (cor.ij(x, y, i = 1, j = 3)^2)) * sign(moments::kurtosis(x)-3)
+    cor13.diff <- ((cor.ij(y, x, i = 3, j = 1)^2) - (cor.ij(y, x, i = 1, j = 3)^2)) * sign(moments::kurtosis(y)-3)  # rescaled to ensure > 0 under target model
 
-    xx <- sign(skewness(x)) * x
-    yy <- sign(skewness(y)) * y
+    xx <- sign(moments::skewness(x)) * x
+    yy <- sign(moments::skewness(y)) * y
     RHS3 <- cor(xx, yy) * mean( (yy^2 * xx) - (yy * xx^2) ) # rescaled to ensure > 0 under target model
 
     #Rtanh <- cor(x, y) * mean(x * tanh(y) - tanh(x) * y)
-    RHS4 <- cor(x, y) * mean( (y^3 * x) - (y * x^3) ) * sign(kurtosis(y)-3)
+    RHS4 <- cor(x, y) * mean( (y^3 * x) - (y * x^3) ) * sign(moments::kurtosis(y)-3)
 
     C1 <- mean(y^3 * x) - 3*cor(x,y)*var(y) # with x = alternative error and y = target error
     C2 <- mean(y * x^3) - 3*cor(x,y)*var(x)
@@ -279,7 +276,7 @@ dda.resdist <- function(formula, pred = NULL, data = list(), B = 200,
 
   if( isTRUE(prob.trans) ){
 
-    agostino.out <- apply(dat[c("alternative.trans", "target.trans")], 2, agostino.test)
+    agostino.out <- apply(dat[c("alternative.trans", "target.trans")], 2, moments::agostino.test)
     names(agostino.out) <- c("alternative", "target")
     agostino.out <- lapply(agostino.out, unclass)
 
@@ -289,7 +286,7 @@ dda.resdist <- function(formula, pred = NULL, data = list(), B = 200,
 
   } else {
 
-    agostino.out <- apply(dat[c("alternative", "target")], 2, agostino.test)
+    agostino.out <- apply(dat[c("alternative", "target")], 2, moments::agostino.test)
     agostino.out <- lapply(agostino.out, unclass)
 
     anscombe.out <- apply(dat[c("alternative", "target")], 2, myanscombe.test)
@@ -316,8 +313,8 @@ dda.resdist <- function(formula, pred = NULL, data = list(), B = 200,
                 list(kurtdiff = unlist(kurt.diff.test(dat$alternative.trans, dat$target.trans)))
     )
 
-    output$skewdiff <- c( skewness(dat$alternative.trans)^2 - skewness(dat$target.trans)^2, output$skewdiff)  # add point estimtes of skew and kurt differences to vector
-    output$kurtdiff <- c((kurtosis(dat$alternative.trans)-3)^2 - (kurtosis(dat$target.trans)-3)^2, output$kurtdiff)
+    output$skewdiff <- c( moments::skewness(dat$alternative.trans)^2 - moments::skewness(dat$target.trans)^2, output$skewdiff)  # add point estimtes of skew and kurt differences to vector
+    output$kurtdiff <- c((moments::kurtosis(dat$alternative.trans)-3)^2 - (moments::kurtosis(dat$target.trans)-3)^2, output$kurtdiff)
 
 
   } else {
@@ -327,17 +324,17 @@ dda.resdist <- function(formula, pred = NULL, data = list(), B = 200,
                 list(kurtdiff = unlist(kurt.diff.test(dat$alternative, dat$target)))
     )
 
-    output$skewdiff <- c( skewness(dat$alternative)^2 - skewness(dat$target)^2, output$skewdiff)  # add point estimtes of skew and kurt differences to vector
-    output$kurtdiff <- c((kurtosis(dat$alternative)-3)^2 - (kurtosis(dat$target)-3)^2, output$kurtdiff)
+    output$skewdiff <- c( moments::skewness(dat$alternative)^2 - moments::skewness(dat$target)^2, output$skewdiff)  # add point estimtes of skew and kurt differences to vector
+    output$kurtdiff <- c((moments::kurtosis(dat$alternative)-3)^2 - (moments::kurtosis(dat$target)-3)^2, output$kurtdiff)
 
   }
 
   ### --- run bootstrap confidence intervals
 
   if(B > 0){
-    suppressWarnings(boot.res <- boot(dat, boot.diff, R = B, prob.trans = prob.trans))
-    if( boot.type == "bca" && any( is.na( empinf( boot.res ) ) ) ) stop("Acceleration constant cannot be calculated. Increase the number of resamples or use boot.type = 'perc'")
-    suppressWarnings(boot.out <- lapply(as.list(1:7), function(i, boot.res) boot.ci(boot.res, conf=conf.level, type=boot.type, t0=boot.res$t0[i], t=boot.res$t[,i]), boot.res=boot.res))
+    suppressWarnings(boot.res <- boot::boot(dat, boot.diff, R = B, prob.trans = prob.trans))
+    if( boot.type == "bca" && any( is.na( boot::empinf( boot.res ) ) ) ) stop("Acceleration constant cannot be calculated. Increase the number of resamples or use boot.type = 'perc'")
+    suppressWarnings(boot.out <- lapply(as.list(1:7), function(i, boot.res) boot::boot.ci(boot.res, conf=conf.level, type=boot.type, t0=boot.res$t0[i], t=boot.res$t[,i]), boot.res=boot.res))
 
     names(boot.out) <- c("skew.diff", "kurt.diff", "cor12.diff", "cor13.diff", "RHS3", "RCC", "RHS4")
 
@@ -372,19 +369,22 @@ dda.resdist <- function(formula, pred = NULL, data = list(), B = 200,
 
 #' @name print.dda.resdist
 #' @title Print Method for \code{dda.resdist} Objects
-#' @description Displays the test statistics and p-values for the asymmetry of error
-#'              distributions of causally competing models (\code{y ~ x} vs. \code{x ~ y}).
 #'
-#' @param object An object of class \code{dda.resdist}.
-#' @param ...    Additional arguments to be passed to the function.
-#' @examples print(result)
+#' @description Prints the test statistics and p-values associated with \code{dda.resdist} objects.
 #'
-#' @returns An object of class \code{dda.resdist}.
+#' @param x An object of class \code{dda.resdist}.
+#' @param ... Additional arguments to be passed to the method.
+#'
+#' @examples
+#' print(result)
+#'
 #' @export
 #' @rdname dda.resdist
 #' @method print dda.resdist
-print.dda.resdist <- function(object, ...){
+print.dda.resdist <- function(x, ...){
   varnames <- object$var.names
+
+  object <- x
 
   cat("\n")
   cat("DIRECTION DEPENDENCE ANALYSIS: Residual Distributions", "\n", "\n")

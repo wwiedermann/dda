@@ -4,7 +4,6 @@
 \name{cdda.indep}
 \alias{cdda.indep}
 \alias{print.cdda.indep}
-\alias{plot.cddaindep}
 \alias{plot.cdda.indep}
 \alias{summary.cdda.indep}
 \title{Conditional Direction Dependence Analysis: Independence Properties}
@@ -29,10 +28,10 @@ cdda.indep(
 
 \method{print}{cdda.indep}(x, ...)
 
-\method{plot}{cdda.indep}(obj = NULL, stat = NULL, ylim = NULL)
+\method{plot}{cdda.indep}(x = NULL, stat = NULL, ylim = NULL, ...)
 
 \method{summary}{cdda.indep}(
-  cdda.output,
+  object,
   nlfun = FALSE,
   hetero = FALSE,
   hsic = TRUE,
@@ -64,11 +63,11 @@ pick-a-point approach is used for the selected numeric values.}
 
 \item{data}{A required data frame containing the variables in the model.}
 
-\item{hetero}{logical, default is \code{FALSE}, includes Breusch-Pagan Homoscedasticity test}
+\item{hetero}{Logical, default is \code{FALSE}, includes Breusch-Pagan Homoscedasticity test statistics.}
 
 \item{diff}{A logical value indicating whether differences in HSIC, dCor, and MI values should be computed. Bootstrap confidence intervals are computed using B bootstrap samples.}
 
-\item{nlfun}{logical, default is \code{FALSE}, includes non-linear correlation test}
+\item{nlfun}{Logical, default is \code{FALSE}, includes non-linear correlation test statistics.}
 
 \item{hsic.method}{A character indicating the inference method for the Hilbert-Schmidt Independence Criterion. Must be one of the four specifications \code{c("gamma", "eigenvalue", "boot", "permutation")}.\code{hsic.method = "gamma"} is the default.}
 
@@ -84,43 +83,39 @@ pick-a-point approach is used for the selected numeric values.}
 
 \item{...}{Additional arguments to be passed to the function.}
 
-\item{x}{An object of class \code{cdda.indep}.}
-
-\item{obj}{a \code{cdda.indep} class object.}
+\item{x}{a \code{cdda.indep} class object.}
 
 \item{stat}{a character indicating the stat of statistic to be plotted with options \code{c("hsic.diff", "dcor.diff", "mi.diff")}.}
 
 \item{ylim}{a numeric vector of length 2 indicating the y-axis limits if \code{NULL}, the function will set the limits automatically.}
 
-\item{cdda.output}{output from \code{cdda.indep} object}
+\item{object}{Output from \code{cdda.indep} object.}
 
-\item{hsic}{logical, default is \code{TRUE}, includes Hilbert-Schmidt Independence Criterion (HSIC) test}
+\item{hsic}{Logical, default is \code{TRUE}, includes Hilbert-Schmidt Independence Criterion (HSIC) test statistics.}
 
-\item{hsic.diff}{logical, default is \code{FALSE}, includes HSIC differences}
+\item{hsic.diff}{Logical, default is \code{FALSE}, includes HSIC difference statistics.}
 
-\item{dcor}{logical, default is \code{TRUE}, includes Distance Correlation (dCor) test}
+\item{dcor}{Logical, default is \code{TRUE}, includes Distance Correlation (dCor) test statistics.}
 
-\item{dcor.diff}{logical, default is \code{FALSE}, includes dCor differences}
+\item{dcor.diff}{Logical, default is \code{FALSE}, includes dCor differences test statistics.}
 
-\item{mi.diff}{logical, default is \code{FALSE}, includes Mutual Information (MI) differences}
+\item{mi.diff}{Logical, default is \code{FALSE}, includes Mutual Information (MI) difference statistics.}
 }
 \value{
-A list of class \class{cdda.indep} containing the results of CDDA
+A list of class \code{cdda.indep} containing the results of CDDA
          independence tests for pre-specified moderator values.
 
-An object of class \code{cdda.indep} with readable OLS coefficients for competing models
+An object of class \code{cdda.indep} with competing model coefficients.
 
 A plot of a test statistic result from the \code{cdda.indep} class object.
-
-A summary of test statistic results from the \code{cdda.indep} class object.
 }
 \description{
 \code{cdda.indep} computes CDDA test statistics to
              evaluate asymmetries of predictor-error independence of competing
-             conditional models (\code{y \sim x \ast m} vs. \code{x \sim y \ast m}
+             conditional models (\code{y ~ x * m} vs. \code{x ~ y * m}
              with \code{m} being a continuous or categorical moderator).
 
-Displays the output of standard linear model coefficients for competing target and alternative models.
+Displays output of standard linear model coefficients for competing target and alternative models.
 
 \code{plot} returns test statistic results from the \code{cdda.indep} class object.
 
@@ -164,7 +159,8 @@ result <- cdda.indep(m, pred = "x", mod = "z",
 print(result)
 
            plot(result, stat = "hsic.diff")
-             summary(result, hetero = FALSE)
+summary(result, hetero = FALSE)
+
 }
 \references{
 Wiedermann, W., & von Eye, A. (2025). \emph{Direction Dependence Analysis: Foundations and Statistical Methods}. Cambridge, UK: Cambridge University Press.

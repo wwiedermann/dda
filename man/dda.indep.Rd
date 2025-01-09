@@ -49,21 +49,17 @@ dda.indep(
 
 \item{x}{An object of class \code{dda.indep}.}
 
-\item{...}{Additional arguments to be passed to the function.}
+\item{...}{Additional arguments to be passed to the method.}
 }
 \value{
 An object of class \code{dda.indep} containing the results of DDA independence tests.
-
-An object of class \code{dda.indep}.
 }
 \description{
 \code{dda.indep} computes DDA test statistics to
              evaluate asymmetries of predictor-error independence of
              causally competing models (\code{y ~ x} vs. \code{x ~ y}).
 
-Displays the results of the asymmetries of predictor-error
-             independence. If bootstrap confidence intervals are computed,
-             the independence test differences are reported.
+Prints the test statistics and p-values associated with \code{dda.indep} objects.
 }
 \examples{
 
@@ -79,6 +75,7 @@ dda.indep(y ~ x, pred = "x", data = d, parallelize = TRUE, cores = 2,
 
 
 print(x)
+
 }
 \references{
 Wiedermann, W., & von Eye, A. (2025). \emph{Direction Dependence Analysis: Foundations and Statistical Methods}. Cambridge, UK: Cambridge University Press.

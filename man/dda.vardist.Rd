@@ -11,10 +11,11 @@ dda.vardist(
   data = list(),
   B = 200,
   boot.type = "perc",
-  conf.level = 0.95
+  conf.level = 0.95,
+  ...
 )
 
-\method{print}{dda.vardist}(x)
+\method{print}{dda.vardist}(x, ...)
 }
 \arguments{
 \item{formula}{Symbolic formula of the model to be tested or a \code{lm}object.}
@@ -31,9 +32,9 @@ which \code{dda.vardist} is called from).}
 
 \item{conf.level}{Confidence level for bootstrap confidence intervals.}
 
-\item{x}{An object of class \code{dda.vardist}.}
-
 \item{...}{Additional arguments to be passed to the function.}
+
+\item{x}{An object of class \code{dda.vardist}.}
 }
 \value{
 An object of class \code{dda.vardist} containing the results of DDA tests
@@ -46,8 +47,7 @@ An object of class \code{dda.vardist}.
              distributions for causally competing models
              (\code{y ~ x} vs. \code{x ~ y}).
 
-Displays the results of results DDA tests
-            of asymmetry patterns of variable distributions.
+Prints the test statistics and p-values associated with \code{dda.vardist} objects.
 }
 \examples{
 set.seed(123)
