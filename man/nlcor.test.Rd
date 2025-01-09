@@ -14,5 +14,11 @@ nlcor.test(x, y, fun)
 \item{fun}{a numeric value or a function of .Primitive type used for non-linear correlation tests. When \code{fun} is numeric the value is used in a power transformation.}
 }
 \description{
-The function \code{nlcor.test} computes non-linear correlation tests between two variables. The function can be used to test for non-linear relationships between two variables. The function returns the correlation coefficient, t-value, degrees of freedom, and p-value for three different tests: (1) Correlation between x^fun and y, (2) Correlation between x and y^fun, and (3) Correlation between x^fun and y^fun. The function can be used to test for non-linear relationships between two variables. The function returns the correlation coefficient, t-value, degrees of freedom, and p-value for three different tests: (1) Correlation between x^fun and y, (2) Correlation between x and y^fun, and (3) Correlation between x^fun and y^fun.
+The function \code{nlcor.test} computes non-linear correlation
+             tests between two variables. The function can be used to test
+             for non-linear relationships between two variables. The function
+             returns the correlation coefficient, t-value, degrees of freedom,
+             and p-value for three different tests: (1) Correlation between
+             \code{x^fun} and {y}, (2) Correlation between \code{x} and
+             \code{y^fun}, and (3) Correlation between \code{x^fun} and \code{y^fun}.
 }

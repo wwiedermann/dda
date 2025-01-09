@@ -106,8 +106,6 @@ A list of class \code{cdda.indep} containing the results of CDDA
          independence tests for pre-specified moderator values.
 
 An object of class \code{cdda.indep} with competing model coefficients.
-
-A plot of a test statistic result from the \code{cdda.indep} class object.
 }
 \description{
 \code{cdda.indep} computes CDDA test statistics to
@@ -158,7 +156,8 @@ result <- cdda.indep(m, pred = "x", mod = "z",
 
 print(result)
 
-           plot(result, stat = "hsic.diff")
+plot(result, stat = "hsic.diff")
+
 summary(result, hetero = FALSE)
 
 }

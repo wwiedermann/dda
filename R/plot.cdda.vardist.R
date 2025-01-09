@@ -8,7 +8,7 @@
 #' @param ylim   a numeric vector of length 2 indicating the y-axis limits if \code{NULL}, the function will set the limits automatically.
 #' @param ...         Additional arguments to be passed to the function.
 #'
-#' @examples  plot(result, stat = "rtanh", ylim = c(-0.05, 0.05))
+#' @examples plot(result, stat = "rtanh", ylim = c(-0.05, 0.05))
 #'
 #' @export
 #' @rdname cdda.vardist

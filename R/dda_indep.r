@@ -28,7 +28,7 @@
 #' y <- 0.5 * x + e
 #' d <- data.frame(x, y)
 #'
-#' dda.indep(y ~ x, pred = "x", data = d, parallelize = TRUE, cores = 2,
+#' result <- dda.indep(y ~ x, pred = "x", data = d, parallelize = TRUE, cores = 2,
 #'           nlfun = 2, B = 100, hetero = TRUE, diff = TRUE)
 #'
 #'
@@ -307,7 +307,7 @@ dda.indep <- function(
 #' @param ... Additional arguments to be passed to the method.
 #'
 #' @examples
-#' print(x)
+#' print(result)
 #'
 #' @export
 #' @rdname dda.indep

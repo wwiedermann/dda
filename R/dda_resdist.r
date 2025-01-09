@@ -363,7 +363,7 @@ dda.resdist <- function(formula, pred = NULL, data = list(), B = 200,
 
   response.name <- all.vars(formula(formula))[1]  # get name of response variable
   output <- c(output, list(var.names = c(response.name, pred), probtrans = prob.trans))
-  class(output) <- "ddaresdist"
+  class(output) <- "dda.resdist"
   return(output)
 }
 
@@ -382,10 +382,9 @@ dda.resdist <- function(formula, pred = NULL, data = list(), B = 200,
 #' @rdname dda.resdist
 #' @method print dda.resdist
 print.dda.resdist <- function(x, ...){
-  varnames <- object$var.names
-
   object <- x
 
+  varnames <- object$var.names
   cat("\n")
   cat("DIRECTION DEPENDENCE ANALYSIS: Residual Distributions", "\n", "\n")
   cat("Skewness and kurtosis tests:", "\n")

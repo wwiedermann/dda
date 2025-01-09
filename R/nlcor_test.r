@@ -1,5 +1,11 @@
 #' @title Non-linear correlation (nlcor) tests
-#' @description The function \code{nlcor.test} computes non-linear correlation tests between two variables. The function can be used to test for non-linear relationships between two variables. The function returns the correlation coefficient, t-value, degrees of freedom, and p-value for three different tests: (1) Correlation between x^fun and y, (2) Correlation between x and y^fun, and (3) Correlation between x^fun and y^fun. The function can be used to test for non-linear relationships between two variables. The function returns the correlation coefficient, t-value, degrees of freedom, and p-value for three different tests: (1) Correlation between x^fun and y, (2) Correlation between x and y^fun, and (3) Correlation between x^fun and y^fun.
+#' @description The function \code{nlcor.test} computes non-linear correlation
+#'              tests between two variables. The function can be used to test
+#'              for non-linear relationships between two variables. The function
+#'              returns the correlation coefficient, t-value, degrees of freedom,
+#'              and p-value for three different tests: (1) Correlation between
+#'              \code{x^fun} and {y}, (2) Correlation between \code{x} and
+#'              \code{y^fun}, and (3) Correlation between \code{x^fun} and \code{y^fun}.
 #' @name nlcor.test
 #'
 #' @param x     a numeric vector representing the tentative predictor.
@@ -7,7 +13,8 @@
 #' @param fun   a numeric value or a function of .Primitive type used for non-linear correlation tests. When \code{fun} is numeric the value is used in a power transformation.
 #'
 #' @export
-nlcor.test <- function(x, y, fun) {
+nlcor.test <- function(x, y, fun)
+  {
   varnames <- c(deparse(substitute(x)), deparse(substitute(y)))
 
   if (length(x) != length(y)) stop("Variables must have the same length")
