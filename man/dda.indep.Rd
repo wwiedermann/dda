@@ -70,11 +70,11 @@ e <- rchisq(n, df = 3) - 3
 y <- 0.5 * x + e
 d <- data.frame(x, y)
 
-dda.indep(y ~ x, pred = "x", data = d, parallelize = TRUE, cores = 2,
+result <- dda.indep(y ~ x, pred = "x", data = d, parallelize = TRUE, cores = 2,
           nlfun = 2, B = 100, hetero = TRUE, diff = TRUE)
 
 
-print(x)
+print(result)
 
 }
 \references{

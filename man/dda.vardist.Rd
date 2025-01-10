@@ -60,7 +60,6 @@ d <- data.frame(x, y)
 
 result <- dda.vardist(y ~ x, pred = "x", data = d,
             B = 1000, boot.type = "bca")
-result
 
 print(result)
 }
