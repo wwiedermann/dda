@@ -123,7 +123,7 @@ result <- cdda.vardist(m, pred = "x", mod = "z",
 
    print(result)
 
- plot(result, stat = "rtanh", ylim = c(-0.05, 0.05))
+plot(result, stat = "rtanh", ylim = c(-0.05, 0.05))
 
 summary(result, skew = FALSE, kurt = FALSE, coskew = TRUE)
 

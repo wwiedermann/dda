@@ -115,7 +115,7 @@ An object of class \code{cdda.indep} with competing model coefficients.
 
 Displays output of standard linear model coefficients for competing target and alternative models.
 
-\code{plot} returns test statistic results from the \code{cdda.indep} class object.
+\code{plot}returns graphs from the \code{cdda.indep} competing conditional models.
 
 \code{summary} returns test statistic results from the \code{cdda.indep} class object.
 }
@@ -148,10 +148,17 @@ d <- data.frame(x, y, z)
 m <- lm(y ~ x * z, data = d)
 
 
-result <- cdda.indep(m, pred = "x", mod = "z",
-                     modval = c(-1, 1), data = d,
-                     hetero = TRUE, diff = TRUE,
-                     parallelize = TRUE, cores = 2, nlfun = 2)
+result <- cdda.indep(m,
+                     pred = "x",
+                     mod = "z",
+                     modval = c(-1, 1),
+                     data = d,
+                     hetero = TRUE,
+                     diff = TRUE,
+                     parallelize = TRUE,
+                     cores = 2,
+                     nlfun = 2,
+                     ...)
 
 
 print(result)

@@ -319,12 +319,14 @@ cdda.indep <- function(
       indep.temp.yx[[i]] <- unclass(dda.indep(ry.aux.tar ~ rx.aux.tar, pred = "rx.aux.tar",
                                               hsic.method = hsic.method, nlfun = nlfun,
                                               B = B, boot.type = boot.type,
-                                              conf.level = conf.level, diff = diff, hetero = hetero
+                                              conf.level = conf.level, diff = diff,
+                                              hetero = hetero, parallelize = parallelize, cores = cores
       ))
       indep.temp.xy[[i]] <- unclass(dda.indep(rx.aux.alt ~ ry.aux.alt, pred = "ry.aux.alt",
                                               hsic.method = hsic.method, nlfun = nlfun,
                                               B = B, boot.type = boot.type,
-                                              conf.level = conf.level, diff = diff, hetero = hetero
+                                              conf.level = conf.level, diff = diff,
+                                              hetero = hetero, parallelize = parallelize, cores = cores
       ))
 
     }
