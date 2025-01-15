@@ -58,8 +58,7 @@ e <- rchisq(n, df = 3) - 3
 y <- 0.5 * x + e
 d <- data.frame(x, y)
 
-result <- dda.vardist(y ~ x, pred = "x", data = d,
-            B = 1000, boot.type = "bca")
+result <- dda.vardist(y ~ x, pred = "x", data = d, B = 50)
 
 print(result)
 }

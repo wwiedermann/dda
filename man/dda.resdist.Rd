@@ -63,7 +63,7 @@ y <- 0.5 * x + e
 d <- data.frame(x, y)
 
 result <- dda.resdist(y ~ x, pred = "x", data = d,
-            B = 500, conf.level = 0.90, prob.trans = TRUE)
+            B = 50, conf.level = 0.90, prob.trans = TRUE)
 
 print(result)
 

@@ -158,7 +158,7 @@ result <- cdda.indep(m,
                      parallelize = TRUE,
                      cores = 2,
                      nlfun = 2,
-                     ...)
+                     B = 50)
 
 
 print(result)

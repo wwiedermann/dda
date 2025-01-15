@@ -57,7 +57,7 @@
 #'
 #' m <- lm(y ~ x * z, data = d)
 #'
-#' result <- cdda.vardist(m, pred = "x", mod = "z",
+#' result <- cdda.vardist(m, pred = "x", mod = "z", B = 50,
 #'                       modval = c(-1, 1), data = d)
 #'
 #' @references Wiedermann, W., & von Eye, A. (2025). \emph{Direction Dependence Analysis: Foundations and Statistical Methods}. Cambridge, UK: Cambridge University Press.

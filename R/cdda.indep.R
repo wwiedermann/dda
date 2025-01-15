@@ -74,7 +74,7 @@
 #'                      parallelize = TRUE,
 #'                      cores = 2,
 #'                      nlfun = 2,
-#'                      ...)
+#'                      B = 50)
 #'
 #'
 #' @references Wiedermann, W., & von Eye, A. (2025). \emph{Direction Dependence Analysis: Foundations and Statistical Methods}. Cambridge, UK: Cambridge University Press.
