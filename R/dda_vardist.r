@@ -26,8 +26,7 @@
 #' y <- 0.5 * x + e
 #' d <- data.frame(x, y)
 #'
-#' result <- dda.vardist(y ~ x, pred = "x", data = d,
-#'             B = 1000, boot.type = "bca")
+#' result <- dda.vardist(y ~ x, pred = "x", data = d, B = 50)
 #'
 #' @references Wiedermann, W., & von Eye, A. (2025). \emph{Direction Dependence Analysis: Foundations and Statistical Methods}. Cambridge, UK: Cambridge University Press.
 #' @seealso \code{\link{cdda.vardist}} for a conditional version.

@@ -4,7 +4,7 @@
 #'              for non-linear relationships between two variables. The function
 #'              returns the correlation coefficient, t-value, degrees of freedom,
 #'              and p-value for three different tests: (1) Correlation between
-#'              \code{x^fun} and {y}, (2) Correlation between \code{x} and
+#'              \code{x^fun} and \code{y}, (2) Correlation between \code{x} and
 #'              \code{y^fun}, and (3) Correlation between \code{x^fun} and \code{y^fun}.
 #' @name nlcor.test
 #'
@@ -12,7 +12,7 @@
 #' @param y     a numeric vector representing the tentative outcome.
 #' @param fun   a numeric value or a function of .Primitive type used for non-linear correlation tests. When \code{fun} is numeric the value is used in a power transformation.
 #'
-#' @export
+#' @noRd
 nlcor.test <- function(x, y, fun)
   {
   varnames <- c(deparse(substitute(x)), deparse(substitute(y)))
@@ -77,7 +77,7 @@ nlcor.test <- function(x, y, fun)
 #' @param ...   Additional arguments to be passed to the function.
 #'
 #' @returns \code{dda.nlcor} test statistics and p-values.
-#' @export
+#' @noRd
 #' @rdname dda.nlcor
 #' @method print dda.nlcor
 print.dda.nlcor <- function(x, ...) {

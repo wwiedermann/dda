@@ -185,9 +185,6 @@ summary.cdda.indep <- function(object, nlfun = FALSE, hetero = FALSE,
   ## dcor ## -------------------------------------------------------------------
   if (dcor == TRUE){
 
-    if (is.null(cdda.output[[1]][[1]]$distance_cor.dcor_yx)) {
-      stop("Difference tests not found, set 'diff = TRUE'.")}
-
     dcor <- matrix(NA, length(mod_names), 4)
 
     for (i in 1:length(mod_names)) {

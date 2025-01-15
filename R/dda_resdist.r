@@ -32,7 +32,7 @@
 #' d <- data.frame(x, y)
 #'
 #' result <- dda.resdist(y ~ x, pred = "x", data = d,
-#'             B = 500, conf.level = 0.90, prob.trans = TRUE)
+#'             B = 50, conf.level = 0.90, prob.trans = TRUE)
 #'
 #' @references Wiedermann, W., & von Eye, A. (2025). Direction Dependence Analysis: Foundations and Statistical Methods. Cambridge, UK: Cambridge University Press.
 #' @export

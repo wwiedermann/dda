@@ -71,7 +71,7 @@ y <- 0.5 * x + e
 d <- data.frame(x, y)
 
 result <- dda.indep(y ~ x, pred = "x", data = d, parallelize = TRUE, cores = 2,
-          nlfun = 2, B = 100, hetero = TRUE, diff = TRUE)
+          nlfun = 2, B = 50, hetero = TRUE, diff = TRUE)
 
 
 print(result)

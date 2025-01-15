@@ -118,7 +118,7 @@ d <- data.frame(x, y, z)
 
 m <- lm(y ~ x * z, data = d)
 
-result <- cdda.vardist(m, pred = "x", mod = "z",
+result <- cdda.vardist(m, pred = "x", mod = "z", B = 50,
                       modval = c(-1, 1), data = d)
 
    print(result)
