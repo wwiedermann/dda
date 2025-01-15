@@ -17,11 +17,11 @@ plot.cdda.vardist <- function(x, stat = NULL,
                               ylim =  NULL, ...){
 
   if(is.null(stat)){
-    stop("stat argument must be specified. as 'rhs', 'cokurt', 'rcc', or 'rtanh'")
+    stop("stat argument must be specified. as 'rhs', 'coskew', 'cokurt', 'rcc', or 'rtanh'")
   }
   else if(stat != "rhs" & stat != "cokurt" & stat != "rcc" &
           stat != "rtanh" & stat != "coskew"){
-    stop("stat must be one of 'rhs', 'cokurt', 'rcc', or 'rtanh'.")
+    stop("stat must be one of 'rhs', 'coskew', 'cokurt', 'rcc', or 'rtanh'.")
   }
 
   obj <- x
