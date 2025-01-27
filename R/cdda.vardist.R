@@ -12,10 +12,10 @@
 #'                    values used in post-hoc probing. Possible characters
 #'                    include \code{c("mean", "median", "JN")}. \code{modval = "mean"}
 #'                    tests the interaction effect at the moderator values
-#'                    \code{M - 1SD},\code{M}, and \code{M + 1SD};
+#'                    \code{M - 1SD}, \code{M}, and \code{M + 1SD};
 #'                    \code{modval = "median"} uses \code{Q1}, \code{Md},
 #'                    and \code{Q3}. The Johnson-Neyman approach is applied
-#'                    when \code{modval = "JN"} with conditional effect being
+#'                    when \code{modval = "JN"} with conditional effects being
 #'                    evaluated at the boundary values of the significance
 #'                    regions. When a numeric sequence is specified, the
 #'                    pick-a-point approach is used for the selected numeric values.
@@ -23,7 +23,6 @@
 #' @param conf.level  Confidence level for bootstrap confidence intervals.
 #' @param B           Number of bootstrap samples.
 #' @param boot.type  A character indicating the type of bootstrap confidence intervals. Must be one of the two values \code{c("perc", "bca")}. \code{boot.type = "bca"} is the default.
-#' @param ...         Additional arguments to be passed to the function.
 #'
 #' @returns A list of class \code{cdda.vardist} containing the results of
 #'          CDDA tests to evaluate distributional properties of observed
@@ -72,8 +71,7 @@ cdda.vardist <- function(formula,
                          modval = NULL,
                          B = 200,
                          boot.type = "perc",
-                         conf.level = 0.95,
-                         ...
+                         conf.level = 0.95
                       ){
 
   if (length(data) == 0) stop("Please specify a data frame.")
@@ -97,7 +95,7 @@ cdda.vardist <- function(formula,
 
     if ( is.null(delete.mod) ) stop( "Specified moderator not found in the target model." )
 
-    delete.interaction <- grep(":", colnames(X))  # which column refers to interaction term
+    delete.interaction <- grep(":", colnames(X))
     if ( length(delete.interaction) == 0 ) stop( "No interaction term specified in the target model." )
 
     x   <- X[, delete.pred] # tentative predictor
@@ -124,7 +122,7 @@ cdda.vardist <- function(formula,
     }
     if (  is.null(delete.mod) == TRUE ) stop( "Specified moderator not found in the target model." )
 
-    delete.interaction <- grep(":", colnames(X))  # which column refers to interaction term
+    delete.interaction <- grep(":", colnames(X))
     if ( length(delete.interaction) == 0 ) stop( "No interaction term specified in the target model." )
 
     x   <- X[,  delete.pred] # tentative predictor
@@ -239,28 +237,16 @@ cdda.vardist <- function(formula,
       twobounds <- unwrpjn[["bounds"]]
 
       if(twobounds[1] < min(moderator, na.rm = TRUE) &
-         twobounds[2] > max(moderator, na.rm = TRUE)) values <- NA #stop("No moderation effects detected for the moderator range.")
-      #  if(lwr.jn < min.mod & upp.jn > max.mod) values <- NA
+         twobounds[2] > max(moderator, na.rm = TRUE)) values <- NA
 
       if(twobounds[1] > min(moderator, na.rm = TRUE) &
          twobounds[2] > max(moderator, na.rm = TRUE)) values <- c(min(moderator), twobounds[1])
-      #      if(lwr.jn > min.mod & upp.jn > max.mod) values <- c(min.mod, lwr.jn)
 
       if(twobounds[1] < min(moderator, na.rm = TRUE) &
          twobounds[2] < max(moderator, na.rm = TRUE)) values <- c(twobounds[2], max(moderator))
-      #      if(lwr.jn < min.mod & upp.jn < max.mod) values <- c(upp.jn, max.mod)
 
       if(twobounds[1] > min(moderator, na.rm = TRUE) &
          twobounds[2] < max(moderator, na.rm = TRUE)) values <- c(min(moderator), twobounds[1], twobounds[2], max(moderator))
-      #   if(lwr.jn > min.mod & upp.jn < max.mod) values <- c(min.mod, lwr.jn, upp.jn, max.mod)
-
-      # if(lwr.jn < min.mod & upp.jn > max.mod) values <- NA
-      # if(lwr.jn > min.mod & upp.jn > max.mod) values <- c(min.mod, lwr.jn)
-      # if(lwr.jn < min.mod & upp.jn < max.mod) values <- c(upp.jn, max.mod)
-      # if(lwr.jn > min.mod & upp.jn < max.mod) values <- c(min.mod, lwr.jn, upp.jn, max.mod)
-      # lwr <- max(twobounds[1], min(moderator))
-      # upr <- min(twobounds[2], max(moderator))
-      # values <- seq(from = lwr, to = upr, length.out = JN.length)
 
       modmat <- data.frame( matrix(NA, length(moderator), length(values)) )
       for( i in seq_along(values) ){ modmat[,i] <- moderator - values[i] }  # compute transformed moderator for each value
@@ -311,8 +297,8 @@ cdda.vardist <- function(formula,
   cdda.var.output[[4]] <- list("response_name" = response.name,
                            "pred_name"= pred,
                            "mod_name" = mod,
-                           "mod_levels" = moderator_levels, # previously: modval,
-                           "mod_data" = data[,mod] #raw for categ, not for contin?
+                           "mod_levels" = moderator_levels,
+                           "mod_data" = data[,mod]
   )
   names(cdda.var.output) <- c("cdda_target", "cdda_alternative", "models", "df_original")
   class(cdda.var.output) <- "cdda.vardist"
@@ -322,12 +308,12 @@ cdda.vardist <- function(formula,
 
 #' @name print.cdda.vardist
 #' @title       Print Method for \code{cdda.vardist} Objects
-#' @description Displays the output of standard linear model coefficients
+#' @description \code{print} returns the output of standard linear model coefficients
 #'              for competing target and alternative models.
-#' @param x     An object of class \code{cdda.vardist}.
+#' @param x     An object of class \code{cdda.vardist} when using \code{print}.
 #' @param ...   Additional arguments to be passed to the function.
 #'
-#' @examples    print(result)
+#' @examples print(result)
 #'
 #' @export
 #' @rdname cdda.vardist

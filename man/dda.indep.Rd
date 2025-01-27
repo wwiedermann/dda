@@ -27,7 +27,7 @@ dda.indep(
 
 \item{pred}{A character indicating the variable name of the predictor which serves as the outcome in the alternative model.}
 
-\item{data}{An optional data frame containing the variables in the model (by default variables are taken from the environment which \code{dda.indep}is called from).}
+\item{data}{An optional data frame containing the variables in the model (by default variables are taken from the environment which \code{dda.indep} is called from).}
 
 \item{nlfun}{Either a numeric value or a function of .Primitive type used for non-linear correlation tests. When \code{nlfun} is numeric the value is used in a power transformation.}
 
@@ -47,9 +47,9 @@ dda.indep(
 
 \item{cores}{A numeric value indicating the number of cores. Only used if \code{parallelize = TRUE}.}
 
-\item{x}{An object of class \code{dda.indep}.}
+\item{x}{An object of class \code{dda.indep} when using \code{print}.}
 
-\item{...}{Additional arguments to be passed to the method.}
+\item{...}{Additional arguments to be passed to the function.}
 }
 \value{
 An object of class \code{dda.indep} containing the results of DDA independence tests.
@@ -59,7 +59,7 @@ An object of class \code{dda.indep} containing the results of DDA independence t
              evaluate asymmetries of predictor-error independence of
              causally competing models (\code{y ~ x} vs. \code{x ~ y}).
 
-Prints the test statistics and p-values associated with \code{dda.indep} objects.
+\code{print} returns DDA test statistics associated with \code{dda.indep} objects.
 }
 \examples{
 

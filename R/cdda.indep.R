@@ -16,7 +16,7 @@
 #'                    \code{M – 1SD}, \code{M}, and \code{M + 1SD};
 #'                    \code{modval = "median"} uses \code{Q1}, \code{Md},
 #'                    and \code{Q3}. The Johnson-Neyman approach is applied
-#'                    when \code{modval = "JN"} with conditional effect being
+#'                    when \code{modval = "JN"} with conditional effects being
 #'                    evaluated at the boundary values of the significance
 #'                    regions. When a numeric sequence is specified,the
 #'                    pick-a-point approach is used for the selected numeric values.
@@ -26,11 +26,10 @@
 #' @param nlfun       Either a numeric value or a function of .Primitive type used for non-linear correlation tests. When nlfun is numeric the value is used in a power transformation.
 #' @param hsic.method A character indicating the inference method for the Hilbert-Schmidt Independence Criterion. Must be one of the four specifications \code{c("gamma", "eigenvalue", "boot", "permutation")}.\code{hsic.method = "gamma"} is the default.
 #' @param B           Number of permutations for separate dCor tests and number of resamples when \code{hsic.method = c("boot", "permutation")} or \code{diff = TRUE}.
-#' @param boot.type   A vector of character strings representing the type of bootstrap confidence intervals. Must be one of the two specifications \code{c("perc", "bca")}.\code{boot.type = "perc"} is the default.
+#' @param boot.type   A character indicating the type of bootstrap confidence intervals. Must be one of the two specifications \code{c("perc", "bca")}. \code{boot.type = "perc"} is the default.
 #' @param conf.level  Confidence level for bootstrap confidence intervals.
 #' @param parallelize A logical value indicating whether bootstrapping is performed on multiple cores. Only used if \code{diff = TRUE}.
 #' @param cores       A numeric value indicating the number of cores. Only used if \code{parallelize = TRUE}.
-#' @param ...         Additional arguments to be passed to the function.
 #'
 #' @returns A list of class \code{cdda.indep} containing the results of CDDA
 #'          independence tests for pre-specified moderator values.
@@ -120,7 +119,7 @@ cdda.indep <- function(
 
     if ( is.null(delete.mod) ) stop( "Specified moderator not found in the target model." )
 
-    delete.interaction <- grep(":", colnames(X))  # which column refers to interaction term
+    delete.interaction <- grep(":", colnames(X))
     if ( length(delete.interaction) == 0 ) stop( "No interaction term specified in the target model." )
 
     x   <- X[, delete.pred] # tentative predictor
@@ -148,11 +147,11 @@ cdda.indep <- function(
 
     if ( is.null(delete.mod) == TRUE ) stop( "Specified moderator not found in the target model." )
 
-    delete.interaction <- grep(":", colnames(X))  # which column refers to interaction term
+    delete.interaction <- grep(":", colnames(X))
     if ( length(delete.interaction) == 0 ) stop( "No interaction term specified in the target model." )
 
     x   <- X[,  delete.pred] # tentative predictor
-    moderator <- X[, delete.mod]  # moderator
+    moderator <- X[, delete.mod] # moderator
 
     X   <- X[, -c(delete.pred, delete.mod, delete.interaction)] # model matrix with only covariates
 
@@ -266,23 +265,16 @@ cdda.indep <- function(
       twobounds <- jnoutput[["bounds"]]
 
       if(twobounds[1] < min(moderator, na.rm = TRUE) &
-         twobounds[2] > max(moderator, na.rm = TRUE)) values <- NA #stop("No moderation effects detected for the moderator range.")
-      #  if(lwr.jn < min.mod & upp.jn > max.mod) values <- NA
+         twobounds[2] > max(moderator, na.rm = TRUE)) values <- NA
 
       if(twobounds[1] > min(moderator, na.rm = TRUE) &
          twobounds[2] > max(moderator, na.rm = TRUE)) values <- c(min(moderator), twobounds[1])
-      #      if(lwr.jn > min.mod & upp.jn > max.mod) values <- c(min.mod, lwr.jn)
 
       if(twobounds[1] < min(moderator, na.rm = TRUE) &
          twobounds[2] < max(moderator, na.rm = TRUE)) values <- c(twobounds[2], max(moderator))
-      #      if(lwr.jn < min.mod & upp.jn < max.mod) values <- c(upp.jn, max.mod)
 
       if(twobounds[1] > min(moderator, na.rm = TRUE) &
          twobounds[2] < max(moderator, na.rm = TRUE)) values <- c(min(moderator), twobounds[1], twobounds[2], max(moderator))
-      #   if(lwr.jn > min.mod & upp.jn < max.mod) values <- c(min.mod, lwr.jn, upp.jn, max.mod)
-
-      # upr <- min(twobounds[2], max(moderator))
-      #values <- seq(from = lwr, to = upr) # no need for jn.length (rm in argument)
 
       modmat <- data.frame( matrix(NA, length(moderator), length(values)) )
       for( i in seq_along(values) ){ modmat[,i] <- moderator - values[i] }  # compute transformed moderator for each value
@@ -337,7 +329,6 @@ cdda.indep <- function(
   }
 
   response.name <- all.vars(formula(formula))[1]  # get name of response variable
-  #output <- c(output, list(var.names = c(response.name, pred)))
 
   cdda.output <- list()
   cdda.output[[1]] <- indep.temp.yx
@@ -346,8 +337,8 @@ cdda.indep <- function(
   cdda.output[[4]] <- list("response_name" = response.name,
                            "pred_name"= pred,
                            "mod_name" = mod,
-                           "mod_levels" = moderator_levels, # previously: modval,
-                           "mod_data" = data[,mod] #raw for categ, not for contin?
+                           "mod_levels" = moderator_levels,
+                           "mod_data" = data[,mod]
   )
 
   names(cdda.output) <- c("cdda_target", "cdda_alternative", "models", "df_original")
@@ -356,8 +347,8 @@ cdda.indep <- function(
 }
 
 #' @title Print Method for \code{cdda.indep} Objects.
-#' @description Displays output of standard linear model coefficients for competing target and alternative models.
-#' @param x     An object of class \code{cdda.indep}.
+#' @description \code{print} returns the output of standard linear model coefficients for competing target and alternative models.
+#' @param x     An object of class \code{cdda.indep} when using \code{print}.
 #' @param ...   Additional arguments to be passed to the function.
 #'
 #' @examples print(result)

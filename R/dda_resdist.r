@@ -258,7 +258,7 @@ dda.resdist <- function(formula, pred = NULL, data = list(), B = 200,
                     out.adj = ry
   )  # note: residuals are standardized prior DDA
 
-  if( isTRUE(prob.trans) ){  # add prob transformed if needed
+  if( isTRUE(prob.trans) ){
 
     trans <- prob.int(rx, ry)
     rx.trans <- trans$x
@@ -370,9 +370,9 @@ dda.resdist <- function(formula, pred = NULL, data = list(), B = 200,
 #' @name print.dda.resdist
 #' @title Print Method for \code{dda.resdist} Objects
 #'
-#' @description Prints the test statistics and p-values associated with \code{dda.resdist} objects.
+#' @description \code{print} returns DDA test statistics associated with \code{dda.resdist} objects.
 #'
-#' @param x An object of class \code{dda.resdist}.
+#' @param x An object of class \code{dda.resdist} when using \code{print}.
 #' @param ... Additional arguments to be passed to the method.
 #'
 #' @examples
