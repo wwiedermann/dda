@@ -16,8 +16,7 @@ cdda.vardist(
   modval = NULL,
   B = 200,
   boot.type = "perc",
-  conf.level = 0.95,
-  ...
+  conf.level = 0.95
 )
 
 \method{print}{cdda.vardist}(x, ...)
@@ -39,10 +38,10 @@ cdda.vardist(
 values used in post-hoc probing. Possible characters
 include \code{c("mean", "median", "JN")}. \code{modval = "mean"}
 tests the interaction effect at the moderator values
-\code{M - 1SD},\code{M}, and \code{M + 1SD};
+\code{M - 1SD}, \code{M}, and \code{M + 1SD};
 \code{modval = "median"} uses \code{Q1}, \code{Md},
 and \code{Q3}. The Johnson-Neyman approach is applied
-when \code{modval = "JN"} with conditional effect being
+when \code{modval = "JN"} with conditional effects being
 evaluated at the boundary values of the significance
 regions. When a numeric sequence is specified, the
 pick-a-point approach is used for the selected numeric values.}
@@ -53,24 +52,24 @@ pick-a-point approach is used for the selected numeric values.}
 
 \item{conf.level}{Confidence level for bootstrap confidence intervals.}
 
-\item{...}{Additional arguments to be passed to the function.}
-
 \item{x}{a \code{cdda.vardist} class object.}
+
+\item{...}{Additional arguments to be passed to the function.}
 
 \item{stat}{a character indicating the statistic to be plotted, default is
 \code{"rhs"}, with options \code{c("coskew", "cokurt", "rhs", "rcc", "rtanh")}.}
 
-\item{ylim}{a numeric vector of length 2 indicating the y-axis limits if \code{NULL}, the function will set the limits automatically.}
+\item{ylim}{a numeric vector of length 2 indicating the y-axis limits. If \code{NULL}, the function will set the limits automatically.}
 
-\item{object}{Output from \code{cdda.vardist} object.}
+\item{object}{An object of class \code{cdda.vardist} when using \code{summary}.}
 
-\item{skew}{Logical, default is \code{TRUE}, includes skew differences and Agostino statistics.}
+\item{skew}{A logical value indicating whether skewness differences and separate D'Agostino skewness tests should be returned when using \code{summary}, default is \code{TRUE}.}
 
-\item{coskew}{Logical, default is \code{FALSE}, where co-skew differences and Hyvarinen-Smith statistics are printed.}
+\item{coskew}{A logical value indicating whether co-skewness differences should be returned when using \code{summary}, default is \code{FALSE}.}
 
-\item{kurt}{Logical, default is \code{TRUE}, where kurtosis differences and Anscombe statistics are printed.}
+\item{kurt}{A logical value indicating whether excess kurtosis differences and Anscombe-Glynn kurtosis tests should be returned when using \code{summary}, default is \code{TRUE}.}
 
-\item{cokurt}{Logical, default is \code{FALSE}, where co-kurtosis differences and Chen-Chan statistics are printed.}
+\item{cokurt}{A logical value indicating whether co-kurtosis differences should be returned when using \code{summary}, default is \code{FALSE}.}
 }
 \value{
 A list of class \code{cdda.vardist} containing the results of
@@ -83,12 +82,12 @@ A list of class \code{cdda.vardist} containing the results of
              (\code{y ~ x * m} vs.\code{x ~ y * m} with \code{m}
              being a continuous or categorical moderator).
 
-Displays the output of standard linear model coefficients
+\code{print} returns the output of standard linear model coefficients
              for competing target and alternative models.
 
-\code{plot} returns graphs from the \code{cdda.vardist} competing conditional models.
+\code{plot} returns graphs for CDDA test statistics obtained from competing conditional models.
 
-\code{summary} returns test statistic results from the \code{cdda.vardist} class object.
+\code{summary} returns test statistics from the \code{cdda.vardist} class object.
 }
 \examples{
 set.seed(321)
@@ -121,7 +120,7 @@ m <- lm(y ~ x * z, data = d)
 result <- cdda.vardist(m, pred = "x", mod = "z", B = 50,
                       modval = c(-1, 1), data = d)
 
-   print(result)
+print(result)
 
 plot(result, stat = "rtanh", ylim = c(-0.05, 0.05))
 

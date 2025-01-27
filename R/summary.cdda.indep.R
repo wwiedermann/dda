@@ -1,15 +1,15 @@
 #' @title Summary for \code{cdda.indep} Objects
-#' @description \code{summary} returns test statistic results from the \code{cdda.indep} class object.
+#' @description \code{summary} returns test statistics from the \code{cdda.indep} class object.
 #' @name summary.cdda.indep
 #'
-#' @param object          Output from \code{cdda.indep} object.
-#' @param nlfun           Logical, default is \code{FALSE}, includes non-linear correlation test statistics.
-#' @param hetero          Logical, default is \code{FALSE}, includes Breusch-Pagan Homoscedasticity test statistics.
-#' @param hsic            Logical, default is \code{TRUE}, includes Hilbert-Schmidt Independence Criterion (HSIC) test statistics.
-#' @param hsic.diff       Logical, default is \code{FALSE}, includes HSIC difference statistics.
-#' @param dcor            Logical, default is \code{TRUE}, includes Distance Correlation (dCor) test statistics.
-#' @param dcor.diff       Logical, default is \code{FALSE}, includes dCor differences test statistics.
-#' @param mi.diff         Logical, default is \code{FALSE}, includes Mutual Information (MI) difference statistics.
+#' @param object          An object of class \code{cdda.indep} when using \code{summary}.
+#' @param nlfun           A logical value indicating whether non-linear correlation tests should be returned when using \code{summary}, default is \code{FALSE}.
+#' @param hetero          A logical value indicating whether separate homoscedasticity tests should be returned when using \code{summary}, default is \code{FALSE}.
+#' @param hsic            A logical value indicating whether deparate HSIC tests should be returned when using \code{summary}, default is \code{TRUE}.
+#' @param hsic.diff       A logical value indicating whether HSIC difference statistics should be returned when using \code{summary}, default is \code{FALSE}.
+#' @param dcor            A logical value indicating whether separate Distance Correlation (dCor) tests should be returned when using \code{summary}, default is \code{TRUE}.
+#' @param dcor.diff       A logical value indicating whether dCor difference statistics should be returned when using \code{summary}, default is \code{FALSE}.
+#' @param mi.diff         A logical value indicating whether Mutual Information (MI) difference statistics should be returned when using \code{summary}, default is \code{FALSE}.
 #' @param ...             Additional arguments to be passed to the function.
 #'
 #' @examples summary(result, hetero = FALSE)

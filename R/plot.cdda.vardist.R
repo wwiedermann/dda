@@ -1,11 +1,11 @@
 #' @title Plots of \code{cdda.vardist} Class Objects
-#' @description \code{plot} returns graphs from the \code{cdda.vardist} competing conditional models.
+#' @description \code{plot} returns graphs for CDDA test statistics obtained from competing conditional models.
 #' @name plot.cdda.vardist
 #'
 #' @param x    a \code{cdda.vardist} class object.
 #' @param stat   a character indicating the statistic to be plotted, default is
 #'               \code{"rhs"}, with options \code{c("coskew", "cokurt", "rhs", "rcc", "rtanh")}.
-#' @param ylim   a numeric vector of length 2 indicating the y-axis limits if \code{NULL}, the function will set the limits automatically.
+#' @param ylim   a numeric vector of length 2 indicating the y-axis limits. If \code{NULL}, the function will set the limits automatically.
 #' @param ...         Additional arguments to be passed to the function.
 #'
 #' @examples plot(result, stat = "rtanh", ylim = c(-0.05, 0.05))
@@ -27,8 +27,8 @@ plot.cdda.vardist <- function(x, stat = NULL,
   obj <- x
 
   ## Plot Label and Assignment ##
-  mod.vals <- obj[[4]][["mod_data"]] #modvalues, raw data
-  mod.levels <- x.axis.labels <- obj[[4]][["mod_levels"]] #"modval levels for pick-a-point, not raw data"
+  mod.vals <- obj[[4]][["mod_data"]]
+  mod.levels <- x.axis.labels <- obj[[4]][["mod_levels"]] #modval levels for pick-a-point
   y.title <- obj[[3]][[1]] #Test statistic CI header
   ci.level <- as.numeric(obj[[1]][[1]]$boot.args[2]) * 100
 
@@ -45,7 +45,7 @@ plot.cdda.vardist <- function(x, stat = NULL,
   out <- matrix(NA, length(plot.axis), 6)
 
   if (stat == "rhs"){
-    y.title <- paste0("Hyvarinen-Smith Co-Skewness Differences (", ci.level, "% CI)") #make ci flexible
+    y.title <- paste0("Hyvarinen-Smith Co-Skewness Differences (", ci.level, "% CI)")
     if(is.null(obj[[1]][[1]]$RHS)){
       stop( "Hyvarinen-Smith Co-Skewness not found. Specify coskew = TRUE." )
       y.title <- "RHS"
@@ -95,7 +95,7 @@ plot.cdda.vardist <- function(x, stat = NULL,
     }
   }
 
-  if (stat == "rtanh"){ #check if the wrong stats are grabbed
+  if (stat == "rtanh"){
     y.title <- paste0("Hyperbolic Tangent Differences (", ci.level, "% CI)")
     if(is.null(obj[[1]][[1]]$Rtanh)){
       stop( "Hyperbolic Tangent Differences not found. Specify cokurt = TRUE." )

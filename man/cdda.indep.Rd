@@ -56,24 +56,24 @@ tests the interaction effect at the moderator values
 \code{M – 1SD}, \code{M}, and \code{M + 1SD};
 \code{modval = "median"} uses \code{Q1}, \code{Md},
 and \code{Q3}. The Johnson-Neyman approach is applied
-when \code{modval = "JN"} with conditional effect being
+when \code{modval = "JN"} with conditional effects being
 evaluated at the boundary values of the significance
 regions. When a numeric sequence is specified,the
 pick-a-point approach is used for the selected numeric values.}
 
 \item{data}{A required data frame containing the variables in the model.}
 
-\item{hetero}{Logical, default is \code{FALSE}, includes Breusch-Pagan Homoscedasticity test statistics.}
+\item{hetero}{A logical value indicating whether separate homoscedasticity tests should be returned when using \code{summary}, default is \code{FALSE}.}
 
 \item{diff}{A logical value indicating whether differences in HSIC, dCor, and MI values should be computed. Bootstrap confidence intervals are computed using B bootstrap samples.}
 
-\item{nlfun}{Logical, default is \code{FALSE}, includes non-linear correlation test statistics.}
+\item{nlfun}{A logical value indicating whether non-linear correlation tests should be returned when using \code{summary}, default is \code{FALSE}.}
 
 \item{hsic.method}{A character indicating the inference method for the Hilbert-Schmidt Independence Criterion. Must be one of the four specifications \code{c("gamma", "eigenvalue", "boot", "permutation")}.\code{hsic.method = "gamma"} is the default.}
 
 \item{B}{Number of permutations for separate dCor tests and number of resamples when \code{hsic.method = c("boot", "permutation")} or \code{diff = TRUE}.}
 
-\item{boot.type}{A vector of character strings representing the type of bootstrap confidence intervals. Must be one of the two specifications \code{c("perc", "bca")}.\code{boot.type = "perc"} is the default.}
+\item{boot.type}{A character indicating the type of bootstrap confidence intervals. Must be one of the two specifications \code{c("perc", "bca")}. \code{boot.type = "perc"} is the default.}
 
 \item{conf.level}{Confidence level for bootstrap confidence intervals.}
 
@@ -85,21 +85,21 @@ pick-a-point approach is used for the selected numeric values.}
 
 \item{x}{a \code{cdda.indep} class object.}
 
-\item{stat}{a character indicating the stat of statistic to be plotted with options \code{c("hsic.diff", "dcor.diff", "mi.diff")}.}
+\item{stat}{a character indicating the CDDA statistic to be plotted with the options \code{c("hsic.diff", "dcor.diff", "mi.diff")}.}
 
 \item{ylim}{a numeric vector of length 2 indicating the y-axis limits if \code{NULL}, the function will set the limits automatically.}
 
-\item{object}{Output from \code{cdda.indep} object.}
+\item{object}{An object of class \code{cdda.indep} when using \code{summary}.}
 
-\item{hsic}{Logical, default is \code{TRUE}, includes Hilbert-Schmidt Independence Criterion (HSIC) test statistics.}
+\item{hsic}{A logical value indicating whether deparate HSIC tests should be returned when using \code{summary}, default is \code{TRUE}.}
 
-\item{hsic.diff}{Logical, default is \code{FALSE}, includes HSIC difference statistics.}
+\item{hsic.diff}{A logical value indicating whether HSIC difference statistics should be returned when using \code{summary}, default is \code{FALSE}.}
 
-\item{dcor}{Logical, default is \code{TRUE}, includes Distance Correlation (dCor) test statistics.}
+\item{dcor}{A logical value indicating whether separate Distance Correlation (dCor) tests should be returned when using \code{summary}, default is \code{TRUE}.}
 
-\item{dcor.diff}{Logical, default is \code{FALSE}, includes dCor differences test statistics.}
+\item{dcor.diff}{A logical value indicating whether dCor difference statistics should be returned when using \code{summary}, default is \code{FALSE}.}
 
-\item{mi.diff}{Logical, default is \code{FALSE}, includes Mutual Information (MI) difference statistics.}
+\item{mi.diff}{A logical value indicating whether Mutual Information (MI) difference statistics should be returned when using \code{summary}, default is \code{FALSE}.}
 }
 \value{
 A list of class \code{cdda.indep} containing the results of CDDA
@@ -113,11 +113,11 @@ An object of class \code{cdda.indep} with competing model coefficients.
              conditional models (\code{y ~ x * m} vs. \code{x ~ y * m}
              with \code{m} being a continuous or categorical moderator).
 
-Displays output of standard linear model coefficients for competing target and alternative models.
+\code{print} returns the output of standard linear model coefficients for competing target and alternative models.
 
-\code{plot}returns graphs from the \code{cdda.indep} competing conditional models.
+\code{plot} returns graphs for CDDA test statistics obtained from competing conditional models.
 
-\code{summary} returns test statistic results from the \code{cdda.indep} class object.
+\code{summary} returns test statistics from the \code{cdda.indep} class object.
 }
 \examples{
 set.seed(321)
@@ -163,7 +163,7 @@ result <- cdda.indep(m,
 
 print(result)
 
-plot(result, stat = "hsic.diff")
+plot(result, stat = "dcor.diff")
 
 summary(result, hetero = FALSE)
 

@@ -28,13 +28,13 @@ which \code{dda.vardist} is called from).}
 
 \item{B}{Number of bootstrap samples.}
 
-\item{boot.type}{A vector of character strings representing the type of bootstrap confidence intervals required. Must be one of the two specifications c("perc", "bca"). boot.type = "perc" is the default.}
+\item{boot.type}{A character indicating the type of bootstrap confidence intervals. Must be one of the two specifications c("perc", "bca"). boot.type = "perc" is the default.}
 
 \item{conf.level}{Confidence level for bootstrap confidence intervals.}
 
 \item{...}{Additional arguments to be passed to the function.}
 
-\item{x}{An object of class \code{dda.vardist}.}
+\item{x}{An object of class \code{dda.vardist} when using \code{print}.}
 }
 \value{
 An object of class \code{dda.vardist} containing the results of DDA tests
@@ -47,7 +47,7 @@ An object of class \code{dda.vardist}.
              distributions for causally competing models
              (\code{y ~ x} vs. \code{x ~ y}).
 
-Prints the test statistics and p-values associated with \code{dda.vardist} objects.
+\code{print} returns DDA test statistics associated with \code{dda.vardist} objects.
 }
 \examples{
 set.seed(123)

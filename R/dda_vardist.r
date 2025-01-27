@@ -10,7 +10,7 @@
 #'                    model (by default variables are taken from the environment
 #'                    which \code{dda.vardist} is called from).
 #' @param B           Number of bootstrap samples.
-#' @param boot.type   A vector of character strings representing the type of bootstrap confidence intervals required. Must be one of the two specifications c("perc", "bca"). boot.type = "perc" is the default.
+#' @param boot.type   A character indicating the type of bootstrap confidence intervals. Must be one of the two specifications c("perc", "bca"). boot.type = "perc" is the default.
 #' @param conf.level  Confidence level for bootstrap confidence intervals.
 #' @param ...         Additional arguments to be passed to the function.
 #'
@@ -184,8 +184,8 @@ dda.vardist <- function(
 #' @name print.dda.vardist
 #' @title Print Method for \code{dda.vardist} Objects
 #'
-#' @description Prints the test statistics and p-values associated with \code{dda.vardist} objects.
-#' @param x     An object of class \code{dda.vardist}.
+#' @description \code{print} returns DDA test statistics associated with \code{dda.vardist} objects.
+#' @param x     An object of class \code{dda.vardist} when using \code{print}.
 #' @param ...   Additional arguments to be passed to the function.
 #'
 #' @examples print(result)

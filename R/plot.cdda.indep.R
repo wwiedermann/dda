@@ -1,13 +1,13 @@
 #' @title Plot of \code{cdda.indep} class object
-#' @description \code{plot}returns graphs from the \code{cdda.indep} competing conditional models.
+#' @description \code{plot} returns graphs for CDDA test statistics obtained from competing conditional models.
 #' @name plot.cdda.indep
 #'
 #' @param x             a \code{cdda.indep} class object.
-#' @param stat          a character indicating the stat of statistic to be plotted with options \code{c("hsic.diff", "dcor.diff", "mi.diff")}.
+#' @param stat          a character indicating the CDDA statistic to be plotted with the options \code{c("hsic.diff", "dcor.diff", "mi.diff")}.
 #' @param ylim          a numeric vector of length 2 indicating the y-axis limits if \code{NULL}, the function will set the limits automatically.
 #' @param ...         Additional arguments to be passed to the function.
 #'
-#' @examples plot(result, stat = "hsic.diff")
+#' @examples plot(result, stat = "dcor.diff")
 #'
 #' @export
 #' @rdname cdda.indep
@@ -23,8 +23,8 @@ plot.cdda.indep <- function(x = NULL, stat = NULL, ylim =  NULL, ...){
 
   obj <- x
   ## Plot Label and Assignment ##
-  mod.vals <- obj[[4]][["mod_data"]] #modvalues, raw data
-  mod.levels <- x.axis.labels <- obj[[4]][["mod_levels"]] #"modval levels for pick-a-point, not raw data"
+  mod.vals <- obj[[4]][["mod_data"]]
+  mod.levels <- x.axis.labels <- obj[[4]][["mod_levels"]] #modval levels for pick-a-point
   y.title <- obj[[3]][[1]] #Test statistic CI header
   ci.level <- as.numeric(obj[[1]][[1]]$boot.args[2]) * 100
 
@@ -57,7 +57,7 @@ plot.cdda.indep <- function(x = NULL, stat = NULL, ylim =  NULL, ...){
       stop( "dCor Differences not found. Specify diff = TRUE." )
     }
 
-    y.title <- paste0("dCor Differences (", ci.level, "% CI)") #y-title CI flexible
+    y.title <- paste0("dCor Differences (", ci.level, "% CI)")
     for (i in 1:length(plot.axis)) {
       out[i, ] <- c(obj[[1]][[i]]$out.diff[2, ],
                     obj[[2]][[i]]$out.diff[2, ])

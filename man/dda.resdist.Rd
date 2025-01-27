@@ -39,7 +39,7 @@ skewness and kurtosis difference tests.}
 
 \item{conf.level}{Confidence level for bootstrap confidence intervals.}
 
-\item{x}{An object of class \code{dda.resdist}.}
+\item{x}{An object of class \code{dda.resdist} when using \code{print}.}
 
 \item{...}{Additional arguments to be passed to the method.}
 }
@@ -52,7 +52,7 @@ An object of class \code{ddaresdist} containing the results of DDA
 \code{dda.resdist} evaluates patterns of asymmetry of error
 distributions of causally competing models (\code{y ~ x} vs. \code{x ~ y}).
 
-Prints the test statistics and p-values associated with \code{dda.resdist} objects.
+\code{print} returns DDA test statistics associated with \code{dda.resdist} objects.
 }
 \examples{
 set.seed(123)
