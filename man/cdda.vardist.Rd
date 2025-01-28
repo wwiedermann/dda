@@ -52,14 +52,14 @@ pick-a-point approach is used for the selected numeric values.}
 
 \item{conf.level}{Confidence level for bootstrap confidence intervals.}
 
-\item{x}{a \code{cdda.vardist} class object.}
+\item{x}{An object of class \code{cdda.vardist} when using \code{print} or \code{plot}.}
 
 \item{...}{Additional arguments to be passed to the function.}
 
-\item{stat}{a character indicating the statistic to be plotted, default is
+\item{stat}{A character indicating the statistic to be plotted, default is
 \code{"rhs"}, with options \code{c("coskew", "cokurt", "rhs", "rcc", "rtanh")}.}
 
-\item{ylim}{a numeric vector of length 2 indicating the y-axis limits. If \code{NULL}, the function will set the limits automatically.}
+\item{ylim}{A numeric vector of length 2 indicating the y-axis limits. If \code{NULL}, the function will set the limits automatically.}
 
 \item{object}{An object of class \code{cdda.vardist} when using \code{summary}.}
 

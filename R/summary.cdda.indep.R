@@ -23,10 +23,10 @@ summary.cdda.indep <- function(object, nlfun = FALSE, hetero = FALSE,
 
   cdda.output <- object
 
-  varnames <- cdda.output[[1]][[1]]$var.names # used in nlcor, boot.args, . . .
+  varnames <- cdda.output[[1]][[1]]$var.names
   mod_names <- names(cdda.output[[1]])
 
-  varnames <- cdda.output[[1]][[1]]$var.names # used in nlcor, boot.args, . . .
+  varnames <- cdda.output[[1]][[1]]$var.names
   mod_names <- names(cdda.output[[1]])
   n_resamples <- cdda.output[[1]][[1]]$boot.args[3]
   ci.level <- as.numeric(cdda.output[[1]][[1]]$boot.args[2]) * 100

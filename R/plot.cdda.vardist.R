@@ -2,11 +2,11 @@
 #' @description \code{plot} returns graphs for CDDA test statistics obtained from competing conditional models.
 #' @name plot.cdda.vardist
 #'
-#' @param x    a \code{cdda.vardist} class object.
-#' @param stat   a character indicating the statistic to be plotted, default is
+#' @param x      An object of class \code{cdda.vardist} when using \code{print} or \code{plot}.
+#' @param stat   A character indicating the statistic to be plotted, default is
 #'               \code{"rhs"}, with options \code{c("coskew", "cokurt", "rhs", "rcc", "rtanh")}.
-#' @param ylim   a numeric vector of length 2 indicating the y-axis limits. If \code{NULL}, the function will set the limits automatically.
-#' @param ...         Additional arguments to be passed to the function.
+#' @param ylim   A numeric vector of length 2 indicating the y-axis limits. If \code{NULL}, the function will set the limits automatically.
+#' @param ...    Additional arguments to be passed to the function.
 #'
 #' @examples plot(result, stat = "rtanh", ylim = c(-0.05, 0.05))
 #'

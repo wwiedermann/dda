@@ -348,7 +348,7 @@ cdda.indep <- function(
 
 #' @title Print Method for \code{cdda.indep} Objects.
 #' @description \code{print} returns the output of standard linear model coefficients for competing target and alternative models.
-#' @param x     An object of class \code{cdda.indep} when using \code{print}.
+#' @param x     An object of class \code{cdda.indep} when using \code{print} or \code{plot}.
 #' @param ...   Additional arguments to be passed to the function.
 #'
 #' @examples print(result)
