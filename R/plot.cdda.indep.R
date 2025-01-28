@@ -2,9 +2,9 @@
 #' @description \code{plot} returns graphs for CDDA test statistics obtained from competing conditional models.
 #' @name plot.cdda.indep
 #'
-#' @param x             a \code{cdda.indep} class object.
-#' @param stat          a character indicating the CDDA statistic to be plotted with the options \code{c("hsic.diff", "dcor.diff", "mi.diff")}.
-#' @param ylim          a numeric vector of length 2 indicating the y-axis limits if \code{NULL}, the function will set the limits automatically.
+#' @param x           An object of class \code{cdda.indep} when using \code{print} or \code{plot}.
+#' @param stat        A character indicating the CDDA statistic to be plotted with the options \code{c("hsic.diff", "dcor.diff", "mi.diff")}.
+#' @param ylim        A numeric vector of length 2 indicating the y-axis limits if \code{NULL}, the function will set the limits automatically.
 #' @param ...         Additional arguments to be passed to the function.
 #'
 #' @examples plot(result, stat = "dcor.diff")

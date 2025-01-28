@@ -83,11 +83,11 @@ pick-a-point approach is used for the selected numeric values.}
 
 \item{...}{Additional arguments to be passed to the function.}
 
-\item{x}{a \code{cdda.indep} class object.}
+\item{x}{An object of class \code{cdda.indep} when using \code{print} or \code{plot}.}
 
-\item{stat}{a character indicating the CDDA statistic to be plotted with the options \code{c("hsic.diff", "dcor.diff", "mi.diff")}.}
+\item{stat}{A character indicating the CDDA statistic to be plotted with the options \code{c("hsic.diff", "dcor.diff", "mi.diff")}.}
 
-\item{ylim}{a numeric vector of length 2 indicating the y-axis limits if \code{NULL}, the function will set the limits automatically.}
+\item{ylim}{A numeric vector of length 2 indicating the y-axis limits if \code{NULL}, the function will set the limits automatically.}
 
 \item{object}{An object of class \code{cdda.indep} when using \code{summary}.}
 

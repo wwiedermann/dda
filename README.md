@@ -2,11 +2,11 @@
 
 `dda`, Direction Dependence Analysis (DDA) provides framework for analyzing competing linear models. A target model `y ~ x` is compared to an alternate (causally reversed) model `x ~ y` through a series of diagnostic tests. DDA framework supports causal model exploration and potential confounding detection through diagnostics with higher-order moments.
 
-* `dda.indep()` independence property tests, including non‐linear correlation tests, Breusch–Pagan homoscedasticity tests, and the HSIC test 
-* `dda.vardist()` variable distribution‐based tests, including D'Agostino and Anscombe–Glynn tests and bootstrap CIs on higher moment differences
-* `dda.resdist()` residual distribution tests, including D'Agostino and Anscombe–Glynn tests and bootstrap CIs on higher moment differences
 * `cdda.indep()` conditional (moderation) independence property tests, including non‐linear correlation tests, Breusch–Pagan homoscedasticity tests, and the HSIC test 
 * `cdda.vardist()` conditional (moderation) variable distribution‐based tests, including D'Agostino and Anscombe–Glynn tests and bootstrap CIs on higher moment differences
+* `dda.indep()` independence property tests, including non‐linear correlation tests, Breusch–Pagan homoscedasticity tests, and the HSIC test 
+* `dda.resdist()` residual distribution tests, including D'Agostino and Anscombe–Glynn tests and bootstrap CIs on higher moment differences
+* `dda.vardist()` variable distribution‐based tests, including D'Agostino and Anscombe–Glynn tests and bootstrap CIs on higher moment differences
 
 Conditional (moderation) functions can be plotted as well where different moderator levels are visually displayed. 
 
@@ -14,15 +14,11 @@ If you are new to Direction Dependence Analysis (DDA) concepts, the best place t
 
 ## Installation
 
-`dda` is under beta testing development which has development version from GitHub: 
+The `dda` development version can be installed from GitHub: 
 
 ```
 remotes::install_github("wwiedermann/dda")
 ```
-
-### Development version
-
-To get a bug fix or to use a feature from the development version, you can install the development version of `dda` from GitHub.
 
 ## Usage
 
