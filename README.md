@@ -1,14 +1,12 @@
 ## Overview
 
-`dda`, Direction Dependence Analysis (DDA) provides framework for analyzing competing linear models. A target model `y ~ x` is compared to an alternate (causally reversed) model `x ~ y` through a series of diagnostic tests. DDA framework supports causal model exploration and potential confounding detection through diagnostics with higher-order moments.
+Direction Dependence Analysis (Package: \code{dda}) provides framework for analyzing competing linear models. A target model \code{y ~ x} is compared to an alternate (causally reversed) model \code{x ~ y} through a series of diagnostic tests. DDA framework supports causal model exploration and potential confounding detection through diagnostics with higher-order moments.
 
 * `cdda.indep()` conditional (moderation) independence property tests, including non‐linear correlation tests, Breusch–Pagan homoscedasticity tests, and the HSIC test 
 * `cdda.vardist()` conditional (moderation) variable distribution‐based tests, including D'Agostino and Anscombe–Glynn tests and bootstrap CIs on higher moment differences
 * `dda.indep()` independence property tests, including non‐linear correlation tests, Breusch–Pagan homoscedasticity tests, and the HSIC test 
 * `dda.resdist()` residual distribution tests, including D'Agostino and Anscombe–Glynn tests and bootstrap CIs on higher moment differences
 * `dda.vardist()` variable distribution‐based tests, including D'Agostino and Anscombe–Glynn tests and bootstrap CIs on higher moment differences
-
-Conditional (moderation) functions can be plotted as well where different moderator levels are visually displayed. 
 
 If you are new to Direction Dependence Analysis (DDA) concepts, the best place to start is the [Direction Dependence in Statistical Modeling: Methods of Analysis](https://onlinelibrary.wiley.com/doi/book/10.1002/9781119523024) text.
 
@@ -69,4 +67,4 @@ plot(mean.vardist, stat = "rhs", ylim = c(-0.2, 0.3))
 
 ## Getting help
 
-If you encounter a clear bug, please file an issue with a minimal reproducible example on GitHub. For questions and other discussion, please contact the package maintainer.
+If you encounter a clear bug, please file an issue with a minimal reproducible example on [GitHub](https://github.com/wwiedermann/dda). For questions and other discussion, please contact the package maintainer.
