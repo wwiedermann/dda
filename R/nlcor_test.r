@@ -6,8 +6,9 @@
 #'              and p-value for three different tests: (1) Correlation between
 #'              \code{x^fun} and \code{y}, (2) Correlation between \code{x} and
 #'              \code{y^fun}, and (3) Correlation between \code{x^fun} and \code{y^fun}.
-#' 
+#'
 #' @export
+#' @keywords internal
 #' @rdname nlcor.test
 #'
 #' @param x     a numeric vector representing the tentative predictor.
@@ -83,7 +84,7 @@ nlcor.test <- function(x, y, fun)
 #' @export
 #' @rdname dda.nlcor
 #' @method print dda.nlcor
-#' 
+#'
 #' @noRd
 print.dda.nlcor <- function(x, ...) {
   varnames <- x$varnames
