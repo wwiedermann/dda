@@ -182,6 +182,7 @@ dda.indep <- function(
 
   ry <- lm.fit(X, y)$residuals
 	rx <- lm.fit(X, x)$residuals
+	#add logical indicator: if robust = TRUE
 
 	m.yx <- lm(ry ~ rx)
 	m.xy <- lm(rx ~ ry)
@@ -451,5 +452,4 @@ if(!is.null(x$out.diff)){
 	 cat("\n")
     }
 }
-
 
