@@ -128,12 +128,12 @@ dda.vardist <- function(
 	agostino.out <- apply(dat, 2, moments::agostino.test)
 	agostino.out <- lapply(agostino.out, unclass)
 	agostino.out$predictor[3:5] <- NULL
-    agostino.out$outcome[3:5] <- NULL
+  agostino.out$outcome[3:5] <- NULL
 
 	anscombe.out <- apply(dat, 2, moments::anscombe.test)
 	anscombe.out <- lapply(anscombe.out, unclass)
 	anscombe.out$predictor[3:5] <- NULL
-    anscombe.out$outcome[3:5] <- NULL
+  anscombe.out$outcome[3:5] <- NULL
 
 	output <- list(agostino.out, anscombe.out)
 	names(output) <- c("agostino", "anscombe")

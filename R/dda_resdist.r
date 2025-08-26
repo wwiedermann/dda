@@ -17,7 +17,7 @@
 #'                    transformation should be performed prior computation of
 #'                    skewness and kurtosis difference tests.
 #' @param conf.level  Confidence level for bootstrap confidence intervals.
-#' @param ...         Additional arguments to be passed to the function.
+#' @param robust       A logical value indicating whether Siegel non-parametric estimators should be used for residual extraction. If \code{robust = TRUE} Seigel estimation is used, otherwise ordinary least squares estimation is used.
 #'
 #' @returns  An object of class \code{ddaresdist} containing the results of DDA
 #'           tests of asymmetry patterns of error distributions obtained from
@@ -37,8 +37,15 @@
 #' @references Wiedermann, W., & von Eye, A. (2025). Direction Dependence Analysis: Foundations and Statistical Methods. Cambridge, UK: Cambridge University Press.
 #' @export
 #' @rdname dda.resdist
-dda.resdist <- function(formula, pred = NULL, data = list(), B = 200,
-                        boot.type = "perc", prob.trans = FALSE, conf.level = 0.95){
+dda.resdist <- function(formula,
+                        pred = NULL,
+                        data = list(),
+                        B = 200,
+                        boot.type = "perc",
+                        prob.trans = FALSE,
+                        conf.level = 0.95,
+                        robust = FALSE)
+                        {
 
   ### --- helper function for bootstrap CIs
   mysd <- function(x){sqrt(sum((x-mean(x))^2)/length(x))}
@@ -250,8 +257,20 @@ dda.resdist <- function(formula, pred = NULL, data = list(), B = 200,
   ry <- as.vector(scale(ry))
   rx <- as.vector(scale(rx))
 
-  tar <- lm(ry ~ rx)
-  alt <- lm(rx ~ ry)
+  resid_df <- data.frame(rx, ry)
+
+  if (robust == TRUE){
+    tar <- mblm::mblm(ry ~ rx, data = resid_df, repeated = TRUE)
+    alt <- mblm::mblm(rx ~ ry, data = resid_df, repeated = TRUE)
+  }
+
+  else if (robust == FALSE) {
+    tar <- lm(ry ~ rx, data = resid_df)
+    alt <- lm(rx ~ ry, data = resid_df)
+  }
+
+  else stop("Invalid specification for robust argument. Please use TRUE or FALSE.")
+
   dat <- data.frame(alternative = as.vector(scale(resid(alt))),
                     target = as.vector(scale(resid(tar))),
                     pred.adj = rx,
