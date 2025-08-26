@@ -30,6 +30,7 @@
 #' @param conf.level  Confidence level for bootstrap confidence intervals.
 #' @param parallelize A logical value indicating whether bootstrapping is performed on multiple cores. Only used if \code{diff = TRUE}.
 #' @param cores       A numeric value indicating the number of cores. Only used if \code{parallelize = TRUE}.
+#' @param robust       A logical value indicating whether Siegel (1982) repeated median estimators should be used for residual extraction. If \code{robust = TRUE} repeated median estimation is used, otherwise ordinary least squares estimation is used.
 #'
 #' @returns A list of class \code{cdda.indep} containing the results of CDDA
 #'          independence tests for pre-specified moderator values.
@@ -96,6 +97,7 @@ cdda.indep <- function(
     conf.level = 0.95,
     parallelize = FALSE,
     cores = 1,
+    robust = FALSE,
     ...
 ){
 
@@ -293,17 +295,33 @@ cdda.indep <- function(
 
     for ( i in 1:(ncol(modmat)) ) {
 
-      #Target model: x -> y
-      aux.yx.tar <- lm(y ~ X + modmat[,i] + modmat[,i]:x)
-      aux.xy.tar <- lm(x ~ X + modmat[,i] + modmat[,i]:x)
+      if (robust == TRUE){
+        #Target model: x -> y
+        aux.yx.tar <- mblm::mblm(y ~ X + modmat[,i] + modmat[,i]:x, data = data)
+        aux.xy.tar <- mblm::mblm(x ~ X + modmat[,i] + modmat[,i]:x, data = data)
 
+        #Alternative model: y -> x
+        aux.yx.alt <- mblm::mblm(y ~ X + modmat[,i] + modmat[,i]:y, data = data)
+        aux.xy.alt <- mblm::mblm(x ~ X + modmat[,i] + modmat[,i]:y, data = data)
+      }
+
+      else if (robust == FALSE){
+        #Target model: x -> y
+        aux.yx.tar <- lm(y ~ X + modmat[,i] + modmat[,i]:x)
+        aux.xy.tar <- lm(x ~ X + modmat[,i] + modmat[,i]:x)
+
+        #Alternative model: y -> x
+        aux.yx.alt <- lm(y ~ X + modmat[,i] + modmat[,i]:y)
+        aux.xy.alt <- lm(x ~ X + modmat[,i] + modmat[,i]:y)
+      }
+
+      else stop("Invalid specification for robust argument. Please use TRUE or FALSE.")
+
+      #Target model residuals
       ry.aux.tar <- resid(aux.yx.tar)
       rx.aux.tar <- resid(aux.xy.tar)
 
-      #Alternative model: y -> x
-      aux.yx.alt <- lm(y ~ X +  modmat[,i] +  modmat[,i]:y)
-      aux.xy.alt <- lm(x ~ X +  modmat[,i] +  modmat[,i]:y)
-
+      #Alternative model residuals
       ry.aux.alt <- resid(aux.yx.alt)
       rx.aux.alt <- resid(aux.xy.alt)
 

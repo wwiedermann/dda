@@ -15,6 +15,8 @@
 #' @param conf.level   Confidence level for bootstrap confidence intervals.
 #' @param parallelize  A logical value indicating whether bootstrapping is performed on multiple cores. Only used if \code{diff = TRUE}.
 #' @param cores        A numeric value indicating the number of cores. Only used if \code{parallelize = TRUE}.
+#' @param robust       A logical value indicating whether Siegel non-parametric estimators should be used for residual extraction. If \code{robust = TRUE} Seigel estimation is used, otherwise ordinary least squares estimation is used.
+#'
 #' @returns
 #' An object of class \code{dda.indep} containing the results of DDA independence tests.
 #' @references Wiedermann, W., & von Eye, A. (2025). \emph{Direction Dependence Analysis: Foundations and Statistical Methods}. Cambridge, UK: Cambridge University Press.
@@ -35,6 +37,7 @@
 #' @seealso \code{\link{cdda.indep}} for a conditional version.
 #' @export
 #' @rdname dda.indep
+#'
 dda.indep <- function(
              formula,
              pred = NULL,
@@ -47,7 +50,8 @@ dda.indep <- function(
              boot.type = "perc",
              conf.level = 0.95,
              parallelize = FALSE,
-             cores = 1)
+             cores = 1,
+             robust = FALSE)
   {
 
    ### --- helper functions for independence difference statistics
@@ -182,12 +186,22 @@ dda.indep <- function(
 
   ry <- lm.fit(X, y)$residuals
 	rx <- lm.fit(X, x)$residuals
-	#add logical indicator: if robust = TRUE
 
-	m.yx <- lm(ry ~ rx)
-	m.xy <- lm(rx ~ ry)
+	resid_df <- data.frame(ry, rx) # create data frame with residuals
 
-	err.yx <- resid(m.yx) #check here
+	if (robust == TRUE){
+	  m.yx <- mblm::mblm(ry ~ rx, repeated = TRUE)
+	  m.xy <- mblm::mblm(rx ~ ry, repeated = TRUE)
+	}
+
+	else if (robust == FALSE) {
+	  m.yx <- lm(ry ~ rx)
+	  m.xy <- lm(rx ~ ry)
+	}
+
+	else stop("Invalid specification for robust argument. Please use TRUE or FALSE.")
+
+	err.yx <- resid(m.yx)
 	err.xy <- resid(m.xy)
 
 
