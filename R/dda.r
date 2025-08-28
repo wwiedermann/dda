@@ -36,9 +36,9 @@
 #'
 #' @seealso \code{\link{cdda.indep}} for a conditional version.
 #' @export
-#' @rdname dda.indep
+#' @rdname dda
 #'
-dda.indep <- function(
+dda <- function(
              formula,
              pred = NULL,
              data = list(),
