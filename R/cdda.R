@@ -325,6 +325,22 @@ cdda <- function(
       ry.aux.alt <- resid(aux.yx.alt)
       rx.aux.alt <- resid(aux.xy.alt)
 
+      #DDA Implementation
+      indep.temp.yx[[i]] <- unclass(dda.indep(ry.aux.tar ~ rx.aux.tar, pred = "rx.aux.tar",
+                                              hsic.method = hsic.method, nlfun = nlfun,
+                                              B = B, boot.type = boot.type,
+                                              conf.level = conf.level, diff = diff,
+                                              hetero = hetero, parallelize = parallelize, cores = cores
+      ))
+      indep.temp.xy[[i]] <- unclass(dda.indep(rx.aux.alt ~ ry.aux.alt, pred = "ry.aux.alt",
+                                              hsic.method = hsic.method, nlfun = nlfun,
+                                              B = B, boot.type = boot.type,
+                                              conf.level = conf.level, diff = diff,
+                                              hetero = hetero, parallelize = parallelize, cores = cores
+      ))
+
+    }
+
 
     names(indep.temp.xy) <- names(indep.temp.yx) <- paste("ModVal", colnames(modmat), sep = ' ')
 
@@ -346,4 +362,6 @@ cdda <- function(
   names(cdda.output) <- c("cdda_target", "cdda_alternative", "models", "df_original")
   class(cdda.output) <- "cdda.indep"
   return(cdda.output)
-}
+
+  }
+
