@@ -11,7 +11,7 @@ Authors@R: c(
 Maintainer: Wolfgang Wiedermann <wiedermannw@missouri.edu>
 Description: A collection of tests to analyze the causal direction of dependence in linear models (Wiedermann, W., & von Eye, A., 2025, ISBN: 9781009381390). The package includes functions to perform Direction Dependence Analysis for variable distributions, residual distributions, and independence properties of predictors and residuals in competing causal models. In addition, the package contains functions to test the causal direction of dependence in conditional models (i.e., models with interaction terms) For more information see <https://www.ddaproject.com>.
 Imports: dHSIC, energy, foreach, graphics, methods, stats
-Suggests: boot, doParallel, devtools, interactions, iterators, lmtest,
+Suggests: boot, doParallel, devtools, interactions, iterators, lmtest, mblm,
         moments, spelling, testthat (>= 3.0.0), waldo
 Encoding: UTF-8
 RoxygenNote: 7.3.2

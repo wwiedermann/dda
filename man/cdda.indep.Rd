@@ -23,6 +23,7 @@ cdda.indep(
   conf.level = 0.95,
   parallelize = FALSE,
   cores = 1,
+  robust = FALSE,
   ...
 )
 
@@ -80,6 +81,8 @@ pick-a-point approach is used for the selected numeric values.}
 \item{parallelize}{A logical value indicating whether bootstrapping is performed on multiple cores. Only used if \code{diff = TRUE}.}
 
 \item{cores}{A numeric value indicating the number of cores. Only used if \code{parallelize = TRUE}.}
+
+\item{robust}{A logical value indicating whether Siegel (1982) repeated median estimators should be used for residual extraction. If \code{robust = TRUE} repeated median estimation is used, otherwise ordinary least squares estimation is used.}
 
 \item{...}{Additional arguments to be passed to the function.}
 
