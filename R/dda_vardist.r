@@ -115,13 +115,59 @@ dda.vardist <- function(
 		   if (!is.matrix(X)) X <- as.matrix(X)
 	}
 
+    if (robust == FALSE){
+
   ry <- lm.fit(X, y)$residuals
 	rx <- lm.fit(X, x)$residuals
 
 	ry <- as.vector(scale(ry))
 	rx <- as.vector(scale(rx))
 
-	dat <- data.frame(predictor = rx, outcome = ry)
+    }
+
+  else if (robust == TRUE){
+    temp_df <- as.data.frame(X)
+    temp_df$..y.. <- y
+    temp_df$..x.. <- x
+
+    # The model.matrix() function creates an intercept column named "(Intercept)".
+    # Because the formula interface for mblm() adds an intercept by default,
+    # we need to identify and remove the original intercept from our formula string.
+    covariate_names <- colnames(X)
+    intercept_col <- which(covariate_names == "(Intercept)")
+
+    if (length(intercept_col) > 0) {
+      # Exclude the intercept column from our list of predictor variables
+      covariate_names <- covariate_names[-intercept_col]
+    }
+
+    # Create the right-hand side of the regression formula.
+    # If no other covariates exist, the model is fit against an intercept only.
+    if (length(covariate_names) == 0) {
+      formula_rhs <- "1"
+    } else {
+      # Combine the covariate names into a single string for the formula
+      formula_rhs <- paste(covariate_names, collapse = " + ")
+    }
+
+    # Build the full formulas
+    formula_y <- as.formula(paste("..y.. ~", formula_rhs))
+    formula_x <- as.formula(paste("..x.. ~", formula_rhs))
+
+    # Run the repeated-measures median-based linear models and get the residuals.
+    # The final output is still assigned to 'ry' and 'rx'.
+    ry <- residuals(mblm::mblm(formula_y, dataframe = temp_df, repeated = TRUE))
+    rx <- residuals(mblm::mblm(formula_x, dataframe = temp_df, repeated = TRUE))
+    ### --- End of Replacement Block ---
+
+    # The rest of the function now uses the robust residuals from mblm
+    ry <- as.vector(scale(ry))
+    rx <- as.vector(scale(rx))
+  }
+
+    else stop("Invalid specification for robust argument. Please use TRUE or FALSE.")
+
+    dat <- data.frame(predictor = rx, outcome = ry)
 
 	### --- run separate normality tests
 

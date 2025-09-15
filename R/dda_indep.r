@@ -466,4 +466,3 @@ if(!is.null(x$out.diff)){
 	 cat("\n")
     }
 }
-
