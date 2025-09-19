@@ -221,6 +221,19 @@ dda.vardist <- function(
 	response.name <- all.vars(formula(formula))[1]  # get name of response variable
 	output <- c(output, list(var.names = c(response.name, pred)))
 
+	call_info <- list(
+	  "function_call" = match.call(),
+	  "function_name" = "dda.indep",  # or deparse(substitute(sys.function()))
+	  "all_args" = as.list(match.call())[-1],
+	  "formula" = formula,
+	  "data_name" = deparse(substitute(data)),
+	  "original_data" = if(missing(data) || is.null(data)) NULL else data
+	)
+
+	output <- c(output,
+	            list(call_info = call_info)
+	           )
+
 	class(output) <- "dda.vardist"
 	return(output)
 
