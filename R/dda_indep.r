@@ -189,7 +189,7 @@ dda.indep <- function(
 
 	resid_df <- data.frame(ry, rx) # create data frame with residuals
 
-	if (robust == TRUE){
+	if (robust == TRUE){ #use lm::bptest and edit the resi line, no wts necessary
 	  m.yx <- mblm::mblm(ry ~ rx, repeated = TRUE)
 	  m.xy <- mblm::mblm(rx ~ ry, repeated = TRUE)
 	}
