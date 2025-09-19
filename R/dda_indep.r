@@ -231,9 +231,9 @@ dda.indep <- function(
 	dcor_yx <- energy::dcor.test(as.vector(rx), as.vector(err.yx), R = B) #rx & ry have an SPSS attribute?
 	dcor_xy <- energy::dcor.test(as.vector(ry), as.vector(err.xy), R = B)
 
-    output <- c(output,
-	            distance_cor = list(dcor_yx = dcor_yx, dcor_xy = dcor_xy, dcor.method = as.character(B))
-				)
+     output <- c(output,
+ 	            distance_cor = list(dcor_yx = dcor_yx, dcor_xy = dcor_xy, dcor.method = as.character(B))
+ 			        	)
 
 	### --- Homoscedasticity tests
 
@@ -309,6 +309,19 @@ dda.indep <- function(
 
   response.name <- all.vars(formula(formula))[1]  # get name of response variable
   output <- c(output, list(var.names = c(response.name, pred)))
+
+  call_info <- list( #new for bagging
+    "function_call" = match.call(),
+    "function_name" = "dda.indep",  # or deparse(substitute(sys.function()))
+    "all_args" = as.list(match.call())[-1],
+    "formula" = formula,
+    "data_name" = deparse(substitute(data)),
+    "original_data" = if(missing(data) || is.null(data)) NULL else data
+  )
+
+  output <- c(output,
+              list(call_info = call_info)
+              )
 
   class(output) <- "dda.indep"
   return(output)

@@ -299,8 +299,17 @@ cdda.vardist <- function(formula,
                            "mod_name" = mod,
                            "mod_levels" = moderator_levels,
                            "mod_data" = data[,mod]
+                           )
+  cdda.output[[5]] <- list(
+    "function_call" = match.call(),
+    "function_name" = as.character(match.call()[[1]]),
+    "all_args" = as.list(match.call())[-1],  # Remove function name
+    "environment" = parent.frame(),
+    "formula" = if(exists("formula")) formula else NULL,
+    "data_name" = deparse(substitute(data))
   )
-  names(cdda.var.output) <- c("cdda_target", "cdda_alternative", "models", "df_original")
+  names(cdda.var.output) <- c("cdda_target", "cdda_alternative", "models",
+                              "df_original", "call_info")
   class(cdda.var.output) <- "cdda.vardist"
   return(cdda.var.output)
 
