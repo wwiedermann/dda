@@ -43,7 +43,7 @@ dda_bagging <- function(dda_result,
 
   } else if (length(dda_result) >= 5 && !is.null(dda_result[[5]])) {
 
-    # Handle CDDA objects (your original structure)
+    # Handle CDDA objects
     call_info <- dda_result[[5]]
     original_call <- call_info$function_call
     function_name <- call_info$function_name
