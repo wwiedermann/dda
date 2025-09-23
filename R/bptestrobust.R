@@ -47,7 +47,11 @@ bptestrobust <- function(formula, varformula = NULL, studentize = TRUE, data = l
   robust_df <- as.data.frame(cbind(y, X[, colnames(X) != "(Intercept)"]))
 
   # Fit the robust model and extract residuals
-  robust_fit <- mblm::mblm(y ~ ., data = robust_df, repeated = TRUE)
+
+  robust_fit <- mblm::mblm(formula = as.formula(paste("y ~", paste(colnames(X)[colnames(X) != "(Intercept)"],
+                                                                   collapse = "+"))),
+                           data = robust_df, repeated = TRUE)
+
   resi <- residuals(robust_fit)
 
   # --- Test Statistic Calculation (using robust residuals) ---
