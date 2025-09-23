@@ -288,11 +288,11 @@ dda.resdist <- function(formula,
     rx.trans <- trans$x
     ry.trans <- trans$y
 
-    if(robust == TRUE){
+    if(robust){
       tar.trans <- mblm::mblm(ry.trans ~ rx.trans)
       alt.trans <- mblm::mblm(rx.trans ~ ry.trans)
     }
-    else if(robust == FALSE){
+    else {
       tar.trans <- lm(ry.trans ~ rx.trans) #can be embedded in another if statement
       alt.trans <- lm(rx.trans ~ ry.trans) # only use 286 & 287 if robust = FALSE
       #if robust = TRUE, use mblm on rx.trans & ry.trans
