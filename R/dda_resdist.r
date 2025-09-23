@@ -93,6 +93,7 @@ dda.resdist <- function(formula,
       if (robust) {
         tar.boot.trans <- mblm::mblm(yboot.trans ~ xboot.trans)
         alt.boot.trans <- mblm::mblm(xboot.trans ~ yboot.trans)
+
       } else {
         tar.boot.trans <- lm(yboot.trans ~ xboot.trans)
         alt.boot.trans <- lm(xboot.trans ~ yboot.trans)
@@ -291,8 +292,8 @@ dda.resdist <- function(formula,
     if(robust){
       tar.trans <- mblm::mblm(ry.trans ~ rx.trans)
       alt.trans <- mblm::mblm(rx.trans ~ ry.trans)
-    }
-    else {
+
+    } else {
       tar.trans <- lm(ry.trans ~ rx.trans) #can be embedded in another if statement
       alt.trans <- lm(rx.trans ~ ry.trans) # only use 286 & 287 if robust = FALSE
       #if robust = TRUE, use mblm on rx.trans & ry.trans

@@ -7,6 +7,7 @@
 #' @param ... Further arguments, ignored.
 #' @return A list with test statistic, df, p-value, and method.
 #'
+#' @noRd
 bptestrobust <- function(formula, data = NULL, studentize = FALSE, ...) {
   # Handle formula or fitted model
   if (inherits(formula, "formula")) {
