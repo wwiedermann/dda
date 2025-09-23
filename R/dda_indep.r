@@ -248,11 +248,11 @@ dda.indep <- function(
 
       } else{
 
-        bp_yx <- lmtest::bptest(formula = ry ~ rx, studentize = FALSE)
-        bp_xy <- lmtest::bptest(formula = rx ~ ry, studentize = FALSE)
+        bp_yx <- lmtest::bptest(ry ~ rx, studentize = FALSE)
+        bp_xy <- lmtest::bptest(rx ~ ry, studentize = FALSE)
 
-        rbp_yx <- lmtest::bptest(formula = m.yx, studentize = TRUE)
-        rbp_xy <- lmtest::bptest(formula = m.xy, studentize = TRUE)
+        rbp_yx <- lmtest::bptest(m.yx, studentize = TRUE)
+        rbp_xy <- lmtest::bptest(m.xy, studentize = TRUE)
       }
 
 

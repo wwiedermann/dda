@@ -1,85 +1,45 @@
-#' Robust Breusch-Pagan Test for Heteroskedasticity
+#' Robust Breusch-Pagan Test
 #'
-#' This function performs a Breusch-Pagan test for heteroskedasticity,
-#' but calculates the initial model residuals using a robust regression
-#' (mblm::mblm) to be resistant to outliers.
+#' Modified Breusch-Pagan test for heteroskedasticity, compatible with formula or fitted models from lm/mblm.
+#' @param formula A regression formula (e.g., y ~ x).
+#' @param data Optional: data.frame containing the variables in the formula.
+#' @param studentize Logical, if TRUE uses squared studentized residuals, else uses squared raw residuals.
+#' @param ... Further arguments, ignored.
+#' @return A list with test statistic, df, p-value, and method.
 #'
-#' @param formula A regression model formula of the form y ~ x1 + x2.
-#' @param varformula Optional formula for the variance model. Defaults to the main model's regressors.
-#' @param studentize Logical. If TRUE (default), the studentized (Koenker-Bassett) version of the test is used.
-#' @param data A data frame containing the variables.
-#'
-#' @return An object of class "htest" containing the test results.
-#' @export
-#'
-#' @examples
-#' # Create heteroskedastic data with an outlier
-#' set.seed(123)
-#' x <- 1:100
-#' y <- 1 + 2*x + rnorm(100, 0, x)
-#' y[50] <- 250 # Add a significant outlier
-#'
-#' # Run the robust Breusch-Pagan test
-#' bptestrobust(y ~ x)
-
-bptestrobust <- function(formula, varformula = NULL, studentize = TRUE, data = list())
-{
-  # Check for mblm package dependency
-  if (!requireNamespace("mblm", quietly = TRUE)) {
-    stop("Package 'mblm' is required. Please install it with install.packages('mblm').", call. = FALSE)
-  }
-
-  # --- Data Setup ---
-  dname <- paste(deparse(substitute(formula)))
-  mf <- model.frame(formula, data = data)
-  y <- model.response(mf)
-  X <- model.matrix(formula, data = data)
-  Z <- if (is.null(varformula)) X else model.matrix(varformula, data = data)
-
-  if (ncol(Z) < 2L) {
-    stop("The auxiliary variance regression requires at least an intercept and a regressor.")
-  }
-
-  n <- NROW(X)
-
-  # --- Robust Residuals Calculation (mblm only) ---
-  # Prepare data by combining the response and predictors into one data frame
-  robust_df <- as.data.frame(cbind(y, X[, colnames(X) != "(Intercept)"]))
-
-  # Fit the robust model and extract residuals
-
-  robust_fit <- mblm::mblm(formula = as.formula(paste("y ~", paste(colnames(X)[colnames(X) != "(Intercept)"],
-                                                                   collapse = "+"))),
-                           data = robust_df, repeated = TRUE)
-
-  resi <- residuals(robust_fit)
-
-  # --- Test Statistic Calculation (using robust residuals) ---
-  # The test uses an unweighted calculation
-  sigma2 <- sum(resi^2) / n
-
-  if (studentize) {
-    w <- resi^2 - sigma2
-    aux <- lm.fit(Z, w)
-    bp <- n * sum(aux$fitted.values^2) / sum(w^2)
-    method <- "Robust residual studentized Breusch-Pagan test"
+bptestrobust <- function(formula, data = NULL, studentize = FALSE, ...) {
+  # Handle formula or fitted model
+  if (inherits(formula, "formula")) {
+    mf <- model.frame(formula, data)
+    y <- model.response(mf)
+    X <- model.matrix(formula, mf)
+    # Fit robust or OLS model
+    if (!is.null(data) && ("mblm" %in% class(data))) {
+      fit <- data
+    } else {
+      fit <- lm(formula, data = data)
+    }
+  } else if (inherits(formula, "lm") || inherits(formula, "mblm")) {
+    fit <- formula
+    y <- fit$model[[1]]
+    X <- model.matrix(fit)
   } else {
-    f <- resi^2 / sigma2 - 1
-    aux <- lm.fit(Z, f)
-    bp <- 0.5 * sum(aux$fitted.values^2)
-    method <- "Robust residual Breusch-Pagan test"
+    stop("First argument must be a formula or fitted model")
   }
-
-  # --- Format and Return Results ---
-  names(bp) <- "BP"
-  df <- c(df = aux$rank - 1)
-
-  RVAL <- list(statistic = bp,
-               parameter = df,
-               method = method,
-               p.value = pchisq(bp, df, lower.tail = FALSE),
-               data.name = dname)
-
-  class(RVAL) <- "htest"
-  return(RVAL)
+  # Residuals
+  res <- residuals(fit)
+  if (studentize) {
+    res <- res / sqrt(sum(res^2) / length(res))
+  }
+  # Auxiliary regression: regress squared residuals on regressors
+  aux_fit <- lm(res^2 ~ X[, -1, drop = FALSE]) # Remove intercept
+  bp_stat <- summary(aux_fit)$r.squared * length(res)
+  df <- ncol(X) - 1
+  pval <- pchisq(bp_stat, df, lower.tail = FALSE)
+  structure(list(
+    statistic = bp_stat,
+    parameter = df,
+    p.value = pval,
+    method = sprintf("Robust Breusch-Pagan test (studentize=%s)", studentize)
+  ), class = "htest")
 }
