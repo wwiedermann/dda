@@ -71,7 +71,7 @@ dda.resdist <- function(formula,
   }
 
 
-  boot.diff <- function(dat, g, prob.trans){
+  boot.diff <- function(dat, g, prob.trans, robust){
     dat <- dat[g, ]
 
     x <- dat[, 1]  # "purified" alternative error
@@ -90,8 +90,13 @@ dda.resdist <- function(formula,
       xboot.trans <- trans.boot$x
       yboot.trans <- trans.boot$y
 
-      tar.boot.trans <- lm(yboot.trans ~ xboot.trans)
-      alt.boot.trans <- lm(xboot.trans ~ yboot.trans)
+      if (robust) {
+        tar.boot.trans <- mblm::mblm(yboot.trans ~ xboot.trans)
+        alt.boot.trans <- mblm::mblm(xboot.trans ~ yboot.trans)
+      } else {
+        tar.boot.trans <- lm(yboot.trans ~ xboot.trans)
+        alt.boot.trans <- lm(xboot.trans ~ yboot.trans)
+      }
 
       xtrans <- as.vector(scale(resid(alt.boot.trans)))
       ytrans <- as.vector(scale(resid(tar.boot.trans)))
@@ -358,7 +363,7 @@ dda.resdist <- function(formula,
   ### --- run bootstrap confidence intervals
 
   if(B > 0){
-    suppressWarnings(boot.res <- boot::boot(dat, boot.diff, R = B, prob.trans = prob.trans))
+    suppressWarnings(boot.res <- boot::boot(dat, boot.diff, R = B, prob.trans = prob.trans, robust = robust))
     if( boot.type == "bca" && any( is.na( boot::empinf( boot.res ) ) ) ) stop("Acceleration constant cannot be calculated. Increase the number of resamples or use boot.type = 'perc'")
     suppressWarnings(boot.out <- lapply(as.list(1:7), function(i, boot.res) boot::boot.ci(boot.res, conf=conf.level, type=boot.type, t0=boot.res$t0[i], t=boot.res$t[,i]), boot.res=boot.res))
 
