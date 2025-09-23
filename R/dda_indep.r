@@ -239,11 +239,22 @@ dda.indep <- function(
 
     if(hetero){
 
-	  bp_yx <- lmtest::bptest(m.yx, studentize = FALSE)
-	  bp_xy <- lmtest::bptest(m.xy, studentize = FALSE)
+      if(robust){
+        bp_yx <- bptestrobust(ry ~ rx, studentize = FALSE)
+        bp_xy <- bptestrobust(rx ~ ry, studentize = FALSE)
 
-	  rbp_yx <- lmtest::bptest(m.yx, studentize = TRUE)
-	  rbp_xy <- lmtest::bptest(m.xy, studentize = TRUE)
+        rbp_yx <- bptestrobust(m.yx, studentize = TRUE)
+        rbp_xy <- bptestrobust(m.xy, studentize = TRUE)
+
+      } else{
+
+        bp_yx <- lmtest::bptest(ry ~ rx, studentize = FALSE)
+        bp_xy <- lmtest::bptest(rx ~ ry, studentize = FALSE)
+
+        rbp_yx <- lmtest::bptest(m.yx, studentize = TRUE)
+        rbp_xy <- lmtest::bptest(m.xy, studentize = TRUE)
+      }
+
 
 	  output <- c(output,
 	              list(breusch_pagan = list( bp_yx, rbp_yx, bp_xy, rbp_xy ) )
