@@ -1,3 +1,17 @@
+data("mtcars")
+result <- dda.indep(mpg ~ wt + hp, pred = "wt", data = mtcars)
+bagged_result <- dda_bagging(result, iter = 10)
+summary.dda_bagging(bagged_result)
+
+# result <- cdda.indep(mpg ~ wt * hp, pred = "wt", mod = "hp",
+#                      modval = "mean", data = mtcars)
+# bagged_result <- dda_bagging(result, iter = 10)
+#
+# result <- dda.resdist(mpg ~ wt + hp, pred = "wt", data = mtcars)
+# bagged_result <- dda_bagging(result, iter = 10)
+# summary.dda_bagging(bagged_result)
+
+
 #' Bootstrap Aggregated DDA Analysis
 #'
 #' @param dda_result Output from any DDA function (dda.indep, dda.vardist, etc.) or CDDA function
