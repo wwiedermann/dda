@@ -1,5 +1,11 @@
 data("mtcars")
 
+n <- 500
+x <- rchisq(n, df = 4) - 4
+e <- rchisq(n, df = 3) - 3
+y <- 0.5 * x + e
+d <- data.frame(x, y)
+
 # 1. dda.indep: Direction Dependence Analysis - Independence
 # result_indep <- dda.indep(mpg ~ wt + hp, pred = "wt", data = mtcars)
 # print(result_indep)
@@ -42,15 +48,16 @@ result_resdist <- dda.resdist(y ~ x, pred = "x", data = d,
 
 print(result_resdist)
 
+bagged_resdist <- dda_bagging(result_resdist, iter = 100)
+summary.dda_bagging(bagged_resdist)
+
+
 # 3. dda.vardist: Direction Dependence Analysis - Variable Distribution
 result_vardist <- dda.vardist(mpg ~ wt + hp, pred = "wt", data = mtcars)
 print(result_vardist)
 
 
 
-
-bagged_resdist <- dda_bagging(result_resdist, iter = 100)
-summary.dda_bagging(bagged_resdist)
 
 bagged_vardist <- dda_bagging(result_vardist, iter = 10)
 summary.dda_bagging(bagged_vardist)
@@ -70,6 +77,7 @@ summary.dda_bagging(bagged_vardist)
 #' @rdname dda.indep
 #' @export
 #' @return A list containing bootstrap and aggregated results
+# NA-safe DDA Bagging for dda.resdist, dda.indep, etc.
 # NA-safe DDA Bagging for dda.resdist, dda.indep, etc.
 
 dda_bagging <- function(
