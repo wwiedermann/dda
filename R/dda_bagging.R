@@ -1,11 +1,45 @@
 data("mtcars")
 
 # 1. dda.indep: Direction Dependence Analysis - Independence
-result_indep <- dda.indep(mpg ~ wt + hp, pred = "wt", data = mtcars)
-print(result_indep)
+# result_indep <- dda.indep(mpg ~ wt + hp, pred = "wt", data = mtcars)
+# print(result_indep)
+
+res_ex_indep <- dda.indep(y ~ x, pred = "x", data = d, parallelize = TRUE, cores = 2,
+                                     nlfun = 2, B = 50, hetero = TRUE, diff = TRUE)
+print(res_ex_indep)
+
+bagged_indep <- dda_bagging(res_ex_indep, iter = 10)
+summary.dda_bagging(bagged_indep)
+
+# ===== DDA Bagging Summary =====
+# Function: dda.indep
+# Object Type: dda.indep
+# Iterations: 10
+# Valid Iterations: 10
+# ----
+#
+# Aggregated Statistics:
+# hsic_yx_stat : 0.6324
+# hsic_xy_stat : 4.9462
+# hsic_yx_pval : 0.1094
+# hsic_xy_pval : 0
+# diff_estimates : 4.3139, 0.1809, 0.1142
+# diff_lower : 2.4641, 0.0974, 0.0614
+# diff_upper : 6.1486, 0.2171, 0.1765
+#
+# Decision Percentages (alpha = 0.05 ):
+#   hsic :
+#   hsic_decision
+# undecided      y->x
+# 0.4       0.6
 
 # 2. dda.resdist: Direction Dependence Analysis - Residual Distribution
-result_resdist <- dda.resdist(mpg ~ wt + hp, pred = "wt", data = mtcars)
+
+# result_resdist <- dda.resdist(mpg ~ wt + hp, pred = "wt", data = mtcars)
+result_resdist <- dda.resdist(y ~ x, pred = "x", data = d,
+                      B = 50, conf.level = 0.90)
+
+
 print(result_resdist)
 
 # 3. dda.vardist: Direction Dependence Analysis - Variable Distribution
@@ -13,11 +47,9 @@ result_vardist <- dda.vardist(mpg ~ wt + hp, pred = "wt", data = mtcars)
 print(result_vardist)
 
 
-# Optionally, you can run bagging for each and summarize
-bagged_indep <- dda_bagging(result_indep, iter = 10)
-summary.dda_bagging(bagged_indep)
 
-bagged_resdist <- dda_bagging(result_resdist, iter = 10)
+
+bagged_resdist <- dda_bagging(result_resdist, iter = 100)
 summary.dda_bagging(bagged_resdist)
 
 bagged_vardist <- dda_bagging(result_vardist, iter = 10)
@@ -38,6 +70,7 @@ summary.dda_bagging(bagged_vardist)
 #' @rdname dda.indep
 #' @export
 #' @return A list containing bootstrap and aggregated results
+# NA-safe DDA Bagging for dda.resdist, dda.indep, etc.
 
 dda_bagging <- function(
     dda_result,
@@ -100,7 +133,7 @@ dda_bagging <- function(
   bagged_results <- list()
   if (progress) {
     pb <- txtProgressBar(min = 0, max = iter, style = 3, width = 50, char = "=")
-    cat(paste("Running", iter, "bootstrap iterations of", function_name, "\n"))
+    cat(paste("\n", "Running", iter, "bootstrap iterations of", function_name, "\n"))
   }
 
   for(i in 1:iter) {
@@ -196,16 +229,12 @@ dda_bagging <- function(
     }
   }
 
-  ## --- DDA.RESDIST block ---
+  ## --- DDA.RESDIST block (NOW NA-SAFE EVERYWHERE) ---
   if (n_valid > 0 && object_type == "dda.resdist") {
-    # Extract relevant statistics
-    # The following keys are based on your bootstrapped DDA.RES result structure
-    # and typical DDA output names. Adjust if your DDA.RES output differs.
     .get_val <- function(x, key) {
       val <- tryCatch(x[[key]], error = function(e) NA_real_)
       get_numeric(val)
     }
-    # Main stats (see your example: agostino.alternative.statistic.z etc.)
     keys <- c("agostino.alternative.statistic.skew",
               "agostino.alternative.statistic.z",
               "agostino.alternative.p.value",
@@ -249,7 +278,6 @@ dda_bagging <- function(
       agg[[key]] <- aggregate_numeric(vals, method)
     }
 
-    # Compute p-values from z-scores if needed (as in your example)
     pval_keys <- c("agostino.alternative.p.value",
                    "agostino.target.p.value",
                    "anscombe.alternative.p.value",
@@ -268,70 +296,123 @@ dda_bagging <- function(
       }
     }
 
-    # Decision rules (see your examples)
     z_crit <- qnorm(1 - alpha/2)
     dec_agost <- sapply(valid_results, function(x) {
       z_alt <- .get_val(x, "agostino.alternative.statistic.z")
       z_tgt <- .get_val(x, "agostino.target.statistic.z")
-      if (abs(z_alt) >= z_crit && abs(z_tgt) < z_crit) "x->y"
-      else if (abs(z_alt) < z_crit && abs(z_tgt) >= z_crit) "y->x"
-      else "undecided"
+      if (is.na(z_alt) || is.na(z_tgt)) {
+        "undecided"
+      } else if (abs(z_alt) >= z_crit && abs(z_tgt) < z_crit) {
+        "x->y"
+      } else if (abs(z_alt) < z_crit && abs(z_tgt) >= z_crit) {
+        "y->x"
+      } else {
+        "undecided"
+      }
     })
     dec_anscom <- sapply(valid_results, function(x) {
       z_alt <- .get_val(x, "anscombe.alternative.statistic.z")
       z_tgt <- .get_val(x, "anscombe.target.statistic.z")
-      if (abs(z_alt) >= z_crit && abs(z_tgt) < z_crit) "x->y"
-      else if (abs(z_alt) < z_crit && abs(z_tgt) >= z_crit) "y->x"
-      else "undecided"
+      if (is.na(z_alt) || is.na(z_tgt)) {
+        "undecided"
+      } else if (abs(z_alt) >= z_crit && abs(z_tgt) < z_crit) {
+        "x->y"
+      } else if (abs(z_alt) < z_crit && abs(z_tgt) >= z_crit) {
+        "y->x"
+      } else {
+        "undecided"
+      }
     })
     dec_skewdiff <- sapply(valid_results, function(x) {
       l <- .get_val(x, "skewdiff.lower")
       u <- .get_val(x, "skewdiff.upper")
-      if (l > 0 & u > 0) "x->y"
-      else if (l < 0 & u < 0) "y->x"
-      else "undecided"
+      if (is.na(l) || is.na(u)) {
+        "undecided"
+      } else if (l > 0 & u > 0) {
+        "x->y"
+      } else if (l < 0 & u < 0) {
+        "y->x"
+      } else {
+        "undecided"
+      }
     })
     dec_kurtdiff <- sapply(valid_results, function(x) {
       l <- .get_val(x, "kurtdiff.lower")
       u <- .get_val(x, "kurtdiff.upper")
-      if (l > 0 & u > 0) "x->y"
-      else if (l < 0 & u < 0) "y->x"
-      else "undecided"
+      if (is.na(l) || is.na(u)) {
+        "undecided"
+      } else if (l > 0 & u > 0) {
+        "x->y"
+      } else if (l < 0 & u < 0) {
+        "y->x"
+      } else {
+        "undecided"
+      }
     })
     dec_cor12diff <- sapply(valid_results, function(x) {
       l <- .get_val(x, "cor12diff.lower")
       u <- .get_val(x, "cor12diff.upper")
-      if (l > 0 & u > 0) "x->y"
-      else if (l < 0 & u < 0) "y->x"
-      else "undecided"
+      if (is.na(l) || is.na(u)) {
+        "undecided"
+      } else if (l > 0 & u > 0) {
+        "x->y"
+      } else if (l < 0 & u < 0) {
+        "y->x"
+      } else {
+        "undecided"
+      }
     })
     dec_cor13diff <- sapply(valid_results, function(x) {
       l <- .get_val(x, "cor13diff.lower")
       u <- .get_val(x, "cor13diff.upper")
-      if (l > 0 & u > 0) "x->y"
-      else if (l < 0 & u < 0) "y->x"
-      else "undecided"
+      if (is.na(l) || is.na(u)) {
+        "undecided"
+      } else if (l > 0 & u > 0) {
+        "x->y"
+      } else if (l < 0 & u < 0) {
+        "y->x"
+      } else {
+        "undecided"
+      }
     })
     dec_RHS3 <- sapply(valid_results, function(x) {
       l <- .get_val(x, "RHS3.lower")
       u <- .get_val(x, "RHS3.upper")
-      if (l > 0 & u > 0) "x->y"
-      else if (l < 0 & u < 0) "y->x"
-      else "undecided"
+      if (is.na(l) || is.na(u)) {
+        "undecided"
+      } else if (l > 0 & u > 0) {
+        "x->y"
+      } else if (l < 0 & u < 0) {
+        "y->x"
+      } else {
+        "undecided"
+      }
     })
     dec_RCC <- sapply(valid_results, function(x) {
       l <- .get_val(x, "RCC.lower")
       u <- .get_val(x, "RCC.upper")
-      if (l > 0 & u > 0) "x->y"
-      else if (l < 0 & u < 0) "y->x"
-      else "undecided"
+      if (is.na(l) || is.na(u)) {
+        "undecided"
+      } else if (l > 0 & u > 0) {
+        "x->y"
+      } else if (l < 0 & u < 0) {
+        "y->x"
+      } else {
+        "undecided"
+      }
     })
     dec_RHS4 <- sapply(valid_results, function(x) {
       l <- .get_val(x, "RHS4.lower")
       u <- .get_val(x, "RHS4.upper")
-      if (l > 0 & u > 0) "x->y"
-      else if (l < 0 & u < 0) "y->x"
-      else "undecided"
+      if (is.na(l) || is.na(u)) {
+        "undecided"
+      } else if (l > 0 & u > 0) {
+        "x->y"
+      } else if (l < 0 & u < 0) {
+        "y->x"
+      } else {
+        "undecided"
+      }
     })
 
     decisions$agostino <- prop.table(table(dec_agost))
@@ -365,7 +446,6 @@ dda_bagging <- function(
   }
   return(output)
 }
-
 #' Summary for dda_bagging Output
 #'
 #' @param object Output from dda_bagging()
