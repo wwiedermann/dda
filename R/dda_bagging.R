@@ -1,20 +1,33 @@
 data("mtcars")
-result <- dda.indep(mpg ~ wt + hp, pred = "wt", data = mtcars)
-bagged_result <- dda_bagging(result, iter = 10)
-summary.dda_bagging(bagged_result)
 
-# result <- cdda.indep(mpg ~ wt * hp, pred = "wt", mod = "hp",
-#                      modval = "mean", data = mtcars)
-# bagged_result <- dda_bagging(result, iter = 10)
-#
-# result <- dda.resdist(mpg ~ wt + hp, pred = "wt", data = mtcars)
-# bagged_result <- dda_bagging(result, iter = 10)
-# summary.dda_bagging(bagged_result)
+# 1. dda.indep: Direction Dependence Analysis - Independence
+result_indep <- dda.indep(mpg ~ wt + hp, pred = "wt", data = mtcars)
+print(result_indep)
+
+# 2. dda.resdist: Direction Dependence Analysis - Residual Distribution
+result_resdist <- dda.resdist(mpg ~ wt + hp, pred = "wt", data = mtcars)
+print(result_resdist)
+
+# 3. dda.vardist: Direction Dependence Analysis - Variable Distribution
+result_vardist <- dda.vardist(mpg ~ wt + hp, pred = "wt", data = mtcars)
+print(result_vardist)
+
+
+# Optionally, you can run bagging for each and summarize
+bagged_indep <- dda_bagging(result_indep, iter = 10)
+summary.dda_bagging(bagged_indep)
+
+bagged_resdist <- dda_bagging(result_resdist, iter = 10)
+summary.dda_bagging(bagged_resdist)
+
+bagged_vardist <- dda_bagging(result_vardist, iter = 10)
+summary.dda_bagging(bagged_vardist)
+
 
 
 #' Bootstrap Aggregated DDA Analysis
 #'
-#' @param dda_result Output from any DDA function (dda.indep, dda.vardist, etc.) or CDDA function
+#' @param dda_result Output from any DDA function (dda.indep, dda.vardist, dda.resdist, etc.)
 #' @param iter Number of bootstrap iterations (default: 100)
 #' @param progress Whether to show progress bar (default: TRUE)
 #' @param save_file Optional file path to save results
@@ -30,17 +43,15 @@ dda_bagging <- function(
     dda_result,
     iter = 100,
     progress = TRUE,
-    save_file = NULL,     ### Eh?
-    override_args = NULL, ### Also unsure about this argument
+    save_file = NULL,
+    override_args = NULL,
     method = "mean",
     alpha = 0.05
 ) {
-
-  # Helper: robustly extract first numeric value from any R object
   get_numeric <- function(x) {
     if (is.null(x)) return(NA_real_)
     if (is.numeric(x)) return(as.numeric(x[1]))
-    if (is.list(x)) return(get_numeric(x[[1]])) # recursively check first element
+    if (is.list(x)) return(get_numeric(x[[1]]))
     return(NA_real_)
   }
 
@@ -113,102 +124,225 @@ dda_bagging <- function(
   decisions <- list()
   n_valid <- length(valid_results)
 
-  if (n_valid > 0) {
-    if (object_type == "dda.indep") {
-      hsic_yx <- sapply(valid_results, function(x) get_numeric(x$hsic.yx$statistic))
-      hsic_xy <- sapply(valid_results, function(x) get_numeric(x$hsic.xy$statistic))
-      hsic_yx_pval <- sapply(valid_results, function(x) get_numeric(x$hsic.yx$p.value))
-      hsic_xy_pval <- sapply(valid_results, function(x) get_numeric(x$hsic.xy$p.value))
-      dcor_yx <- sapply(valid_results, function(x) get_numeric(x$distance_cor$dcor_yx$statistic))
-      dcor_xy <- sapply(valid_results, function(x) get_numeric(x$distance_cor$dcor_xy$statistic))
-      dcor_yx_pval <- sapply(valid_results, function(x) get_numeric(x$distance_cor$dcor_yx$p.value))
-      dcor_xy_pval <- sapply(valid_results, function(x) get_numeric(x$distance_cor$dcor_xy$p.value))
+  aggregate_numeric <- function(vals, method) {
+    vals <- as.numeric(vals)
+    vals <- vals[!is.na(vals)]
+    if (length(vals) == 0) return(NA_real_)
+    if (method == "median") return(median(vals))
+    mean(vals)
+  }
 
-      aggregate_numeric <- function(vals, method) {
-        vals <- as.numeric(vals)
-        vals <- vals[!is.na(vals)]
-        if (length(vals) == 0) return(NA_real_)
-        if (method == "median") return(median(vals))
-        mean(vals) # default mean
-      }
+  ## --- DDA.INDEP block ---
+  if (n_valid > 0 && object_type == "dda.indep") {
+    hsic_yx <- sapply(valid_results, function(x) get_numeric(x$hsic.yx$statistic))
+    hsic_xy <- sapply(valid_results, function(x) get_numeric(x$hsic.xy$statistic))
+    hsic_yx_pval <- sapply(valid_results, function(x) get_numeric(x$hsic.yx$p.value))
+    hsic_xy_pval <- sapply(valid_results, function(x) get_numeric(x$hsic.xy$p.value))
+    dcor_yx <- sapply(valid_results, function(x) get_numeric(x$distance_cor$dcor_yx$statistic))
+    dcor_xy <- sapply(valid_results, function(x) get_numeric(x$distance_cor$dcor_xy$statistic))
+    dcor_yx_pval <- sapply(valid_results, function(x) get_numeric(x$distance_cor$dcor_yx$p.value))
+    dcor_xy_pval <- sapply(valid_results, function(x) get_numeric(x$distance_cor$dcor_xy$p.value))
 
-      agg$hsic_yx_stat <- aggregate_numeric(hsic_yx, method)
-      agg$hsic_xy_stat <- aggregate_numeric(hsic_xy, method)
-      agg$dcor_yx_stat <- aggregate_numeric(dcor_yx, method)
-      agg$dcor_xy_stat <- aggregate_numeric(dcor_xy, method)
+    agg$hsic_yx_stat <- aggregate_numeric(hsic_yx, method)
+    agg$hsic_xy_stat <- aggregate_numeric(hsic_xy, method)
+    agg$dcor_yx_stat <- aggregate_numeric(dcor_yx, method)
+    agg$dcor_xy_stat <- aggregate_numeric(dcor_xy, method)
 
-      if (method == "harmonic_p") {
-        if (!requireNamespace("harmonicmeanp", quietly = TRUE)) {
-          warning("harmonicmeanp package not available, using mean for p-values")
-          agg$hsic_yx_pval <- aggregate_numeric(hsic_yx_pval, "mean")
-          agg$hsic_xy_pval <- aggregate_numeric(hsic_xy_pval, "mean")
-          agg$dcor_yx_pval <- aggregate_numeric(dcor_yx_pval, "mean")
-          agg$dcor_xy_pval <- aggregate_numeric(dcor_xy_pval, "mean")
-        } else {
-          agg$hsic_yx_pval <- harmonicmeanp::p.hmp(hsic_yx_pval[!is.na(hsic_yx_pval)], L = sum(!is.na(hsic_yx_pval)))
-          agg$hsic_xy_pval <- harmonicmeanp::p.hmp(hsic_xy_pval[!is.na(hsic_xy_pval)], L = sum(!is.na(hsic_xy_pval)))
-          agg$dcor_yx_pval <- harmonicmeanp::p.hmp(dcor_yx_pval[!is.na(dcor_yx_pval)], L = sum(!is.na(dcor_yx_pval)))
-          agg$dcor_xy_pval <- harmonicmeanp::p.hmp(dcor_xy_pval[!is.na(dcor_xy_pval)], L = sum(!is.na(dcor_xy_pval)))
-        }
+    if (method == "harmonic_p") {
+      if (!requireNamespace("harmonicmeanp", quietly = TRUE)) {
+        warning("harmonicmeanp package not available, using mean for p-values")
+        agg$hsic_yx_pval <- aggregate_numeric(hsic_yx_pval, "mean")
+        agg$hsic_xy_pval <- aggregate_numeric(hsic_xy_pval, "mean")
+        agg$dcor_yx_pval <- aggregate_numeric(dcor_yx_pval, "mean")
+        agg$dcor_xy_pval <- aggregate_numeric(dcor_xy_pval, "mean")
       } else {
-        agg$hsic_yx_pval <- aggregate_numeric(hsic_yx_pval, method)
-        agg$hsic_xy_pval <- aggregate_numeric(hsic_xy_pval, method)
-        agg$dcor_yx_pval <- aggregate_numeric(dcor_yx_pval, method)
-        agg$dcor_xy_pval <- aggregate_numeric(dcor_xy_pval, method)
-      }
-
-      # Decision percentages
-      hsic_decision <- ifelse(hsic_yx_pval < alpha & hsic_xy_pval >= alpha, "x->y",
-                              ifelse(hsic_yx_pval >= alpha & hsic_xy_pval < alpha, "y->x", "undecided"))
-      dcor_decision <- ifelse(dcor_yx_pval < alpha & dcor_xy_pval >= alpha, "x->y",
-                              ifelse(dcor_yx_pval >= alpha & dcor_xy_pval < alpha, "y->x", "undecided"))
-      decisions$hsic <- prop.table(table(hsic_decision))
-      decisions$dcor <- prop.table(table(dcor_decision))
-
-      # Difference statistics if exist
-      if (!is.null(valid_results[[1]]$out.diff)) {
-        diff_estimates <- sapply(valid_results, function(x) {
-          if (!is.null(x$out.diff)) as.numeric(x$out.diff[, "estimate"]) else rep(NA_real_, 3)
-        })
-        diff_lower <- sapply(valid_results, function(x) {
-          if (!is.null(x$out.diff)) as.numeric(x$out.diff[, "lower"]) else rep(NA_real_, 3)
-        })
-        diff_upper <- sapply(valid_results, function(x) {
-          if (!is.null(x$out.diff)) as.numeric(x$out.diff[, "upper"]) else rep(NA_real_, 3)
-        })
-        agg$diff_estimates <- apply(diff_estimates, 1, aggregate_numeric, method)
-        agg$diff_lower <- apply(diff_lower, 1, aggregate_numeric, method)
-        agg$diff_upper <- apply(diff_upper, 1, aggregate_numeric, method)
-        rownames_matrix <- rownames(valid_results[[1]]$out.diff)
-        names(agg$diff_estimates) <- rownames_matrix
-        names(agg$diff_lower) <- rownames_matrix
-        names(agg$diff_upper) <- rownames_matrix
+        agg$hsic_yx_pval <- harmonicmeanp::p.hmp(hsic_yx_pval[!is.na(hsic_yx_pval)], L = sum(!is.na(hsic_yx_pval)))
+        agg$hsic_xy_pval <- harmonicmeanp::p.hmp(hsic_xy_pval[!is.na(hsic_xy_pval)], L = sum(!is.na(hsic_xy_pval)))
+        agg$dcor_yx_pval <- harmonicmeanp::p.hmp(dcor_yx_pval[!is.na(dcor_yx_pval)], L = sum(!is.na(dcor_yx_pval)))
+        agg$dcor_xy_pval <- harmonicmeanp::p.hmp(dcor_xy_pval[!is.na(dcor_xy_pval)], L = sum(!is.na(dcor_xy_pval)))
       }
     } else {
-      # Generic aggregation
-      extract_all_numeric <- function(result) {
-        numeric_vals <- list()
-        for (i in seq_along(result)) {
-          if (is.numeric(result[[i]])) {
-            numeric_vals <- c(numeric_vals, result[[i]])
-          } else if (is.list(result[[i]])) {
-            numeric_vals <- c(numeric_vals, unlist(result[[i]], use.names = TRUE))
-          }
-        }
-        return(numeric_vals)
-      }
-      all_numeric <- lapply(valid_results, extract_all_numeric)
-      all_names <- unique(unlist(lapply(all_numeric, names)))
-      for (name in all_names) {
-        vals <- sapply(all_numeric, function(x) {
-          val <- x[[name]]
-          get_numeric(val)
-        })
-        agg[[name]] <- aggregate_numeric(vals, method)
+      agg$hsic_yx_pval <- aggregate_numeric(hsic_yx_pval, method)
+      agg$hsic_xy_pval <- aggregate_numeric(hsic_xy_pval, method)
+      agg$dcor_yx_pval <- aggregate_numeric(dcor_yx_pval, method)
+      agg$dcor_xy_pval <- aggregate_numeric(dcor_xy_pval, method)
+    }
+
+    hsic_decision <- ifelse(hsic_yx_pval < alpha & hsic_xy_pval >= alpha, "x->y",
+                            ifelse(hsic_yx_pval >= alpha & hsic_xy_pval < alpha, "y->x", "undecided"))
+    dcor_decision <- ifelse(dcor_yx_pval < alpha & dcor_xy_pval >= alpha, "x->y",
+                            ifelse(dcor_yx_pval >= alpha & dcor_xy_pval < alpha, "y->x", "undecided"))
+    decisions$hsic <- prop.table(table(hsic_decision))
+    decisions$dcor <- prop.table(table(dcor_decision))
+
+    # Difference statistics if exist
+    if (!is.null(valid_results[[1]]$out.diff)) {
+      diff_estimates <- sapply(valid_results, function(x) {
+        if (!is.null(x$out.diff)) as.numeric(x$out.diff[, "estimate"]) else rep(NA_real_, 3)
+      })
+      diff_lower <- sapply(valid_results, function(x) {
+        if (!is.null(x$out.diff)) as.numeric(x$out.diff[, "lower"]) else rep(NA_real_, 3)
+      })
+      diff_upper <- sapply(valid_results, function(x) {
+        if (!is.null(x$out.diff)) as.numeric(x$out.diff[, "upper"]) else rep(NA_real_, 3)
+      })
+      agg$diff_estimates <- apply(diff_estimates, 1, aggregate_numeric, method)
+      agg$diff_lower <- apply(diff_lower, 1, aggregate_numeric, method)
+      agg$diff_upper <- apply(diff_upper, 1, aggregate_numeric, method)
+      rownames_matrix <- rownames(valid_results[[1]]$out.diff)
+      names(agg$diff_estimates) <- rownames_matrix
+      names(agg$diff_lower) <- rownames_matrix
+      names(agg$diff_upper) <- rownames_matrix
+    }
+  }
+
+  ## --- DDA.RESDIST block ---
+  if (n_valid > 0 && object_type == "dda.resdist") {
+    # Extract relevant statistics
+    # The following keys are based on your bootstrapped DDA.RES result structure
+    # and typical DDA output names. Adjust if your DDA.RES output differs.
+    .get_val <- function(x, key) {
+      val <- tryCatch(x[[key]], error = function(e) NA_real_)
+      get_numeric(val)
+    }
+    # Main stats (see your example: agostino.alternative.statistic.z etc.)
+    keys <- c("agostino.alternative.statistic.skew",
+              "agostino.alternative.statistic.z",
+              "agostino.alternative.p.value",
+              "agostino.target.statistic.skew",
+              "agostino.target.statistic.z",
+              "agostino.target.p.value",
+              "anscombe.alternative.statistic.kurt",
+              "anscombe.alternative.statistic.z",
+              "anscombe.alternative.p.value",
+              "anscombe.target.statistic.kurt",
+              "anscombe.target.statistic.z",
+              "anscombe.target.p.value",
+              "skewdiff1",
+              "skewdiff.z.value",
+              "skewdiff.p.value",
+              "skewdiff.lower",
+              "skewdiff.upper",
+              "kurtdiff1",
+              "kurtdiff.z.value",
+              "kurtdiff.p.value",
+              "kurtdiff.lower",
+              "kurtdiff.upper",
+              "cor12diff.cor21.diff",
+              "cor12diff.lower",
+              "cor12diff.upper",
+              "cor13diff.cor13.diff",
+              "cor13diff.lower",
+              "cor13diff.upper",
+              "RHS3.RHS3",
+              "RHS3.lower",
+              "RHS3.upper",
+              "RCC.RCC",
+              "RCC.lower",
+              "RCC.upper",
+              "RHS4.RHS4",
+              "RHS4.lower",
+              "RHS4.upper"
+    )
+    for (key in keys) {
+      vals <- sapply(valid_results, function(x) .get_val(x, key))
+      agg[[key]] <- aggregate_numeric(vals, method)
+    }
+
+    # Compute p-values from z-scores if needed (as in your example)
+    pval_keys <- c("agostino.alternative.p.value",
+                   "agostino.target.p.value",
+                   "anscombe.alternative.p.value",
+                   "anscombe.target.p.value",
+                   "skewdiff.p.value",
+                   "kurtdiff.p.value")
+    zval_keys <- c("agostino.alternative.statistic.z",
+                   "agostino.target.statistic.z",
+                   "anscombe.alternative.statistic.z",
+                   "anscombe.target.statistic.z",
+                   "skewdiff.z.value",
+                   "kurtdiff.z.value")
+    for (i in seq_along(pval_keys)) {
+      if (!is.na(agg[[zval_keys[i]]])) {
+        agg[[pval_keys[i]]] <- 2 * pnorm(abs(agg[[zval_keys[i]]]), lower.tail = FALSE)
       }
     }
-  } else {
-    warning("No valid results to aggregate")
+
+    # Decision rules (see your examples)
+    z_crit <- qnorm(1 - alpha/2)
+    dec_agost <- sapply(valid_results, function(x) {
+      z_alt <- .get_val(x, "agostino.alternative.statistic.z")
+      z_tgt <- .get_val(x, "agostino.target.statistic.z")
+      if (abs(z_alt) >= z_crit && abs(z_tgt) < z_crit) "x->y"
+      else if (abs(z_alt) < z_crit && abs(z_tgt) >= z_crit) "y->x"
+      else "undecided"
+    })
+    dec_anscom <- sapply(valid_results, function(x) {
+      z_alt <- .get_val(x, "anscombe.alternative.statistic.z")
+      z_tgt <- .get_val(x, "anscombe.target.statistic.z")
+      if (abs(z_alt) >= z_crit && abs(z_tgt) < z_crit) "x->y"
+      else if (abs(z_alt) < z_crit && abs(z_tgt) >= z_crit) "y->x"
+      else "undecided"
+    })
+    dec_skewdiff <- sapply(valid_results, function(x) {
+      l <- .get_val(x, "skewdiff.lower")
+      u <- .get_val(x, "skewdiff.upper")
+      if (l > 0 & u > 0) "x->y"
+      else if (l < 0 & u < 0) "y->x"
+      else "undecided"
+    })
+    dec_kurtdiff <- sapply(valid_results, function(x) {
+      l <- .get_val(x, "kurtdiff.lower")
+      u <- .get_val(x, "kurtdiff.upper")
+      if (l > 0 & u > 0) "x->y"
+      else if (l < 0 & u < 0) "y->x"
+      else "undecided"
+    })
+    dec_cor12diff <- sapply(valid_results, function(x) {
+      l <- .get_val(x, "cor12diff.lower")
+      u <- .get_val(x, "cor12diff.upper")
+      if (l > 0 & u > 0) "x->y"
+      else if (l < 0 & u < 0) "y->x"
+      else "undecided"
+    })
+    dec_cor13diff <- sapply(valid_results, function(x) {
+      l <- .get_val(x, "cor13diff.lower")
+      u <- .get_val(x, "cor13diff.upper")
+      if (l > 0 & u > 0) "x->y"
+      else if (l < 0 & u < 0) "y->x"
+      else "undecided"
+    })
+    dec_RHS3 <- sapply(valid_results, function(x) {
+      l <- .get_val(x, "RHS3.lower")
+      u <- .get_val(x, "RHS3.upper")
+      if (l > 0 & u > 0) "x->y"
+      else if (l < 0 & u < 0) "y->x"
+      else "undecided"
+    })
+    dec_RCC <- sapply(valid_results, function(x) {
+      l <- .get_val(x, "RCC.lower")
+      u <- .get_val(x, "RCC.upper")
+      if (l > 0 & u > 0) "x->y"
+      else if (l < 0 & u < 0) "y->x"
+      else "undecided"
+    })
+    dec_RHS4 <- sapply(valid_results, function(x) {
+      l <- .get_val(x, "RHS4.lower")
+      u <- .get_val(x, "RHS4.upper")
+      if (l > 0 & u > 0) "x->y"
+      else if (l < 0 & u < 0) "y->x"
+      else "undecided"
+    })
+
+    decisions$agostino <- prop.table(table(dec_agost))
+    decisions$anscombe <- prop.table(table(dec_anscom))
+    decisions$skewdiff <- prop.table(table(dec_skewdiff))
+    decisions$kurtdiff <- prop.table(table(dec_kurtdiff))
+    decisions$cor12diff <- prop.table(table(dec_cor12diff))
+    decisions$cor13diff <- prop.table(table(dec_cor13diff))
+    decisions$RHS3 <- prop.table(table(dec_RHS3))
+    decisions$RCC <- prop.table(table(dec_RCC))
+    decisions$RHS4 <- prop.table(table(dec_RHS4))
   }
 
   output <- list(
@@ -251,10 +385,8 @@ summary.dda_bagging <- function(object, digits = 4, alpha = 0.05) {
   stats <- object$aggregated_stats
   decisions <- object$decision_percentages
 
-  # Helper for pretty printing non-NA, non-numeric(0), safe for all types
   clean_print <- function(x, digits) {
     if (is.null(x)) return(NULL)
-    # If it's all NA or empty numeric, skip
     if (is.numeric(x)) {
       if (length(x) == 0) return(NULL)
       if (all(is.na(x))) return(NULL)
@@ -268,7 +400,6 @@ summary.dda_bagging <- function(object, digits = 4, alpha = 0.05) {
       return(capture.output(print(round(x, digits))))
     }
     if (is.list(x)) {
-      # Filter out nulls/all NA/empty numerics recursively
       x_filt <- Filter(function(y) {
         if (is.null(y)) return(FALSE)
         if (is.numeric(y) && (length(y) == 0 || all(is.na(y)))) return(FALSE)
@@ -281,7 +412,6 @@ summary.dda_bagging <- function(object, digits = 4, alpha = 0.05) {
       if (length(x_filt) == 0) return(NULL)
       return(capture.output(str(x_filt)))
     }
-    # For atomic types and character
     if (is.atomic(x) && length(x) == 0) return(NULL)
     if (is.atomic(x) && all(is.na(x))) return(NULL)
     return(as.character(x))
