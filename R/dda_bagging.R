@@ -56,9 +56,6 @@ summary.dda_bagging(bagged_resdist)
 result_vardist <- dda.vardist(mpg ~ wt + hp, pred = "wt", data = mtcars)
 print(result_vardist)
 
-
-
-
 bagged_vardist <- dda_bagging(result_vardist, iter = 10)
 summary.dda_bagging(bagged_vardist)
 
@@ -83,9 +80,9 @@ summary.dda_bagging(bagged_vardist)
 dda_bagging <- function(
     dda_result,
     iter = 100,
-    progress = TRUE,
-    save_file = NULL,
-    override_args = NULL,
+    progress = TRUE, # Show progress bar
+    #save_file = NULL, # Eh?
+    #override_args = NULL, # Eh?
     method = "mean",
     alpha = 0.05
 ) {
@@ -99,7 +96,9 @@ dda_bagging <- function(
   # Detect object type and extract call information
   if (inherits(dda_result, "dda.indep") ||
       inherits(dda_result, "dda.vardist") ||
-      inherits(dda_result, "dda.resdist")) {
+      inherits(dda_result, "dda.resdist") ||
+      inherits(dda_result, "cdda.indep") ||
+      inherits(dda_result, "cdda.vardist") ){
 
     if (is.null(dda_result$call_info)) {
       stop("DDA result does not contain function call information. Please ensure you're using an updated DDA function that stores call information.")
@@ -119,14 +118,14 @@ dda_bagging <- function(
       })
     }
   } else if (length(dda_result) >= 5 && !is.null(dda_result[[5]])) {
-    call_info <- dda_result[[5]]
+    call_info <- dda_result[[5]] #[[5]] is function_call, function_name, all_args, formula, data_name, and original_data
     function_name <- call_info$function_name
     all_args <- call_info$all_args
     original_env <- call_info$environment
     data_name <- call_info$data_name
     original_data <- get(data_name, envir = original_env)
   } else {
-    stop("Unrecognized DDA result structure. Please ensure you're using a supported DDA function with call information storage.")
+    stop("Unrecognized DDA result structure. Please ensure you're using a supported DDA object.")
   }
 
   nobs <- nrow(original_data)
@@ -144,8 +143,8 @@ dda_bagging <- function(
     cat(paste("\n", "Running", iter, "bootstrap iterations of", function_name, "\n"))
   }
 
-  for(i in 1:iter) {
-    boot_indices <- sample(1:nobs, nobs, replace = TRUE)
+  for(i in 1:iter) { #argument "resamplin
+    boot_indices <- sample(1:nobs, nobs, replace = TRUE) #options for subsampling
     boot_data <- original_data[boot_indices, ]
     boot_args <- all_args
     boot_args$data <- boot_data
@@ -175,6 +174,7 @@ dda_bagging <- function(
 
   ## --- DDA.INDEP block ---
   if (n_valid > 0 && object_type == "dda.indep") {
+    # If method is mean or median
     hsic_yx <- sapply(valid_results, function(x) get_numeric(x$hsic.yx$statistic))
     hsic_xy <- sapply(valid_results, function(x) get_numeric(x$hsic.xy$statistic))
     hsic_yx_pval <- sapply(valid_results, function(x) get_numeric(x$hsic.yx$p.value))
@@ -237,7 +237,7 @@ dda_bagging <- function(
     }
   }
 
-  ## --- DDA.RESDIST block (NOW NA-SAFE EVERYWHERE) ---
+  ## --- DDA.RESDIST block ---
   if (n_valid > 0 && object_type == "dda.resdist") {
     .get_val <- function(x, key) {
       val <- tryCatch(x[[key]], error = function(e) NA_real_)
