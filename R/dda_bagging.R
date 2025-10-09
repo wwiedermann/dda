@@ -61,29 +61,22 @@ summary.dda_bagging(bagged_vardist)
 
 
 
-#' Bootstrap Aggregated DDA Analysis
+#' Bootstrap Aggregated DDA Analysis (harmonic mean for p-values, mean for other stats)
 #'
 #' @param dda_result Output from any DDA function (dda.indep, dda.vardist, dda.resdist, etc.)
 #' @param iter Number of bootstrap iterations (default: 100)
 #' @param progress Whether to show progress bar (default: TRUE)
 #' @param save_file Optional file path to save results
-#' @param override_args Named list of arguments to override from original call
-#' @param method Method for aggregating results ("mean", "median", "harmonic_p")
 #' @param alpha Significance level for decisions (default: 0.05)
-#'
-#' @rdname dda.indep
-#' @export
 #' @return A list containing bootstrap and aggregated results
-# NA-safe DDA Bagging for dda.resdist, dda.indep, etc.
-# NA-safe DDA Bagging for dda.resdist, dda.indep, etc.
+
+
 
 dda_bagging <- function(
     dda_result,
     iter = 100,
-    progress = TRUE, # Show progress bar
-    #save_file = NULL, # Eh?
-    #override_args = NULL, # Eh?
-    method = "mean",
+    progress = TRUE,
+    save_file = NULL,
     alpha = 0.05
 ) {
   get_numeric <- function(x) {
@@ -92,18 +85,29 @@ dda_bagging <- function(
     if (is.list(x)) return(get_numeric(x[[1]]))
     return(NA_real_)
   }
-
-  # Detect object type and extract call information
+  harmonic_p <- function(pvec) {
+    pvec <- as.numeric(pvec)
+    pvec <- pvec[!is.na(pvec) & pvec > 0 & pvec < 1]
+    if (length(pvec) == 0) return(NA_real_)
+    if (!requireNamespace("harmonicmeanp", quietly = TRUE)) {
+      warning("harmonicmeanp package not found, using mean for p-values")
+      return(mean(pvec))
+    }
+    harmonicmeanp::p.hmp(pvec, L = length(pvec))
+  }
+  print_decisions <- function(x) {
+    levs <- c("undecided", "y->x", "x->y")
+    tab <- table(factor(x, levels = levs))
+    prop <- tab / sum(tab)
+    names(prop) <- levs
+    prop
+  }
+  # Extract call info and data
   if (inherits(dda_result, "dda.indep") ||
       inherits(dda_result, "dda.vardist") ||
       inherits(dda_result, "dda.resdist") ||
       inherits(dda_result, "cdda.indep") ||
-      inherits(dda_result, "cdda.vardist") ){
-
-    if (is.null(dda_result$call_info)) {
-      stop("DDA result does not contain function call information. Please ensure you're using an updated DDA function that stores call information.")
-    }
-
+      inherits(dda_result, "cdda.vardist")) {
     call_info <- dda_result$call_info
     function_name <- call_info$function_name
     all_args <- call_info$all_args
@@ -113,12 +117,11 @@ dda_bagging <- function(
       tryCatch({
         original_data <- get(data_name, envir = parent.frame())
       }, error = function(e) {
-        stop(paste("Could not retrieve original data:", data_name,
-                   "Please ensure the data is available in the environment."))
+        stop(paste("Could not retrieve original data:", data_name))
       })
     }
   } else if (length(dda_result) >= 5 && !is.null(dda_result[[5]])) {
-    call_info <- dda_result[[5]] #[[5]] is function_call, function_name, all_args, formula, data_name, and original_data
+    call_info <- dda_result[[5]]
     function_name <- call_info$function_name
     all_args <- call_info$all_args
     original_env <- call_info$environment
@@ -131,20 +134,14 @@ dda_bagging <- function(
   nobs <- nrow(original_data)
   dda_function <- get(function_name)
 
-  if (!is.null(override_args)) {
-    for (arg_name in names(override_args)) {
-      all_args[[arg_name]] <- override_args[[arg_name]]
-    }
-  }
-
   bagged_results <- list()
   if (progress) {
     pb <- txtProgressBar(min = 0, max = iter, style = 3, width = 50, char = "=")
     cat(paste("\n", "Running", iter, "bootstrap iterations of", function_name, "\n"))
   }
 
-  for(i in 1:iter) { #argument "resamplin
-    boot_indices <- sample(1:nobs, nobs, replace = TRUE) #options for subsampling
+  for(i in 1:iter) {
+    boot_indices <- sample(1:nobs, nobs, replace = TRUE)
     boot_data <- original_data[boot_indices, ]
     boot_args <- all_args
     boot_args$data <- boot_data
@@ -164,17 +161,8 @@ dda_bagging <- function(
   decisions <- list()
   n_valid <- length(valid_results)
 
-  aggregate_numeric <- function(vals, method) {
-    vals <- as.numeric(vals)
-    vals <- vals[!is.na(vals)]
-    if (length(vals) == 0) return(NA_real_)
-    if (method == "median") return(median(vals))
-    mean(vals)
-  }
-
   ## --- DDA.INDEP block ---
   if (n_valid > 0 && object_type == "dda.indep") {
-    # If method is mean or median
     hsic_yx <- sapply(valid_results, function(x) get_numeric(x$hsic.yx$statistic))
     hsic_xy <- sapply(valid_results, function(x) get_numeric(x$hsic.xy$statistic))
     hsic_yx_pval <- sapply(valid_results, function(x) get_numeric(x$hsic.yx$p.value))
@@ -184,37 +172,22 @@ dda_bagging <- function(
     dcor_yx_pval <- sapply(valid_results, function(x) get_numeric(x$distance_cor$dcor_yx$p.value))
     dcor_xy_pval <- sapply(valid_results, function(x) get_numeric(x$distance_cor$dcor_xy$p.value))
 
-    agg$hsic_yx_stat <- aggregate_numeric(hsic_yx, method)
-    agg$hsic_xy_stat <- aggregate_numeric(hsic_xy, method)
-    agg$dcor_yx_stat <- aggregate_numeric(dcor_yx, method)
-    agg$dcor_xy_stat <- aggregate_numeric(dcor_xy, method)
+    agg$hsic_yx_stat <- mean(hsic_yx, na.rm = TRUE)
+    agg$hsic_xy_stat <- mean(hsic_xy, na.rm = TRUE)
+    agg$dcor_yx_stat <- mean(dcor_yx, na.rm = TRUE)
+    agg$dcor_xy_stat <- mean(dcor_xy, na.rm = TRUE)
 
-    if (method == "harmonic_p") {
-      if (!requireNamespace("harmonicmeanp", quietly = TRUE)) {
-        warning("harmonicmeanp package not available, using mean for p-values")
-        agg$hsic_yx_pval <- aggregate_numeric(hsic_yx_pval, "mean")
-        agg$hsic_xy_pval <- aggregate_numeric(hsic_xy_pval, "mean")
-        agg$dcor_yx_pval <- aggregate_numeric(dcor_yx_pval, "mean")
-        agg$dcor_xy_pval <- aggregate_numeric(dcor_xy_pval, "mean")
-      } else {
-        agg$hsic_yx_pval <- harmonicmeanp::p.hmp(hsic_yx_pval[!is.na(hsic_yx_pval)], L = sum(!is.na(hsic_yx_pval)))
-        agg$hsic_xy_pval <- harmonicmeanp::p.hmp(hsic_xy_pval[!is.na(hsic_xy_pval)], L = sum(!is.na(hsic_xy_pval)))
-        agg$dcor_yx_pval <- harmonicmeanp::p.hmp(dcor_yx_pval[!is.na(dcor_yx_pval)], L = sum(!is.na(dcor_yx_pval)))
-        agg$dcor_xy_pval <- harmonicmeanp::p.hmp(dcor_xy_pval[!is.na(dcor_xy_pval)], L = sum(!is.na(dcor_xy_pval)))
-      }
-    } else {
-      agg$hsic_yx_pval <- aggregate_numeric(hsic_yx_pval, method)
-      agg$hsic_xy_pval <- aggregate_numeric(hsic_xy_pval, method)
-      agg$dcor_yx_pval <- aggregate_numeric(dcor_yx_pval, method)
-      agg$dcor_xy_pval <- aggregate_numeric(dcor_xy_pval, method)
-    }
+    agg$hsic_yx_pval <- harmonic_p(hsic_yx_pval)
+    agg$hsic_xy_pval <- harmonic_p(hsic_xy_pval)
+    agg$dcor_yx_pval <- harmonic_p(dcor_yx_pval)
+    agg$dcor_xy_pval <- harmonic_p(dcor_xy_pval)
 
     hsic_decision <- ifelse(hsic_yx_pval < alpha & hsic_xy_pval >= alpha, "x->y",
                             ifelse(hsic_yx_pval >= alpha & hsic_xy_pval < alpha, "y->x", "undecided"))
     dcor_decision <- ifelse(dcor_yx_pval < alpha & dcor_xy_pval >= alpha, "x->y",
                             ifelse(dcor_yx_pval >= alpha & dcor_xy_pval < alpha, "y->x", "undecided"))
-    decisions$hsic <- prop.table(table(hsic_decision))
-    decisions$dcor <- prop.table(table(dcor_decision))
+    decisions$hsic <- print_decisions(hsic_decision)
+    decisions$dcor <- print_decisions(dcor_decision)
 
     # Difference statistics if exist
     if (!is.null(valid_results[[1]]$out.diff)) {
@@ -227,13 +200,13 @@ dda_bagging <- function(
       diff_upper <- sapply(valid_results, function(x) {
         if (!is.null(x$out.diff)) as.numeric(x$out.diff[, "upper"]) else rep(NA_real_, 3)
       })
-      agg$diff_estimates <- apply(diff_estimates, 1, aggregate_numeric, method)
-      agg$diff_lower <- apply(diff_lower, 1, aggregate_numeric, method)
-      agg$diff_upper <- apply(diff_upper, 1, aggregate_numeric, method)
-      rownames_matrix <- rownames(valid_results[[1]]$out.diff)
-      names(agg$diff_estimates) <- rownames_matrix
-      names(agg$diff_lower) <- rownames_matrix
-      names(agg$diff_upper) <- rownames_matrix
+      col_names <- rownames(valid_results[[1]]$out.diff)
+      agg$diff_matrix <- matrix(NA_real_, ncol = 3, nrow = 3)
+      agg$diff_matrix[1, ] <- apply(diff_estimates, 1, mean, na.rm = TRUE)
+      agg$diff_matrix[2, ] <- apply(diff_lower,    1, mean, na.rm = TRUE)
+      agg$diff_matrix[3, ] <- apply(diff_upper,    1, mean, na.rm = TRUE)
+      colnames(agg$diff_matrix) <- col_names
+      rownames(agg$diff_matrix) <- c("estimate", "lower", "upper")
     }
   }
 
@@ -281,11 +254,6 @@ dda_bagging <- function(
               "RHS4.lower",
               "RHS4.upper"
     )
-    for (key in keys) {
-      vals <- sapply(valid_results, function(x) .get_val(x, key))
-      agg[[key]] <- aggregate_numeric(vals, method)
-    }
-
     pval_keys <- c("agostino.alternative.p.value",
                    "agostino.target.p.value",
                    "anscombe.alternative.p.value",
@@ -298,12 +266,20 @@ dda_bagging <- function(
                    "anscombe.target.statistic.z",
                    "skewdiff.z.value",
                    "kurtdiff.z.value")
-    for (i in seq_along(pval_keys)) {
-      if (!is.na(agg[[zval_keys[i]]])) {
-        agg[[pval_keys[i]]] <- 2 * pnorm(abs(agg[[zval_keys[i]]]), lower.tail = FALSE)
+    for (key in keys) {
+      vals <- sapply(valid_results, function(x) .get_val(x, key))
+      if (key %in% pval_keys) {
+        agg[[key]] <- harmonic_p(vals)
+      } else {
+        agg[[key]] <- mean(vals, na.rm = TRUE)
       }
     }
-
+    for (i in seq_along(pval_keys)) {
+      zval <- agg[[zval_keys[i]]]
+      if (!is.na(zval)) {
+        agg[[pval_keys[i]]] <- 2 * pnorm(abs(zval), lower.tail = FALSE)
+      }
+    }
     z_crit <- qnorm(1 - alpha/2)
     dec_agost <- sapply(valid_results, function(x) {
       z_alt <- .get_val(x, "agostino.alternative.statistic.z")
@@ -422,16 +398,15 @@ dda_bagging <- function(
         "undecided"
       }
     })
-
-    decisions$agostino <- prop.table(table(dec_agost))
-    decisions$anscombe <- prop.table(table(dec_anscom))
-    decisions$skewdiff <- prop.table(table(dec_skewdiff))
-    decisions$kurtdiff <- prop.table(table(dec_kurtdiff))
-    decisions$cor12diff <- prop.table(table(dec_cor12diff))
-    decisions$cor13diff <- prop.table(table(dec_cor13diff))
-    decisions$RHS3 <- prop.table(table(dec_RHS3))
-    decisions$RCC <- prop.table(table(dec_RCC))
-    decisions$RHS4 <- prop.table(table(dec_RHS4))
+    decisions$agostino <- print_decisions(dec_agost)
+    decisions$anscombe <- print_decisions(dec_anscom)
+    decisions$skewdiff <- print_decisions(dec_skewdiff)
+    decisions$kurtdiff <- print_decisions(dec_kurtdiff)
+    decisions$cor12diff <- print_decisions(dec_cor12diff)
+    decisions$cor13diff <- print_decisions(dec_cor13diff)
+    decisions$RHS3 <- print_decisions(dec_RHS3)
+    decisions$RCC <- print_decisions(dec_RCC)
+    decisions$RHS4 <- print_decisions(dec_RHS4)
   }
 
   output <- list(
@@ -454,57 +429,18 @@ dda_bagging <- function(
   }
   return(output)
 }
-#' Summary for dda_bagging Output
+
+
+#' Summary for dda_bagging Output (hide all-NA/NaN difference columns too)
 #'
 #' @param object Output from dda_bagging()
 #' @param digits Number of digits for rounding (default: 4)
 #' @param alpha Significance level for decisions (default: 0.05)
-#'
-#' @method summary dda_bagging
-#' @export
-#'
-#' @return Prints an organized summary of aggregated statistics and decision percentages
+#' @return Prints organized summary tables
 
 summary.dda_bagging <- function(object, digits = 4, alpha = 0.05) {
-  if (is.null(object$aggregated_stats)) {
-    cat("No aggregated statistics found.\n")
-    return(invisible(NULL))
-  }
   stats <- object$aggregated_stats
   decisions <- object$decision_percentages
-
-  clean_print <- function(x, digits) {
-    if (is.null(x)) return(NULL)
-    if (is.numeric(x)) {
-      if (length(x) == 0) return(NULL)
-      if (all(is.na(x))) return(NULL)
-      x <- x[!is.na(x)]
-      if (length(x) == 0) return(NULL)
-      return(paste(round(x, digits), collapse = ", "))
-    }
-    if (is.matrix(x) || is.data.frame(x)) {
-      x_nona <- x[!is.na(x)]
-      if (length(x_nona) == 0) return(NULL)
-      return(capture.output(print(round(x, digits))))
-    }
-    if (is.list(x)) {
-      x_filt <- Filter(function(y) {
-        if (is.null(y)) return(FALSE)
-        if (is.numeric(y) && (length(y) == 0 || all(is.na(y)))) return(FALSE)
-        if (is.matrix(y) || is.data.frame(y)) {
-          y_nona <- y[!is.na(y)]
-          return(length(y_nona) > 0)
-        }
-        TRUE
-      }, x)
-      if (length(x_filt) == 0) return(NULL)
-      return(capture.output(str(x_filt)))
-    }
-    if (is.atomic(x) && length(x) == 0) return(NULL)
-    if (is.atomic(x) && all(is.na(x))) return(NULL)
-    return(as.character(x))
-  }
-
   cat("\n===== DDA Bagging Summary =====\n")
   cat("Function:", object$parameters$function_name, "\n")
   cat("Object Type:", object$parameters$object_type, "\n")
@@ -512,25 +448,74 @@ summary.dda_bagging <- function(object, digits = 4, alpha = 0.05) {
   cat("Valid Iterations:", object$n_valid_iterations, "\n")
   cat("----\n")
 
-  cat("\nAggregated Statistics:\n")
-  for (stat_name in names(stats)) {
-    out <- clean_print(stats[[stat_name]], digits)
-    if (!is.null(out)) {
-      cat(stat_name, ":", out, "\n")
+  if (object$parameters$object_type == "dda.indep" && !is.null(stats$hsic_yx_stat)) {
+    stat_tab <- matrix(NA, nrow = 2, ncol = 4)
+    rownames(stat_tab) <- c("HSIC", "dCor")
+    colnames(stat_tab) <- c("Target Stat", "Target p", "Alternative Stat", "Alternative p")
+    stat_tab[1, ] <- c(round(stats$hsic_yx_stat, digits),
+                       round(stats$hsic_yx_pval, digits),
+                       round(stats$hsic_xy_stat, digits),
+                       round(stats$hsic_xy_pval, digits))
+    stat_tab[2, ] <- c(round(stats$dcor_yx_stat, digits),
+                       round(stats$dcor_yx_pval, digits),
+                       round(stats$dcor_xy_stat, digits),
+                       round(stats$dcor_xy_pval, digits))
+    keep_rows <- apply(stat_tab, 1, function(row) any(!is.na(row) & !is.nan(row)))
+    stat_tab_print <- stat_tab[keep_rows, , drop = FALSE]
+    if (nrow(stat_tab_print) > 0) {
+      cat("\nHSIC and dCor Test Statistics & Harmonic p-values:\n")
+      print(stat_tab_print)
+      cat("---\n")
     }
-  }
-
-  if (!is.null(decisions) && length(decisions) > 0) {
-    cat("\nDecision Percentages (alpha =", alpha, "):\n")
-    for (dec_name in names(decisions)) {
-      out <- clean_print(decisions[[dec_name]], digits)
-      if (!is.null(out)) {
-        cat(dec_name, ":\n")
-        print(round(decisions[[dec_name]], digits))
-        cat("\n")
+    if (!is.null(stats$diff_matrix)) {
+      diffmat <- stats$diff_matrix
+      colnames(diffmat) <- c("HSIC", "dCor", "MI")
+      keep_cols <- apply(diffmat, 2, function(col) any(!is.na(col) & !is.nan(col)))
+      diffmat_print <- diffmat[, keep_cols, drop = FALSE]
+      keep_rows <- apply(diffmat_print, 1, function(row) any(!is.na(row) & !is.nan(row)))
+      diffmat_print <- diffmat_print[keep_rows, , drop = FALSE]
+      if (nrow(diffmat_print) > 0 && ncol(diffmat_print) > 0) {
+        cat("\nDifference Statistics (mean estimates, lower, upper):\n")
+        print(round(diffmat_print, digits))
+        cat("---\n")
+      }
+    }
+    # Decision proportions: print only if non-zero/non-NA
+    for (dname in names(decisions)) {
+      prop <- decisions[[dname]]
+      out <- rep(0, 3)
+      names(out) <- c("undecided", "y->x", "x->y")
+      out[names(prop)] <- prop
+      # Only print if at least one is nonzero and not NA
+      if (any(!is.na(out) & out != 0)) {
+        cat(paste("\nDecision proportions for", dname, ":\n"))
+        print(round(out, digits))
+        cat("---\n")
+      }
+    }
+  } else {
+    cat("\nAggregated Statistics:\n")
+    for (stat_name in names(stats)) {
+      stat_val <- stats[[stat_name]]
+      if (is.numeric(stat_val)) {
+        if (all(is.na(stat_val) | is.nan(stat_val))) next
+      }
+      cat(stat_name, ":", round(stat_val, digits), "\n")
+    }
+    if (!is.null(decisions) && length(decisions) > 0) {
+      cat("\nDecision Percentages (alpha =", alpha, "):\n")
+      for (dec_name in names(decisions)) {
+        prop <- decisions[[dec_name]]
+        out <- rep(0, 3)
+        names(out) <- c("undecided", "y->x", "x->y")
+        out[names(prop)] <- prop
+        if (any(!is.na(out) & out != 0)) {
+          cat(dec_name, ":\n")
+          print(round(out, digits))
+          cat("---\n")
+        }
       }
     }
   }
-
   invisible(object)
 }
