@@ -24,20 +24,22 @@ summary.dda_bagging(bagged_indep)
 # Valid Iterations: 10
 # ----
 #
-# Aggregated Statistics:
-# hsic_yx_stat : 0.6324
-# hsic_xy_stat : 4.9462
-# hsic_yx_pval : 0.1094
-# hsic_xy_pval : 0
-# diff_estimates : 4.3139, 0.1809, 0.1142
-# diff_lower : 2.4641, 0.0974, 0.0614
-# diff_upper : 6.1486, 0.2171, 0.1765
+# HSIC and dCor Test Statistics & Harmonic p-values:
+# Target Stat Target p Alternative Stat Alternative p
+# HSIC       0.697    5e-04           6.4876             0
+# ---
 #
-# Decision Percentages (alpha = 0.05 ):
-#   hsic :
-#   hsic_decision
-# undecided      y->x
-# 0.4       0.6
+# Difference Statistics (mean estimates, lower, upper):
+#          HSIC   dCor     MI
+# estimate 5.7906 0.2202 0.1964
+# lower    3.8147 0.1431 0.1279
+# upper    7.6252 0.2491 0.2710
+# ---
+#
+# Decision proportions for hsic :
+# undecided      y->x      x->y
+#       0.6       0.4       0.0
+# ---
 
 # 2. dda.resdist: Direction Dependence Analysis - Residual Distribution
 
@@ -58,7 +60,6 @@ print(result_vardist)
 
 bagged_vardist <- dda_bagging(result_vardist, iter = 10)
 summary.dda_bagging(bagged_vardist)
-
 
 
 #' Bootstrap Aggregated DDA Analysis (harmonic mean for p-values, mean for other stats)
@@ -160,6 +161,7 @@ dda_bagging <- function(
   agg <- list()
   decisions <- list()
   n_valid <- length(valid_results)
+
 
   ## --- DDA.INDEP block ---
   if (n_valid > 0 && object_type == "dda.indep") {
@@ -409,6 +411,79 @@ dda_bagging <- function(
     decisions$RHS4 <- print_decisions(dec_RHS4)
   }
 
+  ## --- DDA.VARDIST block ---
+  if (n_valid > 0 && object_type == "dda.vardist") {
+    # Aggregate main DDA vardist statistics
+    vardist_keys <- c(
+      "agostino.predictor.statistic.skew", "agostino.predictor.statistic.z", "agostino.predictor.p.value",
+      "agostino.outcome.statistic.skew",   "agostino.outcome.statistic.z",   "agostino.outcome.p.value",
+      "anscombe.predictor.statistic.kurt", "anscombe.predictor.statistic.z", "anscombe.predictor.p.value",
+      "anscombe.outcome.statistic.kurt",   "anscombe.outcome.statistic.z",   "anscombe.outcome.p.value"
+    )
+    for (key in vardist_keys) {
+      vals <- sapply(valid_results, function(x) get_numeric(x[[key]]))
+      if (grepl("p.value", key)) {
+        agg[[key]] <- harmonic_p(vals)
+      } else {
+        agg[[key]] <- mean(vals, na.rm = TRUE)
+      }
+    }
+    # Skewness/kurtosis/co-skewness/co-kurtosis differences
+    diff_keys <- c(
+      "skewdiff.skew.diff", "skewdiff.lower", "skewdiff.upper",
+      "kurtdiff.kurt.diff", "kurtdiff.lower", "kurtdiff.upper",
+      "cor12diff.cor21.diff", "cor12diff.lower", "cor12diff.upper",
+      "cor13diff.cor13.diff", "cor13diff.lower", "cor13diff.upper",
+      "RHS.RHS", "RHS.lower", "RHS.upper",
+      "RCC.RCC", "RCC.lower", "RCC.upper",
+      "Rtanh.Rtanh", "Rtanh.lower", "Rtanh.upper"
+    )
+    for (key in diff_keys) {
+      vals <- sapply(valid_results, function(x) get_numeric(x[[key]]))
+      agg[[key]] <- mean(vals, na.rm = TRUE)
+    }
+    # Decision rules
+    z_crit <- qnorm(1 - alpha/2)
+    dec_agost <- sapply(valid_results, function(x) {
+      z_pred <- get_numeric(x$agostino.predictor.statistic.z)
+      z_out <- get_numeric(x$agostino.outcome.statistic.z)
+      if (is.na(z_pred) || is.na(z_out)) "undecided"
+      else if (abs(z_pred) >= z_crit && abs(z_out) < z_crit) "x->y"
+      else if (abs(z_pred) < z_crit && abs(z_out) >= z_crit) "y->x"
+      else "undecided"
+    })
+    dec_anscom <- sapply(valid_results, function(x) {
+      z_pred <- get_numeric(x$anscombe.predictor.statistic.z)
+      z_out <- get_numeric(x$anscombe.outcome.statistic.z)
+      if (is.na(z_pred) || is.na(z_out)) "undecided"
+      else if (abs(z_pred) >= z_crit && abs(z_out) < z_crit) "x->y"
+      else if (abs(z_pred) < z_crit && abs(z_out) >= z_crit) "y->x"
+      else "undecided"
+    })
+    dec_skewdiff <- sapply(valid_results, function(x) {
+      l <- get_numeric(x$skewdiff.lower)
+      u <- get_numeric(x$skewdiff.upper)
+      if (is.na(l) || is.na(u)) "undecided"
+      else if (l > 0 & u > 0) "x->y"
+      else if (l < 0 & u < 0) "y->x"
+      else "undecided"
+    })
+    dec_kurtdiff <- sapply(valid_results, function(x) {
+      l <- get_numeric(x$kurtdiff.lower)
+      u <- get_numeric(x$kurtdiff.upper)
+      if (is.na(l) || is.na(u)) "undecided"
+      else if (l > 0 & u > 0) "x->y"
+      else if (l < 0 & u < 0) "y->x"
+      else "undecided"
+    })
+    decisions$agostino <- print_decisions(dec_agost)
+    decisions$anscombe <- print_decisions(dec_anscom)
+    decisions$skewdiff <- print_decisions(dec_skewdiff)
+    decisions$kurtdiff <- print_decisions(dec_kurtdiff)
+    # You can add more decision rules for coskew/cokurt if desired.
+  }
+
+
   output <- list(
     bagged_results = bagged_results,
     aggregated_stats = agg,
@@ -431,7 +506,7 @@ dda_bagging <- function(
 }
 
 
-#' Summary for dda_bagging Output (hide all-NA/NaN difference columns too)
+#' Summary for dda_bagging Output
 #'
 #' @param object Output from dda_bagging()
 #' @param digits Number of digits for rounding (default: 4)
