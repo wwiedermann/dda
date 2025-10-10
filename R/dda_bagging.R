@@ -15,7 +15,7 @@ res_ex_indep <- dda.indep(y ~ x, pred = "x", data = d, parallelize = TRUE, cores
 print(res_ex_indep)
 
 bagged_indep <- dda_bagging(res_ex_indep, iter = 10)
-summary.dda_bagging(bagged_indep)
+summary.dda_bagging_indep(bagged_indep)
 
 # ===== DDA Bagging Summary =====
 # Function: dda.indep
@@ -41,6 +41,7 @@ summary.dda_bagging(bagged_indep)
 #       0.6       0.4       0.0
 # ---
 
+
 # 2. dda.resdist: Direction Dependence Analysis - Residual Distribution
 
 # result_resdist <- dda.resdist(mpg ~ wt + hp, pred = "wt", data = mtcars)
@@ -51,7 +52,7 @@ result_resdist <- dda.resdist(y ~ x, pred = "x", data = d,
 print(result_resdist)
 
 bagged_resdist <- dda_bagging(result_resdist, iter = 100)
-summary.dda_bagging(bagged_resdist)
+summary.dda_bagging_resdist(bagged_resdist)
 
 
 # 3. dda.vardist: Direction Dependence Analysis - Variable Distribution
@@ -59,7 +60,7 @@ result_vardist <- dda.vardist(mpg ~ wt + hp, pred = "wt", data = mtcars)
 print(result_vardist)
 
 bagged_vardist <- dda_bagging(result_vardist, iter = 10)
-summary.dda_bagging(bagged_vardist)
+summary.dda_bagging_vardist(bagged_vardist)
 
 
 #' Bootstrap Aggregated DDA Analysis (harmonic mean for p-values, mean for other stats)
@@ -214,275 +215,36 @@ dda_bagging <- function(
 
   ## --- DDA.RESDIST block ---
   if (n_valid > 0 && object_type == "dda.resdist") {
-    .get_val <- function(x, key) {
-      val <- tryCatch(x[[key]], error = function(e) NA_real_)
-      get_numeric(val)
-    }
-    keys <- c("agostino.alternative.statistic.skew",
-              "agostino.alternative.statistic.z",
-              "agostino.alternative.p.value",
-              "agostino.target.statistic.skew",
-              "agostino.target.statistic.z",
-              "agostino.target.p.value",
-              "anscombe.alternative.statistic.kurt",
-              "anscombe.alternative.statistic.z",
-              "anscombe.alternative.p.value",
-              "anscombe.target.statistic.kurt",
-              "anscombe.target.statistic.z",
-              "anscombe.target.p.value",
-              "skewdiff1",
-              "skewdiff.z.value",
-              "skewdiff.p.value",
-              "skewdiff.lower",
-              "skewdiff.upper",
-              "kurtdiff1",
-              "kurtdiff.z.value",
-              "kurtdiff.p.value",
-              "kurtdiff.lower",
-              "kurtdiff.upper",
-              "cor12diff.cor21.diff",
-              "cor12diff.lower",
-              "cor12diff.upper",
-              "cor13diff.cor13.diff",
-              "cor13diff.lower",
-              "cor13diff.upper",
-              "RHS3.RHS3",
-              "RHS3.lower",
-              "RHS3.upper",
-              "RCC.RCC",
-              "RCC.lower",
-              "RCC.upper",
-              "RHS4.RHS4",
-              "RHS4.lower",
-              "RHS4.upper"
-    )
-    pval_keys <- c("agostino.alternative.p.value",
-                   "agostino.target.p.value",
-                   "anscombe.alternative.p.value",
-                   "anscombe.target.p.value",
-                   "skewdiff.p.value",
-                   "kurtdiff.p.value")
-    zval_keys <- c("agostino.alternative.statistic.z",
-                   "agostino.target.statistic.z",
-                   "anscombe.alternative.statistic.z",
-                   "anscombe.target.statistic.z",
-                   "skewdiff.z.value",
-                   "kurtdiff.z.value")
-    for (key in keys) {
-      vals <- sapply(valid_results, function(x) .get_val(x, key))
-      if (key %in% pval_keys) {
-        agg[[key]] <- harmonic_p(vals)
-      } else {
-        agg[[key]] <- mean(vals, na.rm = TRUE)
-      }
-    }
-    for (i in seq_along(pval_keys)) {
-      zval <- agg[[zval_keys[i]]]
-      if (!is.na(zval)) {
-        agg[[pval_keys[i]]] <- 2 * pnorm(abs(zval), lower.tail = FALSE)
-      }
-    }
-    z_crit <- qnorm(1 - alpha/2)
-    dec_agost <- sapply(valid_results, function(x) {
-      z_alt <- .get_val(x, "agostino.alternative.statistic.z")
-      z_tgt <- .get_val(x, "agostino.target.statistic.z")
-      if (is.na(z_alt) || is.na(z_tgt)) {
-        "undecided"
-      } else if (abs(z_alt) >= z_crit && abs(z_tgt) < z_crit) {
-        "x->y"
-      } else if (abs(z_alt) < z_crit && abs(z_tgt) >= z_crit) {
-        "y->x"
-      } else {
-        "undecided"
-      }
-    })
-    dec_anscom <- sapply(valid_results, function(x) {
-      z_alt <- .get_val(x, "anscombe.alternative.statistic.z")
-      z_tgt <- .get_val(x, "anscombe.target.statistic.z")
-      if (is.na(z_alt) || is.na(z_tgt)) {
-        "undecided"
-      } else if (abs(z_alt) >= z_crit && abs(z_tgt) < z_crit) {
-        "x->y"
-      } else if (abs(z_alt) < z_crit && abs(z_tgt) >= z_crit) {
-        "y->x"
-      } else {
-        "undecided"
-      }
-    })
-    dec_skewdiff <- sapply(valid_results, function(x) {
-      l <- .get_val(x, "skewdiff.lower")
-      u <- .get_val(x, "skewdiff.upper")
-      if (is.na(l) || is.na(u)) {
-        "undecided"
-      } else if (l > 0 & u > 0) {
-        "x->y"
-      } else if (l < 0 & u < 0) {
-        "y->x"
-      } else {
-        "undecided"
-      }
-    })
-    dec_kurtdiff <- sapply(valid_results, function(x) {
-      l <- .get_val(x, "kurtdiff.lower")
-      u <- .get_val(x, "kurtdiff.upper")
-      if (is.na(l) || is.na(u)) {
-        "undecided"
-      } else if (l > 0 & u > 0) {
-        "x->y"
-      } else if (l < 0 & u < 0) {
-        "y->x"
-      } else {
-        "undecided"
-      }
-    })
-    dec_cor12diff <- sapply(valid_results, function(x) {
-      l <- .get_val(x, "cor12diff.lower")
-      u <- .get_val(x, "cor12diff.upper")
-      if (is.na(l) || is.na(u)) {
-        "undecided"
-      } else if (l > 0 & u > 0) {
-        "x->y"
-      } else if (l < 0 & u < 0) {
-        "y->x"
-      } else {
-        "undecided"
-      }
-    })
-    dec_cor13diff <- sapply(valid_results, function(x) {
-      l <- .get_val(x, "cor13diff.lower")
-      u <- .get_val(x, "cor13diff.upper")
-      if (is.na(l) || is.na(u)) {
-        "undecided"
-      } else if (l > 0 & u > 0) {
-        "x->y"
-      } else if (l < 0 & u < 0) {
-        "y->x"
-      } else {
-        "undecided"
-      }
-    })
-    dec_RHS3 <- sapply(valid_results, function(x) {
-      l <- .get_val(x, "RHS3.lower")
-      u <- .get_val(x, "RHS3.upper")
-      if (is.na(l) || is.na(u)) {
-        "undecided"
-      } else if (l > 0 & u > 0) {
-        "x->y"
-      } else if (l < 0 & u < 0) {
-        "y->x"
-      } else {
-        "undecided"
-      }
-    })
-    dec_RCC <- sapply(valid_results, function(x) {
-      l <- .get_val(x, "RCC.lower")
-      u <- .get_val(x, "RCC.upper")
-      if (is.na(l) || is.na(u)) {
-        "undecided"
-      } else if (l > 0 & u > 0) {
-        "x->y"
-      } else if (l < 0 & u < 0) {
-        "y->x"
-      } else {
-        "undecided"
-      }
-    })
-    dec_RHS4 <- sapply(valid_results, function(x) {
-      l <- .get_val(x, "RHS4.lower")
-      u <- .get_val(x, "RHS4.upper")
-      if (is.na(l) || is.na(u)) {
-        "undecided"
-      } else if (l > 0 & u > 0) {
-        "x->y"
-      } else if (l < 0 & u < 0) {
-        "y->x"
-      } else {
-        "undecided"
-      }
-    })
-    decisions$agostino <- print_decisions(dec_agost)
-    decisions$anscombe <- print_decisions(dec_anscom)
-    decisions$skewdiff <- print_decisions(dec_skewdiff)
-    decisions$kurtdiff <- print_decisions(dec_kurtdiff)
-    decisions$cor12diff <- print_decisions(dec_cor12diff)
-    decisions$cor13diff <- print_decisions(dec_cor13diff)
-    decisions$RHS3 <- print_decisions(dec_RHS3)
-    decisions$RCC <- print_decisions(dec_RCC)
-    decisions$RHS4 <- print_decisions(dec_RHS4)
+    # Variable names and probtrans
+    agg$var.names <- if (!is.null(valid_results[[1]]$var.names)) valid_results[[1]]$var.names else c("target", "alternative")
+    agg$probtrans <- if (!is.null(valid_results[[1]]$probtrans)) valid_results[[1]]$probtrans else FALSE
+
+    # Mean aggregate test statistics, harmonic mean aggregate p-values
+    agg$agostino.target.statistic <- mean(sapply(valid_results, function(x) get_numeric(x$agostino$target$statistic[1])), na.rm=TRUE)
+    agg$agostino.target.z         <- mean(sapply(valid_results, function(x) get_numeric(x$agostino$target$statistic[2])), na.rm=TRUE)
+    agg$agostino.target.p.value   <- harmonic_p(sapply(valid_results, function(x) get_numeric(x$agostino$target$p.value)))
+    agg$agostino.alternative.statistic <- mean(sapply(valid_results, function(x) get_numeric(x$agostino$alternative$statistic[1])), na.rm=TRUE)
+    agg$agostino.alternative.z         <- mean(sapply(valid_results, function(x) get_numeric(x$agostino$alternative$statistic[2])), na.rm=TRUE)
+    agg$agostino.alternative.p.value   <- harmonic_p(sapply(valid_results, function(x) get_numeric(x$agostino$alternative$p.value)))
+
+    agg$anscombe.target.statistic <- mean(sapply(valid_results, function(x) get_numeric(x$anscombe$target$statistic[1])), na.rm=TRUE)
+    agg$anscombe.target.z         <- mean(sapply(valid_results, function(x) get_numeric(x$anscombe$target$statistic[2])), na.rm=TRUE)
+    agg$anscombe.target.p.value   <- harmonic_p(sapply(valid_results, function(x) get_numeric(x$anscombe$target$p.value)))
+    agg$anscombe.alternative.statistic <- mean(sapply(valid_results, function(x) get_numeric(x$anscombe$alternative$statistic[1])), na.rm=TRUE)
+    agg$anscombe.alternative.z         <- mean(sapply(valid_results, function(x) get_numeric(x$anscombe$alternative$statistic[2])), na.rm=TRUE)
+    agg$anscombe.alternative.p.value   <- harmonic_p(sapply(valid_results, function(x) get_numeric(x$anscombe$alternative$p.value)))
+
+    # Difference tests (classic print style)
+    agg$skewdiff <- apply(sapply(valid_results, function(x) x$skewdiff), 1, mean, na.rm=TRUE)
+    agg$kurtdiff <- apply(sapply(valid_results, function(x) x$kurtdiff), 1, mean, na.rm=TRUE)
+    agg$cor12diff <- apply(sapply(valid_results, function(x) x$cor12diff), 1, mean, na.rm=TRUE)
+    agg$cor13diff <- apply(sapply(valid_results, function(x) x$cor13diff), 1, mean, na.rm=TRUE)
+    agg$RHS3      <- apply(sapply(valid_results, function(x) x$RHS3), 1, mean, na.rm=TRUE)
+    agg$RHS4      <- apply(sapply(valid_results, function(x) x$RHS4), 1, mean, na.rm=TRUE)
+    agg$RCC       <- apply(sapply(valid_results, function(x) x$RCC), 1, mean, na.rm=TRUE)
   }
 
-  ## --- DDA.VARDIST block ---
-  if (n_valid > 0 && object_type == "dda.vardist") {
-    # Aggregate main DDA vardist statistics
-    vardist_keys <- c(
-      "agostino.predictor.statistic.skew", "agostino.predictor.statistic.z", "agostino.predictor.p.value",
-      "agostino.outcome.statistic.skew",   "agostino.outcome.statistic.z",   "agostino.outcome.p.value",
-      "anscombe.predictor.statistic.kurt", "anscombe.predictor.statistic.z", "anscombe.predictor.p.value",
-      "anscombe.outcome.statistic.kurt",   "anscombe.outcome.statistic.z",   "anscombe.outcome.p.value"
-    )
-    for (key in vardist_keys) {
-      vals <- sapply(valid_results, function(x) get_numeric(x[[key]]))
-      if (grepl("p.value", key)) {
-        agg[[key]] <- harmonic_p(vals)
-      } else {
-        agg[[key]] <- mean(vals, na.rm = TRUE)
-      }
-    }
-    # Skewness/kurtosis/co-skewness/co-kurtosis differences
-    diff_keys <- c(
-      "skewdiff.skew.diff", "skewdiff.lower", "skewdiff.upper",
-      "kurtdiff.kurt.diff", "kurtdiff.lower", "kurtdiff.upper",
-      "cor12diff.cor21.diff", "cor12diff.lower", "cor12diff.upper",
-      "cor13diff.cor13.diff", "cor13diff.lower", "cor13diff.upper",
-      "RHS.RHS", "RHS.lower", "RHS.upper",
-      "RCC.RCC", "RCC.lower", "RCC.upper",
-      "Rtanh.Rtanh", "Rtanh.lower", "Rtanh.upper"
-    )
-    for (key in diff_keys) {
-      vals <- sapply(valid_results, function(x) get_numeric(x[[key]]))
-      agg[[key]] <- mean(vals, na.rm = TRUE)
-    }
-    # Decision rules
-    z_crit <- qnorm(1 - alpha/2)
-    dec_agost <- sapply(valid_results, function(x) {
-      z_pred <- get_numeric(x$agostino.predictor.statistic.z)
-      z_out <- get_numeric(x$agostino.outcome.statistic.z)
-      if (is.na(z_pred) || is.na(z_out)) "undecided"
-      else if (abs(z_pred) >= z_crit && abs(z_out) < z_crit) "x->y"
-      else if (abs(z_pred) < z_crit && abs(z_out) >= z_crit) "y->x"
-      else "undecided"
-    })
-    dec_anscom <- sapply(valid_results, function(x) {
-      z_pred <- get_numeric(x$anscombe.predictor.statistic.z)
-      z_out <- get_numeric(x$anscombe.outcome.statistic.z)
-      if (is.na(z_pred) || is.na(z_out)) "undecided"
-      else if (abs(z_pred) >= z_crit && abs(z_out) < z_crit) "x->y"
-      else if (abs(z_pred) < z_crit && abs(z_out) >= z_crit) "y->x"
-      else "undecided"
-    })
-    dec_skewdiff <- sapply(valid_results, function(x) {
-      l <- get_numeric(x$skewdiff.lower)
-      u <- get_numeric(x$skewdiff.upper)
-      if (is.na(l) || is.na(u)) "undecided"
-      else if (l > 0 & u > 0) "x->y"
-      else if (l < 0 & u < 0) "y->x"
-      else "undecided"
-    })
-    dec_kurtdiff <- sapply(valid_results, function(x) {
-      l <- get_numeric(x$kurtdiff.lower)
-      u <- get_numeric(x$kurtdiff.upper)
-      if (is.na(l) || is.na(u)) "undecided"
-      else if (l > 0 & u > 0) "x->y"
-      else if (l < 0 & u < 0) "y->x"
-      else "undecided"
-    })
-    decisions$agostino <- print_decisions(dec_agost)
-    decisions$anscombe <- print_decisions(dec_anscom)
-    decisions$skewdiff <- print_decisions(dec_skewdiff)
-    decisions$kurtdiff <- print_decisions(dec_kurtdiff)
-    # You can add more decision rules for coskew/cokurt if desired.
-  }
-
+  #############################################################################
 
   output <- list(
     bagged_results = bagged_results,
@@ -505,92 +267,3 @@ dda_bagging <- function(
   return(output)
 }
 
-
-#' Summary for dda_bagging Output
-#'
-#' @param object Output from dda_bagging()
-#' @param digits Number of digits for rounding (default: 4)
-#' @param alpha Significance level for decisions (default: 0.05)
-#' @return Prints organized summary tables
-
-summary.dda_bagging <- function(object, digits = 4, alpha = 0.05) {
-  stats <- object$aggregated_stats
-  decisions <- object$decision_percentages
-  cat("\n===== DDA Bagging Summary =====\n")
-  cat("Function:", object$parameters$function_name, "\n")
-  cat("Object Type:", object$parameters$object_type, "\n")
-  cat("Iterations:", object$parameters$iter, "\n")
-  cat("Valid Iterations:", object$n_valid_iterations, "\n")
-  cat("----\n")
-
-  if (object$parameters$object_type == "dda.indep" && !is.null(stats$hsic_yx_stat)) {
-    stat_tab <- matrix(NA, nrow = 2, ncol = 4)
-    rownames(stat_tab) <- c("HSIC", "dCor")
-    colnames(stat_tab) <- c("Target Stat", "Target p", "Alternative Stat", "Alternative p")
-    stat_tab[1, ] <- c(round(stats$hsic_yx_stat, digits),
-                       round(stats$hsic_yx_pval, digits),
-                       round(stats$hsic_xy_stat, digits),
-                       round(stats$hsic_xy_pval, digits))
-    stat_tab[2, ] <- c(round(stats$dcor_yx_stat, digits),
-                       round(stats$dcor_yx_pval, digits),
-                       round(stats$dcor_xy_stat, digits),
-                       round(stats$dcor_xy_pval, digits))
-    keep_rows <- apply(stat_tab, 1, function(row) any(!is.na(row) & !is.nan(row)))
-    stat_tab_print <- stat_tab[keep_rows, , drop = FALSE]
-    if (nrow(stat_tab_print) > 0) {
-      cat("\nHSIC and dCor Test Statistics & Harmonic p-values:\n")
-      print(stat_tab_print)
-      cat("---\n")
-    }
-    if (!is.null(stats$diff_matrix)) {
-      diffmat <- stats$diff_matrix
-      colnames(diffmat) <- c("HSIC", "dCor", "MI")
-      keep_cols <- apply(diffmat, 2, function(col) any(!is.na(col) & !is.nan(col)))
-      diffmat_print <- diffmat[, keep_cols, drop = FALSE]
-      keep_rows <- apply(diffmat_print, 1, function(row) any(!is.na(row) & !is.nan(row)))
-      diffmat_print <- diffmat_print[keep_rows, , drop = FALSE]
-      if (nrow(diffmat_print) > 0 && ncol(diffmat_print) > 0) {
-        cat("\nDifference Statistics (mean estimates, lower, upper):\n")
-        print(round(diffmat_print, digits))
-        cat("---\n")
-      }
-    }
-    # Decision proportions: print only if non-zero/non-NA
-    for (dname in names(decisions)) {
-      prop <- decisions[[dname]]
-      out <- rep(0, 3)
-      names(out) <- c("undecided", "y->x", "x->y")
-      out[names(prop)] <- prop
-      # Only print if at least one is nonzero and not NA
-      if (any(!is.na(out) & out != 0)) {
-        cat(paste("\nDecision proportions for", dname, ":\n"))
-        print(round(out, digits))
-        cat("---\n")
-      }
-    }
-  } else {
-    cat("\nAggregated Statistics:\n")
-    for (stat_name in names(stats)) {
-      stat_val <- stats[[stat_name]]
-      if (is.numeric(stat_val)) {
-        if (all(is.na(stat_val) | is.nan(stat_val))) next
-      }
-      cat(stat_name, ":", round(stat_val, digits), "\n")
-    }
-    if (!is.null(decisions) && length(decisions) > 0) {
-      cat("\nDecision Percentages (alpha =", alpha, "):\n")
-      for (dec_name in names(decisions)) {
-        prop <- decisions[[dec_name]]
-        out <- rep(0, 3)
-        names(out) <- c("undecided", "y->x", "x->y")
-        out[names(prop)] <- prop
-        if (any(!is.na(out) & out != 0)) {
-          cat(dec_name, ":\n")
-          print(round(out, digits))
-          cat("---\n")
-        }
-      }
-    }
-  }
-  invisible(object)
-}
