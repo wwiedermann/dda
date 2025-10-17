@@ -191,6 +191,9 @@ dda.indep <- function(
 
 	if (robust == TRUE){ #use lm::bptest and edit the resi line, no wts necessary
 	  m.yx <- mblm::mblm(ry ~ rx, repeated = TRUE)
+	  #m.yx <- robslopes::RepeatedMedian(ry ~ rx)
+	  #m.yx <- RobustLinearReg::siegel_regression(ry ~ rx)
+
 	  m.xy <- mblm::mblm(rx ~ ry, repeated = TRUE)
 	}
 
