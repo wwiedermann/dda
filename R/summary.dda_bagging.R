@@ -1,9 +1,8 @@
-#' Summary for dda_bagging Output (dda.indep only)
+#' Summary for dda_bagging Output (INDEP, robust S3, no type check)
 #'
-#' @param object Output from dda_bagging() for dda.indep objects
+#' @param object Output from dda_bagging() for dda.indep objects (class: dda_bagging_indep)
 #' @param digits Number of digits for rounding (default: 4)
 #' @param alpha Significance level for decisions (default: 0.05)
-#' @return Prints organized summary tables
 #' @export
 #' @method summary dda_bagging_indep
 
@@ -18,69 +17,68 @@ summary.dda_bagging_indep <- function(object, digits = 4, alpha = 0.05) {
   cat("Valid Iterations:", object$n_valid_iterations, "\n")
   cat("----\n")
 
-  # Only run for dda.indep
-  if (object$parameters$object_type == "dda.indep" && !is.null(stats$hsic_yx_stat)) {
-    stat_tab <- matrix(NA, nrow = 2, ncol = 4)
-    rownames(stat_tab) <- c("HSIC", "dCor")
-    colnames(stat_tab) <- c("Target Stat", "Target p", "Alternative Stat", "Alternative p")
+  # Build stat table even if some stats are NA
+  stat_tab <- matrix(NA, nrow = 2, ncol = 4)
+  rownames(stat_tab) <- c("HSIC", "dCor")
+  colnames(stat_tab) <- c("Target Stat", "Target p", "Alternative Stat", "Alternative p")
 
-    stat_tab[1, ] <- c(round(stats$hsic_yx_stat, digits),
-                       round(stats$hsic_yx_pval, digits),
-                       round(stats$hsic_xy_stat, digits),
-                       round(stats$hsic_xy_pval, digits))
-    stat_tab[2, ] <- c(round(stats$dcor_yx_stat, digits),
-                       round(stats$dcor_yx_pval, digits),
-                       round(stats$dcor_xy_stat, digits),
-                       round(stats$dcor_xy_pval, digits))
+  stat_tab[1, ] <- c(
+    if (!is.null(stats$hsic_yx_stat)) round(stats$hsic_yx_stat, digits) else NA,
+    if (!is.null(stats$hsic_yx_pval)) round(stats$hsic_yx_pval, digits) else NA,
+    if (!is.null(stats$hsic_xy_stat)) round(stats$hsic_xy_stat, digits) else NA,
+    if (!is.null(stats$hsic_xy_pval)) round(stats$hsic_xy_pval, digits) else NA
+  )
+  stat_tab[2, ] <- c(
+    if (!is.null(stats$dcor_yx_stat)) round(stats$dcor_yx_stat, digits) else NA,
+    if (!is.null(stats$dcor_yx_pval)) round(stats$dcor_yx_pval, digits) else NA,
+    if (!is.null(stats$dcor_xy_stat)) round(stats$dcor_xy_stat, digits) else NA,
+    if (!is.null(stats$dcor_xy_pval)) round(stats$dcor_xy_pval, digits) else NA
+  )
 
-    keep_rows <- apply(stat_tab, 1, function(row) any(!is.na(row) & !is.nan(row)))
-    stat_tab_print <- stat_tab[keep_rows, , drop = FALSE]
+  # Print only rows with any non-NA value
+  keep_rows <- apply(stat_tab, 1, function(row) any(!is.na(row) & !is.nan(row)))
+  stat_tab_print <- stat_tab[keep_rows, , drop = FALSE]
 
-    if (nrow(stat_tab_print) > 0) {
-      cat("\nHSIC and dCor Test Statistics & Harmonic p-values:\n")
-      print(stat_tab_print)
+  if (nrow(stat_tab_print) > 0) {
+    cat("\nHSIC and dCor Test Statistics & Harmonic p-values:\n")
+    print(stat_tab_print)
+    cat("---\n")
+  } else {
+    cat("\nNo HSIC/dCor statistics found in bagged output.\n")
+  }
+
+  # Print difference statistics if present
+  if (!is.null(stats$diff_matrix)) {
+    diffmat <- stats$diff_matrix
+    colnames(diffmat) <- c("HSIC", "dCor", "MI")
+    keep_cols <- apply(diffmat, 2, function(col) any(!is.na(col) & !is.nan(col)))
+    diffmat_print <- diffmat[, keep_cols, drop = FALSE]
+    keep_rows <- apply(diffmat_print, 1, function(row) any(!is.na(row) & !is.nan(row)))
+    diffmat_print <- diffmat_print[keep_rows, , drop = FALSE]
+
+    if (nrow(diffmat_print) > 0 && ncol(diffmat_print) > 0) {
+      cat("\nDifference Statistics (mean estimates, lower, upper):\n")
+      print(round(diffmat_print, digits))
       cat("---\n")
     }
+  }
 
-    if (!is.null(stats$diff_matrix)) {
-      diffmat <- stats$diff_matrix
-      colnames(diffmat) <- c("HSIC", "dCor", "MI")
-      keep_cols <- apply(diffmat, 2, function(col) any(!is.na(col) & !is.nan(col)))
-      diffmat_print <- diffmat[, keep_cols, drop = FALSE]
-      keep_rows <- apply(diffmat_print, 1, function(row) any(!is.na(row) & !is.nan(row)))
-      diffmat_print <- diffmat_print[keep_rows, , drop = FALSE]
+  # Decision proportions
+  for (dname in names(decisions)) {
+    prop <- decisions[[dname]]
+    out <- rep(0, 3)
+    names(out) <- c("undecided", "y->x", "x->y")
+    out[names(prop)] <- prop
 
-      if (nrow(diffmat_print) > 0 && ncol(diffmat_print) > 0) {
-        cat("\nDifference Statistics (mean estimates, lower, upper):\n")
-        print(round(diffmat_print, digits))
-        cat("---\n")
-      }
+    if (any(!is.na(out) & out != 0)) {
+      cat(paste("\nDecision proportions for", dname, ":\n"))
+      print(round(out, digits))
+      cat("---\n")
     }
-
-    # Decision proportions
-    for (dname in names(decisions)) {
-      prop <- decisions[[dname]]
-      out <- rep(0, 3)
-      names(out) <- c("undecided", "y->x", "x->y")
-      out[names(prop)] <- prop
-
-      # Print only if any category is nonzero/non-NA
-      if (any(!is.na(out) & out != 0)) {
-        cat(paste("\nDecision proportions for", dname, ":\n"))
-        print(round(out, digits))
-        cat("---\n")
-      }
-    }
-  } else {
-    cat("\nThis summary method only supports dda.indep objects.\n")
   }
 
   invisible(object)
 }
-
-
-
-
 #' Summary for dda_bagging Output (dda.vardist)
 #'
 #' @param object Output from dda_bagging() for dda.vardist objects
@@ -163,16 +161,12 @@ summary.dda_bagging_vardist <- function(object, digits = 4) {
   invisible(object)
 }
 
-
-
-
-#' Summary for dda_bagging Output (dda.resdist, classic style, no decisions)
+#' Summary for dda_bagging Output (dda.resdist, classic style, robust)
 #'
 #' @param object Output from dda_bagging() for dda.resdist objects
 #' @param digits Number of digits for rounding (default: 4)
 #' @return Prints organized summary tables, matching classic print.dda.resdist style
 #' @export
-
 summary.dda_bagging_resdist <- function(object, digits = 4) {
   stats <- object$aggregated_stats
   varnames <- if (!is.null(stats$var.names) && length(stats$var.names) == 2) stats$var.names else c("target", "alternative")
@@ -180,38 +174,124 @@ summary.dda_bagging_resdist <- function(object, digits = 4) {
   cat("\nDIRECTION DEPENDENCE ANALYSIS: Residual Distributions (Bagged)\n\n")
   cat("Skewness and kurtosis tests:\n")
 
-  # Skewness & kurtosis test table (classic style)
-  sigtests <- rbind(
-    c(stats$agostino.target.statistic, stats$agostino.target.z, stats$agostino.target.p.value,
-      stats$agostino.alternative.statistic, stats$agostino.alternative.z, stats$agostino.alternative.p.value),
-    c(stats$anscombe.target.statistic, stats$anscombe.target.z, stats$anscombe.target.p.value,
-      stats$anscombe.alternative.statistic, stats$anscombe.alternative.z, stats$anscombe.alternative.p.value)
+  # Skewness & kurtosis test table
+  skew_row <- c(
+    if (!is.null(stats$agostino.target.statistic)) stats$agostino.target.statistic else NA,
+    if (!is.null(stats$agostino.target.z)) stats$agostino.target.z else NA,
+    if (!is.null(stats$agostino.target.p.value)) stats$agostino.target.p.value else NA,
+    if (!is.null(stats$agostino.alternative.statistic)) stats$agostino.alternative.statistic else NA,
+    if (!is.null(stats$agostino.alternative.z)) stats$agostino.alternative.z else NA,
+    if (!is.null(stats$agostino.alternative.p.value)) stats$agostino.alternative.p.value else NA
   )
+  kurt_row <- c(
+    if (!is.null(stats$anscombe.target.statistic)) stats$anscombe.target.statistic else NA,
+    if (!is.null(stats$anscombe.target.z)) stats$anscombe.target.z else NA,
+    if (!is.null(stats$anscombe.target.p.value)) stats$anscombe.target.p.value else NA,
+    if (!is.null(stats$anscombe.alternative.statistic)) stats$anscombe.alternative.statistic else NA,
+    if (!is.null(stats$anscombe.alternative.z)) stats$anscombe.alternative.z else NA,
+    if (!is.null(stats$anscombe.alternative.p.value)) stats$anscombe.alternative.p.value else NA
+  )
+  sigtests <- rbind(skew_row, kurt_row)
   sigtests <- round(sigtests, digits)
   rownames(sigtests) <- c("Skewness", "Kurtosis")
   colnames(sigtests) <- c(varnames[1], " z-value", " Pr(>|z|)", varnames[2], " z-value", " Pr(>|z|)")
-  print.default(format(sigtests, digits = max(3L, getOption("digits") - 3L), scientific = NA, scipen = 999), print.gap = 2L, quote = FALSE)
+  keep_rows <- apply(sigtests, 1, function(row) any(!is.na(row) & !is.nan(row)))
+  sigtests_print <- sigtests[keep_rows, , drop = FALSE]
+  if (nrow(sigtests_print) > 0)
+    print.default(format(sigtests_print, digits = max(3L, getOption("digits") - 3L), scientific = NA, scipen = 999), print.gap = 2L, quote = FALSE)
 
-  # Difference tests (classic style: means across bagged runs)
-  cat("\nSkewness and kurtosis difference tests:\n")
-  citests <- rbind(stats$skewdiff, stats$kurtdiff)
-  citests <- round(citests, digits)
-  rownames(citests) <- c("Skewness", "Kurtosis")
-  colnames(citests) <- c("diff", "z-value", "Pr(>|z|)", "lower", "upper")
-  print.default(format(citests, digits = max(3L, getOption("digits") - 3L)), print.gap = 2L, quote = FALSE)
-  cat("\n")
+  # Difference tests w/ CIs
+  ci_block <- FALSE
+  if (!is.null(stats$skewdiff) && !is.null(stats$kurtdiff)) {
+    citests <- rbind(stats$skewdiff, stats$kurtdiff)
+    citests <- round(citests, digits)
+    rownames(citests) <- c("Skewness", "Kurtosis")
+    colnames(citests) <- c("diff", "z-value", "Pr(>|z|)", "lower", "upper")
+    keep_rows <- apply(citests, 1, function(row) any(!is.na(row) & !is.nan(row)))
+    citests_print <- citests[keep_rows, , drop = FALSE]
+    if (nrow(citests_print) > 0) {
+      ci_block <- TRUE
+      # Print heading, detect CI level and method if possible
+      ci.level <- NULL; boot.type <- NULL; n.resamples <- NULL
+      if (!is.null(object$bagged_results) && length(object$bagged_results) > 0) {
+        # Try to find a non-null boot.args in one of the results
+        boot.args <- NULL
+        for (res in object$bagged_results) {
+          if (!is.null(res$boot.args)) { boot.args <- res$boot.args; break }
+        }
+        if (!is.null(boot.args)) {
+          boot.type <- boot.args[1]
+          ci.level <- as.numeric(boot.args[2]) * 100
+          n.resamples <- as.numeric(boot.args[3])
+        }
+      }
+      cat("\n")
+      if (!is.null(ci.level) && !is.null(boot.type)) {
+        if (boot.type == "bca")  cat("Skewness and kurtosis difference tests and ", ci.level, "% BCa bootstrap CIs:\n\n", sep = "")
+        if (boot.type == "perc") cat("Skewness and kurtosis difference tests and ", ci.level, "% Percentile bootstrap CIs:\n\n", sep = "")
+      } else {
+        cat("Skewness and kurtosis difference tests and bootstrap CIs:\n\n")
+      }
+      print.default(format(citests_print, digits = max(3L, getOption("digits") - 3L)), print.gap = 2L, quote = FALSE)
+    }
+  }
 
-  cat("Co-skewness and co-kurtosis difference tests:\n")
-  jointtests <- rbind(stats$cor12diff, stats$RHS3, stats$cor13diff, stats$RHS4, stats$RCC)
-  jointtests <- round(jointtests, digits)
-  rownames(jointtests) <- c("Co-Skewness", "Hyvarinen-Smith (Co-Skewness)", "Co-Kurtosis", "Hyvarinen-Smith (Co-Kurtosis)", "Chen-Chan (Co-Kurtosis)")
-  colnames(jointtests) <- c("estimate", "lower", "upper")
-  print.default(format(jointtests, digits = max(3L, getOption("digits") - 3L)), print.gap = 2L, quote = FALSE)
+  # Joint higher moment difference CIs
+  joint_names <- c("Co-Skewness", "Hyvarinen-Smith (Co-Skewness)",
+                   "Co-Kurtosis", "Hyvarinen-Smith (Co-Kurtosis)", "Chen-Chan (Co-Kurtosis)")
+  joint_keys <- c("cor12diff", "RHS3", "cor13diff", "RHS4", "RCC")
+  joint_vals <- lapply(joint_keys, function(k) if (!is.null(stats[[k]])) stats[[k]] else rep(NA, 3))
+  joint_mat <- do.call(rbind, joint_vals)
+  joint_mat <- round(joint_mat, digits)
+  rownames(joint_mat) <- joint_names
+  colnames(joint_mat) <- c("estimate", "lower", "upper")
+  keep_rows <- apply(joint_mat, 1, function(row) any(!is.na(row) & !is.nan(row)))
+  joint_print <- joint_mat[keep_rows, , drop = FALSE]
+  if (nrow(joint_print) > 0) {
+    cat("\n")
+    ci.level <- NULL; boot.type <- NULL; n.resamples <- NULL
+    if (!is.null(object$bagged_results) && length(object$bagged_results) > 0) {
+      boot.args <- NULL
+      for (res in object$bagged_results) {
+        if (!is.null(res$boot.args)) { boot.args <- res$boot.args; break }
+      }
+      if (!is.null(boot.args)) {
+        boot.type <- boot.args[1]
+        ci.level <- as.numeric(boot.args[2]) * 100
+        n.resamples <- as.numeric(boot.args[3])
+      }
+    }
+    if (!is.null(ci.level) && !is.null(boot.type)) {
+      if (boot.type == "bca")  cat(ci.level, "% BCa bootstrap CIs for joint higher moment differences:\n", sep = "")
+      if (boot.type == "perc") cat(ci.level, "% Percentile bootstrap CIs for joint higher moment differences:\n", sep = "")
+    } else {
+      cat("Bootstrap CIs for joint higher moment differences:\n")
+    }
+    print.default(format(joint_print, digits = max(3L, getOption("digits") - 3L)), print.gap = 2L, quote = FALSE)
+  }
 
-  cat("\n---\n")
+  # Number of resamples
+  n.resamples <- NULL
+  if (!is.null(object$bagged_results) && length(object$bagged_results) > 0) {
+    boot.args <- NULL
+    for (res in object$bagged_results) {
+      if (!is.null(res$boot.args)) { boot.args <- res$boot.args; break }
+    }
+    if (!is.null(boot.args) && length(boot.args) >= 3) {
+      n.resamples <- as.numeric(boot.args[3])
+    }
+  }
+  if (!is.null(n.resamples)) {
+    cat("\nNumber of resamples:", n.resamples, "\n")
+  }
+
+  cat("---\n")
   cat(paste("Note: Target is", varnames[2], "->", varnames[1], "\n"))
   cat(paste("      Alternative is", varnames[1], "->", varnames[2], "\n"))
-  cat(paste("      Difference statistics > 0 suggest the model", varnames[2], "->", varnames[1], "\n"))
-
+  if (isFALSE(stats$probtrans)) {
+    cat(paste("      Difference statistics > 0 suggest the model", varnames[2], "->", varnames[1], "\n"))
+  } else {
+    cat(paste("      Under prob.trans = TRUE, skewness and kurtosis differences < 0 and\n     co-skewness and co-kurtosis differences > 0 suggest", varnames[2], "->", varnames[1], "\n"))
+  }
   invisible(object)
 }
