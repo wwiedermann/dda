@@ -25,7 +25,7 @@ summary.dda_bagging_indep(bagged_indep)
 # ----
 #
 # HSIC and dCor Test Statistics & Harmonic p-values:
-# Target Stat Target p Alternative Stat Alternative p
+#      Target Stat Target p Alternative Stat Alternative p
 # HSIC       0.697    5e-04           6.4876             0
 # ---
 #
@@ -44,16 +44,48 @@ summary.dda_bagging_indep(bagged_indep)
 
 # 2. dda.resdist: Direction Dependence Analysis - Residual Distribution
 
-# result_resdist <- dda.resdist(mpg ~ wt + hp, pred = "wt", data = mtcars)
+#result_resdist <- dda.resdist(mpg ~ wt + hp, pred = "wt", data = mtcars)
 result_resdist <- dda.resdist(y ~ x, pred = "x", data = d,
                       B = 50, conf.level = 0.90)
-
 
 print(result_resdist)
 
 bagged_resdist <- dda_bagging(result_resdist, iter = 10)
 summary.dda_bagging_resdist(bagged_resdist)
 
+# ===== DDA Bagging Summary =====
+# Function: dda.resdist
+# Object Type: dda.resdist
+# Iterations: 10
+# Completed Iterations: 10
+# ----
+#
+# DIRECTION DEPENDENCE ANALYSIS: Residual Distributions (Bagged)
+#
+# Skewness and kurtosis tests:
+#            y         z-value Pr(>|z|)   x         z-value   Pr(>|z|)
+# Skewness   1.5852  10.7542    0.0000     0.6156   5.1918    0.0000
+# Kurtosis   3.2714   6.2694    0.0000     1.7188   4.4170    0.0000
+#
+# Skewness and kurtosis difference tests and 90% Percentile bootstrap CIs:
+#
+#             diff      z-value   Pr(>|z|)  lower     upper
+# Skewness   -2.1381   -3.6024    0.0060   -3.3170   -0.8676
+# Kurtosis   -9.2769   -1.3781    0.2292  -28.1648    5.7288
+#
+# 90% Percentile bootstrap CIs for joint higher moment differences:
+#                                 estimate  lower    upper
+# Co-Skewness                     0.5002    0.2189   0.7860
+# Hyvarinen-Smith (Co-Skewness)   0.7186    0.4281   0.9786
+# Co-Kurtosis                     7.2307    0.9296  15.0412
+# Hyvarinen-Smith (Co-Kurtosis)   0.6761    0.1273   1.1414
+# Chen-Chan (Co-Kurtosis)         3.1162    0.1477   8.2168
+#
+# Number of resamples: 50
+# ---
+#   Note: Target is x -> y
+# Alternative is y -> x
+# Difference statistics > 0 suggest the model x -> y
 
 # 3. dda.vardist: Direction Dependence Analysis - Variable Distribution
 result_vardist <- dda.vardist(mpg ~ wt + hp, pred = "wt", data = mtcars)
@@ -61,6 +93,17 @@ print(result_vardist)
 
 bagged_vardist <- dda_bagging(result_vardist, iter = 10)
 summary.dda_bagging_vardist(bagged_vardist)
+
+#############################################################################
+
+#' Bootstrap Aggregated DDA Analysis (harmonic mean for p-values, mean for other stats)
+#'
+#' @param dda_result Output from any DDA function (dda.indep, dda.vardist, dda.resdist, etc.)
+#' @param iter Number of bootstrap iterations (default: 100)
+#' @param progress Whether to show progress bar (default: TRUE)
+#' @param save_file Optional file path to save results
+#' @param alpha Significance level for decisions (default: 0.05)
+#' @return A list containing bootstrap and aggregated results
 
 dda_bagging <- function(
     dda_result,
@@ -151,32 +194,49 @@ dda_bagging <- function(
   n_valid <- length(valid_results)
   class_label <- "dda_bagging"
 
-  ## --- DDA.INDEP block ---
+  ## --- DDA.INDEP block (now includes decisions) ---
   if (n_valid > 0 && object_type == "dda.indep") {
-    agg$hsic_yx_stat <- mean(sapply(valid_results, function(x) get_numeric(x$hsic.yx$statistic)), na.rm = TRUE)
-    agg$hsic_xy_stat <- mean(sapply(valid_results, function(x) get_numeric(x$hsic.xy$statistic)), na.rm = TRUE)
-    agg$dcor_yx_stat <- mean(sapply(valid_results, function(x) get_numeric(x$distance_cor$dcor_yx$statistic)), na.rm = TRUE)
-    agg$dcor_xy_stat <- mean(sapply(valid_results, function(x) get_numeric(x$distance_cor$dcor_xy$statistic)), na.rm = TRUE)
+    hsic_yx <- sapply(valid_results, function(x) get_numeric(x$hsic.yx$statistic))
+    hsic_xy <- sapply(valid_results, function(x) get_numeric(x$hsic.xy$statistic))
+    hsic_yx_pval <- sapply(valid_results, function(x) get_numeric(x$hsic.yx$p.value))
+    hsic_xy_pval <- sapply(valid_results, function(x) get_numeric(x$hsic.xy$p.value))
+    dcor_yx <- sapply(valid_results, function(x) get_numeric(x$distance_cor$dcor_yx$statistic))
+    dcor_xy <- sapply(valid_results, function(x) get_numeric(x$distance_cor$dcor_xy$statistic))
+    dcor_yx_pval <- sapply(valid_results, function(x) get_numeric(x$distance_cor$dcor_yx$p.value))
+    dcor_xy_pval <- sapply(valid_results, function(x) get_numeric(x$distance_cor$dcor_xy$p.value))
 
-    agg$hsic_yx_pval <- harmonic_p(sapply(valid_results, function(x) get_numeric(x$hsic.yx$p.value)))
-    agg$hsic_xy_pval <- harmonic_p(sapply(valid_results, function(x) get_numeric(x$hsic.xy$p.value)))
-    agg$dcor_yx_pval <- harmonic_p(sapply(valid_results, function(x) get_numeric(x$distance_cor$dcor_yx$p.value)))
-    agg$dcor_xy_pval <- harmonic_p(sapply(valid_results, function(x) get_numeric(x$distance_cor$dcor_xy$p.value)))
+    agg$hsic_yx_stat <- mean(hsic_yx, na.rm = TRUE)
+    agg$hsic_xy_stat <- mean(hsic_xy, na.rm = TRUE)
+    agg$dcor_yx_stat <- mean(dcor_yx, na.rm = TRUE)
+    agg$dcor_xy_stat <- mean(dcor_xy, na.rm = TRUE)
+
+    agg$hsic_yx_pval <- harmonic_p(hsic_yx_pval)
+    agg$hsic_xy_pval <- harmonic_p(hsic_xy_pval)
+    agg$dcor_yx_pval <- harmonic_p(dcor_yx_pval)
+    agg$dcor_xy_pval <- harmonic_p(dcor_xy_pval)
+
+    # Decision proportions (robust to NAs)
+    hsic_decision <- ifelse(is.na(hsic_yx_pval) | is.na(hsic_xy_pval), "undecided",
+                            ifelse(hsic_yx_pval < alpha & hsic_xy_pval >= alpha, "x->y",
+                                   ifelse(hsic_yx_pval >= alpha & hsic_xy_pval < alpha, "y->x",
+                                          "undecided")))
+    decisions$hsic <- print_decisions(hsic_decision)
 
     # Difference statistics if present
     if (!is.null(valid_results[[1]]$out.diff)) {
+      first_diff <- valid_results[[1]]$out.diff
       diff_mat <- lapply(valid_results, function(x) {
         if (!is.null(x$out.diff)) {
           as.matrix(x$out.diff)
         } else {
-          matrix(NA_real_, nrow = nrow(valid_results[[1]]$out.diff), ncol = ncol(valid_results[[1]]$out.diff),
-                 dimnames = dimnames(valid_results[[1]]$out.diff))
+          matrix(NA_real_, nrow = nrow(first_diff), ncol = ncol(first_diff),
+                 dimnames = dimnames(first_diff))
         }
       })
       diff_array <- simplify2array(diff_mat)
       agg$diff_matrix <- apply(diff_array, c(1,2), function(xx) mean(xx, na.rm=TRUE))
-      # names are inherited from the first valid result
     }
+
     class_label <- "dda_bagging_indep"
   }
 
@@ -218,7 +278,80 @@ dda_bagging <- function(
     agg$RHS3      <- mean_diff("RHS3", 3)
     agg$RHS4      <- mean_diff("RHS4", 3)
     agg$RCC       <- mean_diff("RCC", 3)
+
     class_label <- "dda_bagging_resdist"
+  }
+
+  ## --- DDA.VARDIST block (robust; mean stats, harmonic-mean p-values) ---
+  if (n_valid > 0 && object_type == "dda.vardist") {
+    # Keep variable names for summary headers
+    agg$var.names <- if (!is.null(valid_results[[1]]$var.names)) valid_results[[1]]$var.names else c("Outcome", "Predictor")
+
+    # Helper: robust mean of a scalar nested path (skips NULLs/NA)
+    get_mean <- function(f) {
+      vals <- sapply(valid_results, function(x) {
+        out <- tryCatch(f(x), error = function(e) NA_real_)
+        get_numeric(out)
+      })
+      mean(vals, na.rm = TRUE)
+    }
+    # Helper: harmonic mean p for a scalar nested path (skips NULLs/NA)
+    get_hmp <- function(f) {
+      pvals <- sapply(valid_results, function(x) {
+        out <- tryCatch(f(x), error = function(e) NA_real_)
+        get_numeric(out)
+      })
+      harmonic_p(pvals)
+    }
+    # Helper: robust vector aggregator (len columns) using column means
+    mean_vec <- function(key, len) {
+      rows <- lapply(valid_results, function(x) {
+        v <- tryCatch(x[[key]], error = function(e) NULL)
+        if (is.null(v)) return(rep(NA_real_, len))
+        vnum <- suppressWarnings(as.numeric(v))
+        if (length(vnum) < len) {
+          # pad with NAs if shorter
+          vnum <- c(vnum, rep(NA_real_, len - length(vnum)))
+        } else if (length(vnum) > len) {
+          vnum <- vnum[seq_len(len)]
+        }
+        vnum
+      })
+      mat <- do.call(rbind, rows)
+      if (is.null(mat) || length(mat) == 0) return(rep(NA_real_, len))
+      as.numeric(colMeans(mat, na.rm = TRUE))
+    }
+
+    # Agostino (skewness) and Anscombe (kurtosis) tests
+    # Outcome is varnames[1]; Predictor is varnames[2]
+    agg$agostino.outcome.statistic.skew   <- get_mean(function(x) x$agostino$outcome$statistic[1])
+    agg$agostino.outcome.statistic.z      <- get_mean(function(x) x$agostino$outcome$statistic[2])
+    agg$agostino.outcome.p.value          <- get_hmp(function(x) x$agostino$outcome$p.value)
+
+    agg$agostino.predictor.statistic.skew <- get_mean(function(x) x$agostino$predictor$statistic[1])
+    agg$agostino.predictor.statistic.z    <- get_mean(function(x) x$agostino$predictor$statistic[2])
+    agg$agostino.predictor.p.value        <- get_hmp(function(x) x$agostino$predictor$p.value)
+
+    agg$anscombe.outcome.statistic.kurt   <- get_mean(function(x) x$anscombe$outcome$statistic[1])
+    agg$anscombe.outcome.statistic.z      <- get_mean(function(x) x$anscombe$outcome$statistic[2])
+    agg$anscombe.outcome.p.value          <- get_hmp(function(x) x$anscombe$outcome$p.value)
+
+    agg$anscombe.predictor.statistic.kurt <- get_mean(function(x) x$anscombe$predictor$statistic[1])
+    agg$anscombe.predictor.statistic.z    <- get_mean(function(x) x$anscombe$predictor$statistic[2])
+    agg$anscombe.predictor.p.value        <- get_hmp(function(x) x$anscombe$predictor$p.value)
+
+    # Higher-moment differences and CIs (mean across iterations)
+    # Each expected as c(value, lower, upper)
+    agg$skewdiff  <- mean_vec("skewdiff",  3)  # c(diff, lower, upper)
+    agg$kurtdiff  <- mean_vec("kurtdiff",  3)  # c(diff, lower, upper)
+    agg$cor12diff <- mean_vec("cor12diff", 3)  # c(estimate, lower, upper)
+    agg$cor13diff <- mean_vec("cor13diff", 3)  # c(estimate, lower, upper)
+    agg$RHS       <- mean_vec("RHS",       3)  # c(estimate, lower, upper)
+    agg$Rtanh     <- mean_vec("Rtanh",     3)  # c(estimate, lower, upper)
+    agg$RCC       <- mean_vec("RCC",       3)  # c(estimate, lower, upper)
+
+    # Ensure the bagged object can dispatch to a vardist summary
+    class_label <- "dda_bagging_vardist"
   }
 
   output <- list(
