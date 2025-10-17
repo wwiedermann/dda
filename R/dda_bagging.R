@@ -62,17 +62,6 @@ print(result_vardist)
 bagged_vardist <- dda_bagging(result_vardist, iter = 10)
 summary.dda_bagging_vardist(bagged_vardist)
 
-
-#' Bootstrap Aggregated DDA Analysis (harmonic mean for p-values, mean for other stats)
-#'
-#' @param dda_result Output from any DDA function (dda.indep, dda.vardist, dda.resdist, etc.)
-#' @param iter Number of bootstrap iterations (default: 100)
-#' @param progress Whether to show progress bar (default: TRUE)
-#' @param save_file Optional file path to save results
-#' @param alpha Significance level for decisions (default: 0.05)
-#' @return A list containing bootstrap and aggregated results
-
-
 dda_bagging <- function(
     dda_result,
     iter = 100,
@@ -103,6 +92,7 @@ dda_bagging <- function(
     names(prop) <- levs
     prop
   }
+
   # Extract call info and data
   if (inherits(dda_result, "dda.indep") ||
       inherits(dda_result, "dda.vardist") ||
@@ -135,23 +125,21 @@ dda_bagging <- function(
   nobs <- nrow(original_data)
   dda_function <- get(function_name)
 
-  bagged_results <- list()
+  bagged_results <- vector("list", iter)
   if (progress) {
     pb <- txtProgressBar(min = 0, max = iter, style = 3, width = 50, char = "=")
     cat(paste("\n", "Running", iter, "bootstrap iterations of", function_name, "\n"))
   }
 
-  for(i in 1:iter) {
-    boot_indices <- sample(1:nobs, nobs, replace = TRUE)
+  for(i in seq_len(iter)) {
+    boot_indices <- sample(seq_len(nobs), nobs, replace = TRUE)
     boot_data <- original_data[boot_indices, ]
     boot_args <- all_args
     boot_args$data <- boot_data
-    tryCatch({
-      bagged_results[[i]] <- do.call(dda_function, boot_args)
-    }, error = function(e) {
-      warning(paste("DDA function failed at iteration", i, ":", e$message))
-      bagged_results[[i]] <- NA
-    })
+    res <- tryCatch({
+      do.call(dda_function, boot_args)
+    }, error = function(e) NA)
+    bagged_results[[i]] <- res
     if (progress) setTxtProgressBar(pb, i)
   }
   if (progress) { close(pb); cat("\nBootstrap iterations completed.\n") }
@@ -161,10 +149,34 @@ dda_bagging <- function(
   agg <- list()
   decisions <- list()
   n_valid <- length(valid_results)
+  class_label <- "dda_bagging"
 
   ## --- DDA.INDEP block ---
   if (n_valid > 0 && object_type == "dda.indep") {
-    # ... as before ...
+    agg$hsic_yx_stat <- mean(sapply(valid_results, function(x) get_numeric(x$hsic.yx$statistic)), na.rm = TRUE)
+    agg$hsic_xy_stat <- mean(sapply(valid_results, function(x) get_numeric(x$hsic.xy$statistic)), na.rm = TRUE)
+    agg$dcor_yx_stat <- mean(sapply(valid_results, function(x) get_numeric(x$distance_cor$dcor_yx$statistic)), na.rm = TRUE)
+    agg$dcor_xy_stat <- mean(sapply(valid_results, function(x) get_numeric(x$distance_cor$dcor_xy$statistic)), na.rm = TRUE)
+
+    agg$hsic_yx_pval <- harmonic_p(sapply(valid_results, function(x) get_numeric(x$hsic.yx$p.value)))
+    agg$hsic_xy_pval <- harmonic_p(sapply(valid_results, function(x) get_numeric(x$hsic.xy$p.value)))
+    agg$dcor_yx_pval <- harmonic_p(sapply(valid_results, function(x) get_numeric(x$distance_cor$dcor_yx$p.value)))
+    agg$dcor_xy_pval <- harmonic_p(sapply(valid_results, function(x) get_numeric(x$distance_cor$dcor_xy$p.value)))
+
+    # Difference statistics if present
+    if (!is.null(valid_results[[1]]$out.diff)) {
+      diff_mat <- lapply(valid_results, function(x) {
+        if (!is.null(x$out.diff)) {
+          as.matrix(x$out.diff)
+        } else {
+          matrix(NA_real_, nrow = nrow(valid_results[[1]]$out.diff), ncol = ncol(valid_results[[1]]$out.diff),
+                 dimnames = dimnames(valid_results[[1]]$out.diff))
+        }
+      })
+      diff_array <- simplify2array(diff_mat)
+      agg$diff_matrix <- apply(diff_array, c(1,2), function(xx) mean(xx, na.rm=TRUE))
+      # names are inherited from the first valid result
+    }
     class_label <- "dda_bagging_indep"
   }
 
@@ -209,12 +221,6 @@ dda_bagging <- function(
     class_label <- "dda_bagging_resdist"
   }
 
-  ## --- DDA.VARDIST block ---
-  if (n_valid > 0 && object_type == "dda.vardist") {
-    # ... your vardist aggregation as before ...
-    class_label <- "dda_bagging_vardist"
-  }
-
   output <- list(
     bagged_results = bagged_results,
     aggregated_stats = agg,
@@ -233,7 +239,6 @@ dda_bagging <- function(
     save(output, file = save_file)
     cat(paste("Results saved to:", save_file, "\n"))
   }
-  # Set S3 class for correct summary dispatch!
   class(output) <- c(class_label, "dda_bagging", class(output))
   return(output)
 }
