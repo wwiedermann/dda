@@ -16,8 +16,32 @@ print(res_ex_indep)
 
 init <- Sys.time()
 bagged_indep <- dda_bagging(res_ex_indep, iter = 100)
-Sys.time() - init #
+Sys.time() - init #Time difference of 1.757695 hours
 summary.dda_bagging_indep(bagged_indep)
+
+# ===== DDA Bagging Summary (INDEP) =====
+# Function: dda.indep
+# Object Type: dda.indep
+# Iterations: 100
+# Completed Iterations: 100
+# ----
+#
+#   HSIC and dCor Test Statistics & Harmonic p-values:
+#        Target Stat Target p Alternative Stat Alternative p
+# HSIC      0.9399        0           7.7198             0
+# ---
+#
+#   Difference Statistics (mean estimates, lower, upper):
+#      HSIC   dCor     MI
+# HSIC 6.7799 4.8988 8.7575
+# dCor 0.2401 0.1681 0.2788
+# MI   0.2661 0.1778 0.3741
+# ---
+#
+#   Decision proportions for hsic :
+#  undecided      y->x      x->y
+#  0.83      0.17      0.00
+# ---
 
 
 # 2. dda.resdist: Direction Dependence Analysis - Residual Distribution
