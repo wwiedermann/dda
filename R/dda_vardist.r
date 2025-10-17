@@ -181,7 +181,7 @@ dda.vardist <- function(
 
 	call_info <- list(
 	  "function_call" = match.call(),
-	  "function_name" = "dda.indep",  # or deparse(substitute(sys.function()))
+	  "function_name" = "dda.vardist",  # or deparse(substitute(sys.function()))
 	  "all_args" = as.list(match.call())[-1],
 	  "formula" = formula,
 	  "data_name" = deparse(substitute(data)),

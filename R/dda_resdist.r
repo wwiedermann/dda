@@ -289,7 +289,7 @@ dda.resdist <- function(formula,
   output <- c(output, list(var.names = c(response.name, pred), probtrans = prob.trans))
   call_info <- list(
     "function_call" = match.call(),
-    "function_name" = "dda.indep",
+    "function_name" = "dda.resdist",
     "all_args" = as.list(match.call())[-1],
     "formula" = formula,
     "data_name" = deparse(substitute(data)),
