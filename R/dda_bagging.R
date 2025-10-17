@@ -1,29 +1,36 @@
 data("mtcars")
 
-n <- 500
+n <- 1000
 x <- rchisq(n, df = 4) - 4
 e <- rchisq(n, df = 3) - 3
 y <- 0.5 * x + e
 d <- data.frame(x, y)
+
+init <- Sys.time()
+mblm::mblm(y ~ x)
+Sys.time() - init # Time difference of 0.1234567 secs
+
+init <- Sys.time()
+RobustLinearReg::siegel_regression(y ~ x)
 
 # 1. dda.indep: Direction Dependence Analysis - Independence
 # result_indep <- dda.indep(mpg ~ wt + hp, pred = "wt", data = mtcars)
 # print(result_indep)
 
 res_ex_indep <- dda.indep(y ~ x, pred = "x", data = d, parallelize = TRUE, cores = 2,
-                                     nlfun = 2, B = 2000, hetero = TRUE, diff = TRUE)
+                                     nlfun = 2, B = 20, hetero = TRUE, diff = TRUE)
 print(res_ex_indep)
 
 init <- Sys.time()
-bagged_indep <- dda_bagging(res_ex_indep, iter = 100)
+bagged_indep <- dda_bagging(res_ex_indep, iter = 10)
 Sys.time() - init #Time difference of 1.757695 hours
 summary.dda_bagging_indep(bagged_indep)
 
 # ===== DDA Bagging Summary (INDEP) =====
 # Function: dda.indep
-# Object Type: dda.indep
+# Object Type: dda.indep # redundant line
 # Iterations: 100
-# Completed Iterations: 100
+# Completed Iterations: 100 # redundant line
 # ----
 #
 #   HSIC and dCor Test Statistics & Harmonic p-values:
@@ -130,7 +137,7 @@ summary.dda_bagging_resdist(bagged_resdist)
 # 3. dda.vardist: Direction Dependence Analysis - Variable Distribution
 #result_vardist <- dda.vardist(mpg ~ wt + hp, pred = "wt", data = mtcars)
 result_vardist <- dda.vardist(y ~ x, pred = "x", data = d, B = 2000)
-
+mblm::mblm(y ~ x)
 print(result_vardist)
 
 init <- Sys.time()
@@ -293,9 +300,9 @@ dda_bagging <- function(
     agg$dcor_xy_pval <- harmonic_p(dcor_xy_pval)
 
     # Decision proportions (robust to NAs)
-    hsic_decision <- ifelse(is.na(hsic_yx_pval) | is.na(hsic_xy_pval), "undecided",
-                            ifelse(hsic_yx_pval < alpha & hsic_xy_pval >= alpha, "x->y",
-                                   ifelse(hsic_yx_pval >= alpha & hsic_xy_pval < alpha, "y->x",
+    hsic_decision <- ifelse(#is.na(hsic_yx_pval) | is.na(hsic_xy_pval), "undecided",
+                            ifelse(hsic_yx_pval >= alpha & hsic_xy_pval < alpha, "x->y",
+                                   ifelse(hsic_yx_pval < alpha & hsic_xy_pval >= alpha, "y->x",
                                           "undecided")))
     decisions$hsic <- print_decisions(hsic_decision)
 
