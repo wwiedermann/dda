@@ -78,7 +78,7 @@ dda.resdist <- function(formula,
           # m.xy <- RobustLinearReg::siegel_regression(rx ~ ry)
 
           if (robust) mblm::mblm(yboot.trans ~ xboot.trans) else lm(yboot.trans ~ xboot.trans),
-          error = function(e) NULL)
+          error = function(e) NULL) # is this saving the mblm result somewhere?
         alt.boot.trans <- tryCatch(
           if (robust) mblm::mblm(xboot.trans ~ yboot.trans) else lm(xboot.trans ~ yboot.trans),
           error = function(e) NULL)
