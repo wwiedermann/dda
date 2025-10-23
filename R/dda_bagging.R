@@ -6,13 +6,6 @@ e <- rchisq(n, df = 3) - 3
 y <- 0.5 * x + e
 d <- data.frame(x, y)
 
-init <- Sys.time()
-mblm::mblm(y ~ x)
-Sys.time() - init # Time difference of 0.1234567 secs
-
-init <- Sys.time()
-RobustLinearReg::siegel_regression(y ~ x)
-
 # 1. dda.indep: Direction Dependence Analysis - Independence
 # result_indep <- dda.indep(mpg ~ wt + hp, pred = "wt", data = mtcars)
 # print(result_indep)
