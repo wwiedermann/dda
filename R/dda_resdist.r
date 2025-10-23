@@ -71,6 +71,12 @@ dda.resdist <- function(formula,
         if(anyNA(xboot.trans) || anyNA(yboot.trans) || length(unique(xboot.trans)) < 3 || length(unique(yboot.trans)) < 3) return(rep(NA, 7))
         # Fit models
         tar.boot.trans <- tryCatch(
+          # m.yx <- mblm::mblm(ry ~ rx, repeated = TRUE)
+          # m.yx <- RobustLinearReg::siegel_regression(ry ~ rx)
+
+          # m.xy <- mblm::mblm(rx ~ ry, repeated = TRUE)
+          # m.xy <- RobustLinearReg::siegel_regression(rx ~ ry)
+
           if (robust) mblm::mblm(yboot.trans ~ xboot.trans) else lm(yboot.trans ~ xboot.trans),
           error = function(e) NULL)
         alt.boot.trans <- tryCatch(
