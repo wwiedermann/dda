@@ -55,9 +55,8 @@ print.dda_bagging_indep <- function(object, digits = 4, alpha = 0.05) {
   if (is.null(iter_label) && !is.null(object$parameters$iterations)) iter_label <- object$parameters$iterations
 
   cat("\n")
-  cat("DIRECTION DEPENDENCE ANALYSIS: Independence Properties", "\n", "\n")
+  cat("DIRECTION DEPENDENCE ANALYSIS: Independence Properties", "\n")
   if (!is.null(iter_label)) {
-    # per request: no quotes around the number
     cat(paste0("bootstrapped ", iter_label, " times"), "\n", "\n")
   }
 
@@ -347,8 +346,8 @@ print.dda_bagging_resdist <- function(object, digits = 4) {
   if (is.null(varnames)) varnames <- c("target", "alternative")
 
   # iteration / counts for preamble
-  iter_val <- first_nonnull(params$iter, params$B, params$iterations, object$n_valid_iterations)
-  completed_iter <- if (!is.null(object$n_valid_iterations)) object$n_valid_iterations else NA
+   iter_val <- first_nonnull(params$iter, params$B, params$iterations, object$n_valid_iterations)
+  # completed_iter <- if (!is.null(object$n_valid_iterations)) object$n_valid_iterations else NA
 
   # Preamble similar to indep-style bagging summary
   # cat("\n===== DDA Bagging Summary =====\n")
@@ -359,8 +358,8 @@ print.dda_bagging_resdist <- function(object, digits = 4) {
   # cat("----\n\n")
 
   # Classic resdist header
-  cat("DIRECTION DEPENDENCE ANALYSIS: Residual Distributions (Bagged)\n\n")
-  cat("Bootstrapped", iter_val, "times", "\n")
+  cat("DIRECTION DEPENDENCE ANALYSIS: Residual Distributions (Bagged)\n")
+  cat("Bootstrapped", iter_val, "times", "\n\n")
 
 
   cat("Skewness and kurtosis tests:\n")
@@ -578,20 +577,32 @@ print.dda_bagging_resdist <- function(object, digits = 4) {
 #' @return Prints organized summary tables, matching classic print.dda.vardist style
 #' @export
 print.dda_bagging_vardist <- function(object, digits = 4) {
+
+    first_nonnull <- function(...) {
+    vals <- list(...)
+    for (v in vals) if (!is.null(v)) return(v)
+    return(NULL)
+  }
+
   stats <- object$aggregated_stats
   params <- object$parameters
   # Outcome first, Predictor second (matches original print.dda.vardist)
   varnames <- if (!is.null(stats$var.names) && length(stats$var.names) == 2) stats$var.names else c("Outcome", "Predictor")
+  # iteration / counts for preamble
+  iter_val <- first_nonnull(params$iter, params$B, params$iterations, object$n_valid_iterations)
+
 
   # indep-style preamble
-  cat("\n===== DDA Bagging Summary =====\n")
-  cat("Function:", if (!is.null(params$function_name)) params$function_name else "unknown", "\n")
-  cat("Object Type:", if (!is.null(params$object_type)) params$object_type else "unknown", "\n")
-  cat("Iterations:", if (!is.null(params$iter)) params$iter else NA, "\n")
-  cat("Completed Iterations:", if (!is.null(object$n_valid_iterations)) object$n_valid_iterations else NA, "\n")
-  cat("----\n")
+  # cat("\n===== DDA Bagging Summary =====\n")
+  # cat("Function:", if (!is.null(params$function_name)) params$function_name else "unknown", "\n")
+  # cat("Object Type:", if (!is.null(params$object_type)) params$object_type else "unknown", "\n")
+  # cat("Iterations:", if (!is.null(params$iter)) params$iter else NA, "\n")
+  # cat("Completed Iterations:", if (!is.null(object$n_valid_iterations)) object$n_valid_iterations else NA, "\n")
+  # cat("----\n")
 
-  cat("\nDIRECTION DEPENDENCE ANALYSIS: Variable Distributions (Bagged)\n\n")
+  cat("\nDIRECTION DEPENDENCE ANALYSIS: Variable Distributions (Bagged)\n")
+  cat("Bootstrapped", iter_val, "times", "\n\n")
+
   cat("Skewness and kurtosis tests:\n")
 
   # Skewness & kurtosis test table (robust to missing)
