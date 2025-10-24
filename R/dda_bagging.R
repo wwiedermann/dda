@@ -16,32 +16,32 @@ print(res_ex_indep)
 
 init <- Sys.time()
 bagged_indep <- dda_bagging(res_ex_indep, iter = 10)
-Sys.time() - init #Time difference of 1.757695 hours
-summary.dda_bagging_indep(bagged_indep)
+Sys.time() - init
+print.dda_bagging_indep(bagged_indep)
 
-# ===== DDA Bagging Summary (INDEP) =====
-# Function: dda.indep
-# Object Type: dda.indep # redundant line
-# Iterations: 100
-# Completed Iterations: 100 # redundant line
-# ----
+# DIRECTION DEPENDENCE ANALYSIS: Independence Properties
 #
-#   HSIC and dCor Test Statistics & Harmonic p-values:
-#        Target Stat Target p Alternative Stat Alternative p
-# HSIC      0.9399        0           7.7198             0
+# bootstrapped 10 times
+#
+# Target Model: x -> y
+#
+# Omnibus Independence Tests:
+#   HSIC = 0.5588, p-value = 0.0046
+#
+# Alternative Model: y -> x
+#
+# Omnibus Independence Tests:
+# HSIC = 9.1952, p-value = 0.0000
+#
+# Bootstrap CIs for Difference Statistics:
+#        estimate  lower    upper
+# HSIC   8.6364    6.7349  10.4142
+# dCor   0.2163    0.1582   0.2389
+# MI     0.1950    0.1149   0.2779
+#
 # ---
 #
-#   Difference Statistics (mean estimates, lower, upper):
-#      HSIC   dCor     MI
-# HSIC 6.7799 4.8988 8.7575
-# dCor 0.2401 0.1681 0.2788
-# MI   0.2661 0.1778 0.3741
-# ---
-#
-#   Decision proportions for hsic :
-#  undecided      y->x      x->y
-#  0.83      0.17      0.00
-# ---
+#   Note: Difference statistics > 0 suggest x -> y
 
 
 # 2. dda.resdist: Direction Dependence Analysis - Residual Distribution
@@ -53,9 +53,9 @@ result_resdist <- dda.resdist(y ~ x, pred = "x", data = d,
 print(result_resdist)
 
 init <- Sys.time()
-bagged_resdist <- dda_bagging(result_resdist, iter = 100)
+bagged_resdist <- dda_bagging(result_resdist, iter = 10)
 Sys.time() - init # Time difference of 3.210665 mins
-summary.dda_bagging_resdist(bagged_resdist)
+print.dda_bagging_resdist(bagged_resdist)
 
 # ===== DDA Bagging Summary =====
 # Function: dda.resdist
@@ -130,7 +130,6 @@ summary.dda_bagging_resdist(bagged_resdist)
 # 3. dda.vardist: Direction Dependence Analysis - Variable Distribution
 #result_vardist <- dda.vardist(mpg ~ wt + hp, pred = "wt", data = mtcars)
 result_vardist <- dda.vardist(y ~ x, pred = "x", data = d, B = 2000)
-mblm::mblm(y ~ x)
 print(result_vardist)
 
 init <- Sys.time()
