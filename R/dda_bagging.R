@@ -20,13 +20,12 @@ Sys.time() - init
 print.dda_bagging_indep(bagged_indep)
 
 # DIRECTION DEPENDENCE ANALYSIS: Independence Properties
-#
 # bootstrapped 10 times
 #
 # Target Model: x -> y
 #
 # Omnibus Independence Tests:
-#   HSIC = 0.5588, p-value = 0.0046
+# HSIC = 0.5588, p-value = 0.0046
 #
 # Alternative Model: y -> x
 #
@@ -41,7 +40,7 @@ print.dda_bagging_indep(bagged_indep)
 #
 # ---
 #
-#   Note: Difference statistics > 0 suggest x -> y
+# Note: Difference statistics > 0 suggest x -> y
 
 
 # 2. dda.resdist: Direction Dependence Analysis - Residual Distribution
@@ -57,74 +56,33 @@ bagged_resdist <- dda_bagging(result_resdist, iter = 10)
 Sys.time() - init # Time difference of 3.210665 mins
 print.dda_bagging_resdist(bagged_resdist)
 
-# ===== DDA Bagging Summary =====
-# Function: dda.resdist
-# Object Type: dda.resdist
-# Iterations: 100
-# Completed Iterations: 100
-# ----
-#
-#   DIRECTION DEPENDENCE ANALYSIS: Residual Distributions (Bagged)
+# DIRECTION DEPENDENCE ANALYSIS: Residual Distributions (Bagged)
+# Bootstrapped 10 times
 #
 # Skewness and kurtosis tests:
-#           y         z-value   Pr(>|z|)  x         z-value   Pr(>|z|)
-# Skewness   1.5826  10.7247    0.0000     0.5963   5.0876    0.0000
-# Kurtosis   3.2643   6.2666    0.0000     1.7091   4.4472    0.0000
+#   y         z-value   Pr(>|z|)  x         z-value   Pr(>|z|)
+# Skewness   1.9801  17.2185    0.0000     0.6374   7.5945    0.0000
+# Kurtosis   6.2210  11.5401    0.0000     2.2198   7.3100    0.0000
 #
 # Skewness and kurtosis difference tests and 90% Percentile bootstrap CIs:
 #
-#             diff      z-value   Pr(>|z|)  lower     upper
-# Skewness   -2.1925   -3.6485    0.0062   -3.3565   -0.9905
-# Kurtosis   -9.7248   -1.3542    0.3247  -27.2791    4.3254
+#   diff      z-value   Pr(>|z|)  lower     upper
+# Skewness   -3.5554   -6.4284    0.0000   -5.2224   -1.8972
+# Kurtosis  -36.6739   -3.0846    0.0096  -80.6616   -5.9266
 #
 # 90% Percentile bootstrap CIs for joint higher moment differences:
-#                                 estimate  lower    upper
-# Co-Skewness                     0.5033    0.2428   0.7980
-# Hyvarinen-Smith (Co-Skewness)   0.7403    0.4641   1.0112
-# Co-Kurtosis                     7.3345    1.5167  15.2955
-# Hyvarinen-Smith (Co-Kurtosis)   0.6944    0.1872   1.1881
-# Chen-Chan (Co-Kurtosis)         3.1095    0.3550   8.1098
-#
-# Number of resamples: 2000
-# ---
-# Note: Target is x -> y
-# Alternative is y -> x
-# Difference statistics > 0 suggest the model x -> y
-
-# ===== DDA Bagging Summary =====
-# Function: dda.resdist
-# Object Type: dda.resdist
-# Iterations: 100
-# Completed Iterations: 100
-# ----
-#
-#   DIRECTION DEPENDENCE ANALYSIS: Residual Distributions (Bagged)
-#
-# Skewness and kurtosis tests:
-#            y         z-value   Pr(>|z|)  x         z-value   Pr(>|z|)
-# Skewness   1.5826  10.7247    0.0000     0.5963   5.0876    0.0000
-# Kurtosis   3.2643   6.2666    0.0000     1.7091   4.4472    0.0000
-#
-# Skewness and kurtosis difference tests and 90% Percentile bootstrap CIs:
-#
-#            diff      z-value   Pr(>|z|)  lower     upper
-# Skewness   -2.1925   -3.6485    0.0062   -3.3565   -0.9905
-# Kurtosis   -9.7248   -1.3542    0.3247  -27.2791    4.3254
-#
-# 90% Percentile bootstrap CIs for joint higher moment differences:
-#                                 estimate  lower    upper
-# Co-Skewness                     0.5033    0.2428   0.7980
-# Hyvarinen-Smith (Co-Skewness)   0.7403    0.4641   1.0112
-# Co-Kurtosis                     7.3345    1.5167  15.2955
-# Hyvarinen-Smith (Co-Kurtosis)   0.6944    0.1872   1.1881
-# Chen-Chan (Co-Kurtosis)         3.1095    0.3550   8.1098
+#   estimate  lower    upper
+# Co-Skewness                     0.7619    0.4037   1.1724
+# Hyvarinen-Smith (Co-Skewness)   0.7032    0.4241   0.9966
+# Co-Kurtosis                    17.6398    4.7216  36.4090
+# Hyvarinen-Smith (Co-Kurtosis)   1.1033    0.4374   1.7668
+# Chen-Chan (Co-Kurtosis)        10.9494    1.9954  25.7751
 #
 # Number of resamples: 2000
 # ---
 #   Note: Target is x -> y
 # Alternative is y -> x
 # Difference statistics > 0 suggest the model x -> y
-
 
 ###############################################################################
 # 3. dda.vardist: Direction Dependence Analysis - Variable Distribution
@@ -133,43 +91,39 @@ result_vardist <- dda.vardist(y ~ x, pred = "x", data = d, B = 2000)
 print(result_vardist)
 
 init <- Sys.time()
-bagged_vardist <- dda_bagging(result_vardist, iter = 100)
+bagged_vardist <- dda_bagging(result_vardist, iter = 10)
 Sys.time() - init #Time difference of 2.703492 mins
-summary.dda_bagging_vardist(bagged_vardist)
-#
-# ===== DDA Bagging Summary =====
-#   Function: dda.vardist
-# Object Type: dda.vardist
-# Iterations: 100
-# Completed Iterations: 100
-# ----
-#
-#   DIRECTION DEPENDENCE ANALYSIS: Variable Distributions (Bagged)
+print.dda_bagging_vardist(bagged_vardist)
+
+# DIRECTION DEPENDENCE ANALYSIS: Variable Distributions (Bagged)
+# Bootstrapped 10 times
 #
 # Skewness and kurtosis tests:
-#          y        z-value   Pr(>|z|)  x        z-value   Pr(>|z|)
-# Skewness   1.304   9.460     0.000      1.591  10.734     0.000
-# Kurtosis   2.382   5.554     0.000      3.737   6.445     0.000
+#             y    z-value   Pr(>|z|)  x        z-value   Pr(>|z|)
+# Skewness   1.455  14.271     0.000      1.288  13.157     0.000
+# Kurtosis   3.328   8.997     0.000      2.426   7.686     0.000
 #
 # 95% Percentile bootstrap CIs for higher moment differences:
-#   diff     lower    upper
-# Skewness   0.8970  -0.5912   2.5777
-# Kurtosis  12.9933  -9.5477  49.5642
+#            diff      lower     upper
+# Skewness   -0.4631   -1.5883    0.6282
+# Kurtosis   -5.4491  -21.7069    8.2469
 #
 # 95% Percentile bootstrap CIs for differences in higher-order correlations:
-#   estimate  lower    upper
-# Cor^2[2,1] - Cor^2[1,2]   0.5236    0.2010   0.9365
-# Cor^2[3,1] - Cor^2[1,3]   9.8078   -0.9159  25.8260
+#                          estimate  lower   upper
+# Cor^2[2,1] - Cor^2[1,2]  0.2808    0.1587  0.4121
+# Cor^2[3,1] - Cor^2[1,3]  4.1488    1.4437  7.0258
 #
 # 95% Percentile bootstrap CIs for Likelihood Ratio approximations:
-#   estimate  lower    upper
-# Hyvarinen-Smith (co-skewness)   0.1882    0.0932   0.2785
-# Hyvarinen-Smith (tanh)          0.0147    0.0063   0.0223
-# Chen-Chan (co-kurtosis)         5.3845   -0.5292  16.9036
+#                                  estimate  lower    upper
+# Hyvarinen-Smith (co-skewness)   0.1633    0.1015   0.2184
+# Hyvarinen-Smith (tanh)          0.0174    0.0097   0.0243
+# Chen-Chan (co-kurtosis)         0.8311   -0.1659   2.1324
 #
 # Number of resamples: 2000
 # ---
 #   Note: (Cor^2[i,j] - Cor^2[j,i]) > 0 suggests the model x -> y
+
+
 #############################################################################
 
 #' Bootstrap Aggregated DDA Analysis (harmonic mean for p-values, mean for other stats)
@@ -184,6 +138,8 @@ summary.dda_bagging_vardist(bagged_vardist)
 dda_bagging <- function(
     dda_result,
     iter = 100,
+    #p-val = c("harmonic", "fisher", "stoufer"),
+    #aggregate = c("mean", "median", ?)
     progress = TRUE,
     save_file = NULL,
     alpha = 0.05
