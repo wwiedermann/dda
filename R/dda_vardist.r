@@ -145,7 +145,10 @@ dda.vardist <- function(
 
    if(B > 0){
              boot.res <- boot::boot(dat, boot.diff, R = B)
-             if( boot.type == "bca" && any( is.na( boot::empinf( boot.res ) ) ) ) stop("Acceleration constant cannot be calculated. Increase the number of resamples or use boot.type = 'perc'")
+             if( boot.type == "bca" && any( is.na( boot::empinf( boot.res ) ) ) ) {
+               warning("Acceleration constant cannot be calculated. Falling back to percentile bootstrap method. Consider increasing the number of resamples (B) for more stable results.", call. = FALSE)
+               boot.type <- "perc"
+             }
              suppressWarnings(boot.out <- lapply(as.list(1:7), function(i, boot.res) boot::boot.ci(boot.res, conf=conf.level, type=boot.type, t0=boot.res$t0[i], t=boot.res$t[,i]), boot.res=boot.res))
 
 			 names(boot.out) <- c("skew.diff", "kurt.diff", "cor12.diff", "cor13.diff", "RHS", "RCC", "Rtanh")
