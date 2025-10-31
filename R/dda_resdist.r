@@ -1,6 +1,7 @@
 #' @title Direction Dependence Analysis: Residual Distributions
 #' @description \code{dda.resdist} evaluates patterns of asymmetry of error
-#' distributions of causally competing models (\code{y ~ x} vs. \code{x ~ y}).
+#'              distributions of causally competing models (\code{y ~ x} 
+#'              vs. \code{x ~ y}).
 #' @name dda.resdist
 #'
 #' @param formula     Symbolic formula of the target model to be tested or a \code{lm} object.
@@ -19,9 +20,8 @@
 #' @param conf.level  Confidence level for bootstrap confidence intervals.
 #' @param ...         Additional arguments to be passed to the function.
 #'
-#' @returns  An object of class \code{ddaresdist} containing the results of DDA
-#'           tests of asymmetry patterns of error distributions obtained from
-#'           the causally competing models.
+#' @returns An object of class \code{ddaresdist} containing the results of  
+#'          direction dependence tests of error distributions.
 #'
 #' @examples
 #' set.seed(123)
@@ -37,8 +37,14 @@
 #' @references Wiedermann, W., & von Eye, A. (2025). Direction Dependence Analysis: Foundations and Statistical Methods. Cambridge, UK: Cambridge University Press.
 #' @export
 #' @rdname dda.resdist
-dda.resdist <- function(formula, pred = NULL, data = list(), B = 200,
-                        boot.type = "perc", prob.trans = FALSE, conf.level = 0.95){
+dda.resdist <- function(formula, 
+                        pred = NULL, 
+                        data = list(), 
+                        B = 200,
+                        boot.type = "perc", 
+                        prob.trans = FALSE, 
+                        conf.level = 0.95
+                        ){
 
   ### --- helper function for bootstrap CIs
   mysd <- function(x){sqrt(sum((x-mean(x))^2)/length(x))}

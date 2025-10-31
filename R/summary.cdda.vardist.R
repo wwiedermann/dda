@@ -1,4 +1,4 @@
-#' @title Summary of \code{cdda.vardist} class object
+#' @title Summary of \code{cdda.vardist} Class Objects
 #' @description \code{summary} returns test statistics from the \code{cdda.vardist} class object.
 #' @name summary.cdda.vardist
 #'
@@ -14,9 +14,13 @@
 #' @export
 #' @rdname cdda.vardist
 #' @method summary cdda.vardist
-summary.cdda.vardist <- function(object, skew = TRUE, coskew = FALSE,
-                        kurt = TRUE, cokurt = FALSE, ...)
-  {
+summary.cdda.vardist <- function(object,
+                                 skew = TRUE, 
+                                 coskew = FALSE, 
+                                 kurt = TRUE, 
+                                 cokurt = FALSE, 
+                                 ...
+                                 ){
   cdda.output <- object
 
   varnames <- cdda.output[[1]][[1]]$var.names

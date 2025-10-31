@@ -1,4 +1,4 @@
-#' @title Summary for \code{cdda.indep} Objects
+#' @title Summary of \code{cdda.indep} Class Objects
 #' @description \code{summary} returns test statistics from the \code{cdda.indep} class object.
 #' @name summary.cdda.indep
 #'
@@ -17,9 +17,16 @@
 #' @export
 #' @rdname cdda.indep
 #' @method summary cdda.indep
-summary.cdda.indep <- function(object, nlfun = FALSE, hetero = FALSE,
-                               hsic = TRUE, hsic.diff = FALSE, dcor = TRUE,
-                               dcor.diff = FALSE, mi.diff = FALSE, ...) {
+summary.cdda.indep <- function(object, 
+                               nlfun = FALSE, 
+                               hetero = FALSE,
+                               hsic = TRUE,
+                               hsic.diff = FALSE, 
+                               dcor = TRUE,
+                               dcor.diff = FALSE, 
+                               mi.diff = FALSE, 
+                               ...
+                               ){
 
   cdda.output <- object
 

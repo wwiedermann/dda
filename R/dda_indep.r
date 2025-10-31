@@ -1,6 +1,5 @@
 #' @title Direction Dependence Analysis: Independence Properties
-#' @description \code{dda.indep} computes DDA test statistics to
-#'              evaluate asymmetries of predictor-error independence of
+#' @description \code{dda.indep} evaluates asymmetries of predictor-error independence of
 #'              causally competing models (\code{y ~ x} vs. \code{x ~ y}).
 #'
 #' @param formula      Symbolic formula of the model to be tested or a \code{lm} object.
@@ -15,8 +14,10 @@
 #' @param conf.level   Confidence level for bootstrap confidence intervals.
 #' @param parallelize  A logical value indicating whether bootstrapping is performed on multiple cores. Only used if \code{diff = TRUE}.
 #' @param cores        A numeric value indicating the number of cores. Only used if \code{parallelize = TRUE}.
-#' @returns
-#' An object of class \code{dda.indep} containing the results of DDA independence tests.
+#'
+#' @returns An object of class \code{dda.indep} containing the results of 
+#'          independence tests of Direction Dependence Analysis.
+#' 
 #' @references Wiedermann, W., & von Eye, A. (2025). \emph{Direction Dependence Analysis: Foundations and Statistical Methods}. Cambridge, UK: Cambridge University Press.
 #'
 #' @examples
@@ -47,8 +48,8 @@ dda.indep <- function(
              boot.type = "perc",
              conf.level = 0.95,
              parallelize = FALSE,
-             cores = 1)
-  {
+             cores = 1
+             ){
 
    ### --- helper functions for independence difference statistics
 

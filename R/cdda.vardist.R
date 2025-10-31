@@ -1,12 +1,12 @@
 #' @title Conditional Directional Dependence Analysis: Variable Distributions
-#' @description \code{cdda.vardist} computes DDA test statistics for observed
-#'              variable distributions of competing conditional models
-#'              (\code{y ~ x * m} vs.\code{x ~ y * m} with \code{m}
+#' @description \code{cdda.vardist} evaluates variable distributions of competing 
+#'              conditional models (\code{y ~ x * m} vs.\code{x ~ y * m} with \code{m}
 #'              being a continuous or categorical moderator).
 #' @name cdda.vardist
 #'
 #' @param formula     Symbolic formula of the model to be tested or a \code{lm} object
-#' @param pred        A character indicating the variable name of the predictor which serves as the outcome in the alternative model.
+#' @param pred        A character indicating the variable name of the predictor 
+#'                    which serves as the outcome in the alternative model.
 #' @param mod         A character indicating the variable name of the moderator.
 #' @param modval      Characters or a numeric sequence specifying the moderator
 #'                    values used in post-hoc probing. Possible characters
@@ -22,11 +22,10 @@
 #' @param data        A required data frame containing the variables in the model.
 #' @param conf.level  Confidence level for bootstrap confidence intervals.
 #' @param B           Number of bootstrap samples.
-#' @param boot.type  A character indicating the type of bootstrap confidence intervals. Must be one of the two values \code{c("perc", "bca")}. \code{boot.type = "bca"} is the default.
+#' @param boot.type   A character indicating the type of bootstrap confidence intervals. Must be one of the two values \code{c("perc", "bca")}. \code{boot.type = "bca"} is the default.
 #'
-#' @returns A list of class \code{cdda.vardist} containing the results of
-#'          CDDA tests to evaluate distributional properties of observed
-#'          variables for pre-specified moderator values.
+#' @returns An object of class \code{cdda.vardist} containing the results of  
+#'          conditional direction dependence tests of variable distributions.
 #'
 #' @examples
 #' set.seed(321)
@@ -72,7 +71,7 @@ cdda.vardist <- function(formula,
                          B = 200,
                          boot.type = "perc",
                          conf.level = 0.95
-                      ){
+                        ){
 
   if (length(data) == 0) stop("Please specify a data frame.")
 

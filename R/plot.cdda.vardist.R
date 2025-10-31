@@ -1,5 +1,6 @@
 #' @title Plots of \code{cdda.vardist} Class Objects
-#' @description \code{plot} returns graphs for CDDA test statistics obtained from competing conditional models.
+#' @description \code{plot} returns graphs for results of \code{cdda.vardist}.
+#'              
 #' @name plot.cdda.vardist
 #'
 #' @param x      An object of class \code{cdda.vardist} when using \code{print} or \code{plot}.
@@ -13,8 +14,13 @@
 #' @export
 #' @rdname cdda.vardist
 #' @method plot cdda.vardist
-plot.cdda.vardist <- function(x, stat = NULL,
-                              ylim =  NULL, ...){
+plot.cdda.vardist <- function(x, 
+                              stat = NULL,
+                              ylim =  NULL,
+                              ...
+                              ){
+  oldpar <- par(no.readonly = TRUE) 
+  on.exit(par(oldpar)) 
 
   if(is.null(stat)){
     stop("stat argument must be specified. as 'rhs', 'coskew', 'cokurt', 'rcc', or 'rtanh'")
