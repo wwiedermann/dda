@@ -300,7 +300,7 @@ cdda.vardist <- function(formula,
                            "mod_levels" = moderator_levels,
                            "mod_data" = data[,mod]
                            )
-  cdda.output[[5]] <- list(
+  cdda.var.output[[5]] <- list(
     "function_call" = match.call(),
     "function_name" = as.character(match.call()[[1]]),
     "all_args" = as.list(match.call())[-1],  # Remove function name
