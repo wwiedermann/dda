@@ -271,7 +271,10 @@ dda.indep <- function(
 
 	    }
 
-      if( boot.type == "bca" && any( is.na( boot::empinf( boot.res ) ) ) ) stop("Acceleration constant cannot be calculated. Increase the number of resamples or use boot.type = 'perc'")
+      if( boot.type == "bca" && any( is.na( boot::empinf( boot.res ) ) ) ) {
+        warning("Acceleration constant cannot be calculated. Falling back to percentile bootstrap method. Consider increasing the number of resamples (B) for more stable results.", call. = FALSE)
+        boot.type <- "perc"
+      }
 
 	  suppressWarnings(boot.out <- lapply(as.list(1:3), function(i, boot.res) boot::boot.ci(boot.res, conf=conf.level, type=boot.type, t0=boot.res$t0[i], t=boot.res$t[,i]), boot.res=boot.res))
 
