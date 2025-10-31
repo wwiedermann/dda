@@ -187,7 +187,7 @@ dda.vardist <- function(
             boot::boot.ci(res, conf = conf.level, type = "bca", t0 = res$t0[i], t = res$t[, i])
           }, res = boot.res))
         },
-        error = function(e) {
+        error = function(e) { # error is the "finally" function in tryCatch
           warning("Acceleration constant cannot be calculated. Falling back to percentile bootstrap method. Consider increasing the number of resamples (B) for more stable results.", call. = FALSE)
           NULL
         }
