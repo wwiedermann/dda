@@ -143,36 +143,33 @@ dda.vardist <- function(
 
     ### --- run bootstrap confidence intervals
 
-   if(B > 0){
-             boot.res <- boot::boot(dat, boot.diff, R = B)
-             if( boot.type == "bca" && any( is.na( boot::empinf( boot.res ) ) ) ) {
-               warning("Acceleration constant cannot be calculated. Falling back to percentile bootstrap method. Consider increasing the number of resamples (B) for more stable results.", call. = FALSE)
-               boot.type <- "perc"
-             }
-             suppressWarnings(boot.out <- lapply(as.list(1:7), function(i, boot.res) boot::boot.ci(boot.res, conf=conf.level, type=boot.type, t0=boot.res$t0[i], t=boot.res$t[,i]), boot.res=boot.res))
+	if (B > 0) {
+	  suppressWarnings(boot.res <- boot::boot(dat, boot.diff, R = B))
 
-			 names(boot.out) <- c("skew.diff", "kurt.diff", "cor12.diff", "cor13.diff", "RHS", "RCC", "Rtanh")
+	  # If BCa is requested, try to run it safely first
+	  if (boot.type == "bca") {
+	    boot.out <- tryCatch({
+	      suppressWarnings(lapply(as.list(1:7), function(i, res) {
+	        boot::boot.ci(res, conf = conf.level, type = "bca", t0 = res$t0[i], t = res$t[, i])
+	      }, res = boot.res))
+	    }, error = function(e) {
+	      # If ANY index fails, trigger warning and return NULL to signal fallback needed
+	      warning("Acceleration constant cannot be calculated. Falling back to percentile bootstrap method. Consider increasing the number of resamples (B) for more stable results.", call. = FALSE)
+	      return(NULL)
+	    })
 
-       ci.skewdiff  <- unclass(boot.out$skew.diff)[[4]][4:5] ; names(ci.skewdiff) <- c("lower", "upper")
-			 ci.kurtdiff  <- unclass(boot.out$kurt.diff)[[4]][4:5] ; names(ci.kurtdiff) <- c("lower", "upper")
-			 ci.cor12diff <- unclass(boot.out$cor12.diff)[[4]][4:5] ; names(ci.cor12diff) <- c("lower", "upper")
-			 ci.cor13diff <- unclass(boot.out$cor13.diff)[[4]][4:5] ; names(ci.cor13diff) <- c("lower", "upper")
-			 ci.RHS       <- unclass(boot.out$RHS)[[4]][4:5] ; names(ci.RHS) <- c("lower", "upper")
-			 ci.RCC       <- unclass(boot.out$RCC)[[4]][4:5] ; names(ci.RCC) <- c("lower", "upper")
-			 ci.Rtanh     <- unclass(boot.out$Rtanh)[[4]][4:5] ; names(ci.Rtanh) <- c("lower", "upper")
+	    # If it failed (returned NULL), update boot.type to trigger the fallback below
+	    if (is.null(boot.out)) {
+	      boot.type <- "perc"
+	    }
+	  }
 
-			 output <- c(output,
-			       list(skewdiff = c(boot.res$t0[1], ci.skewdiff)),
-						 list(kurtdiff = c(boot.res$t0[2], ci.kurtdiff)),
-						 list(cor12diff = c(boot.res$t0[3], ci.cor12diff)),
-						 list(cor13diff = c(boot.res$t0[4], ci.cor13diff)),
-						 list(RHS = c(boot.res$t0[5], ci.RHS)),
-						 list(RCC = c(boot.res$t0[6], ci.RCC)),
-						 list(Rtanh = c(boot.res$t0[7], ci.Rtanh)),
-						 list(boot.args = c(boot.type, conf.level, B)),
-						 list(boot.warning = FALSE)
-						)
-			if(sign(output$anscombe$predictor$statistic[1]) != sign(output$anscombe$outcome$statistic[1])) { output$boot.warning <- TRUE }
+	  # Run standard if it wasn't BCa originally OR if BCa failed above
+	  if (boot.type != "bca") {
+	    suppressWarnings(boot.out <- lapply(as.list(1:7), function(i, res) {
+	      boot::boot.ci(res, conf = conf.level, type = boot.type, t0 = res$t0[i], t = res$t[, i])
+	    }, res = boot.res))
+	  }
 	}
 
 	response.name <- all.vars(formula(formula))[1]  # get name of response variable
