@@ -73,7 +73,7 @@ dda.resdist <- function(formula, pred = NULL, data = list(), B = 200,
     x <- as.vector(scale(x))
     y <- as.vector(scale(y))
 
-    if( isTRUE(prob.trans) ){
+    if(prob.trans == TRUE){
 
       xboot <- dat[, 3] # tentative (cov-adjusted) predictor
       yboot <- dat[, 4] # tentative (cov-adjusted) outcome
@@ -258,7 +258,7 @@ dda.resdist <- function(formula, pred = NULL, data = list(), B = 200,
                     out.adj = ry
   )  # note: residuals are standardized prior DDA
 
-  if( isTRUE(prob.trans) ){
+  if( prob.trans == TRUE ){
 
     trans <- prob.int(rx, ry)
     rx.trans <- trans$x
@@ -274,7 +274,7 @@ dda.resdist <- function(formula, pred = NULL, data = list(), B = 200,
 
   ### --- run separate normality tests
 
-  if( isTRUE(prob.trans) ){
+  if(prob.trans == TRUE){
 
     agostino.out <- apply(dat[c("alternative.trans", "target.trans")], 2, moments::agostino.test)
     names(agostino.out) <- c("alternative", "target")
@@ -331,37 +331,34 @@ dda.resdist <- function(formula, pred = NULL, data = list(), B = 200,
 
   ### --- run bootstrap confidence intervals
 
-  if(B > 0){
+  if (B > 0) {
+    # Pass prob.trans through boot so it reaches boot.diff
     suppressWarnings(boot.res <- boot::boot(dat, boot.diff, R = B, prob.trans = prob.trans))
-    if( boot.type == "bca" && any( is.na( boot::empinf( boot.res ) ) ) ) {
-      warning("Acceleration constant cannot be calculated. Falling back to percentile bootstrap method. Consider increasing the number of resamples (B) for more stable results.", call. = FALSE)
-      boot.type <- "perc"
+
+    # If BCa is requested, try to run it safely first
+    if (boot.type == "bca") {
+      boot.out <- tryCatch({
+        suppressWarnings(lapply(as.list(1:7), function(i, res) {
+          boot::boot.ci(res, conf = conf.level, type = "bca", t0 = res$t0[i], t = res$t[, i])
+        }, res = boot.res))
+      }, error = function(e) {
+        # If ANY index fails, trigger warning and return NULL to signal fallback needed
+        warning("Acceleration constant cannot be calculated. Falling back to percentile bootstrap method. Consider increasing the number of resamples (B) for more stable results.", call. = FALSE)
+        return(NULL)
+      })
+
+      # If it failed (returned NULL), update boot.type to trigger the fallback below
+      if (is.null(boot.out)) {
+        boot.type <- "perc"
+      }
     }
-    suppressWarnings(boot.out <- lapply(as.list(1:7), function(i, boot.res) boot::boot.ci(boot.res, conf=conf.level, type=boot.type, t0=boot.res$t0[i], t=boot.res$t[,i]), boot.res=boot.res))
 
-    names(boot.out) <- c("skew.diff", "kurt.diff", "cor12.diff", "cor13.diff", "RHS3", "RCC", "RHS4")
-
-    ci.skewdiff  <- unclass(boot.out$skew.diff)[[4]][4:5] ; names(ci.skewdiff) <- c("lower", "upper")
-    ci.kurtdiff  <- unclass(boot.out$kurt.diff)[[4]][4:5] ; names(ci.kurtdiff) <- c("lower", "upper")
-    ci.cor12diff <- unclass(boot.out$cor12.diff)[[4]][4:5] ; names(ci.cor12diff) <- c("lower", "upper")
-    ci.cor13diff <- unclass(boot.out$cor13.diff)[[4]][4:5] ; names(ci.cor13diff) <- c("lower", "upper")
-    ci.RHS3      <- unclass(boot.out$RHS3)[[4]][4:5] ; names(ci.RHS3) <- c("lower", "upper")
-    ci.RCC       <- unclass(boot.out$RCC)[[4]][4:5] ; names(ci.RCC) <- c("lower", "upper")
-    ci.RHS4      <- unclass(boot.out$RHS4)[[4]][4:5] ; names(ci.RHS4) <- c("lower", "upper")
-
-    output$skewdiff <- c(output$skewdiff, ci.skewdiff)
-    output$kurtdiff <-	c(output$kurtdiff, ci.kurtdiff)
-
-    output <- c(output,
-                list(cor12diff = c(boot.res$t0[3], ci.cor12diff)),
-                list(cor13diff = c(boot.res$t0[4], ci.cor13diff)),
-                list(RHS3 = c(boot.res$t0[5], ci.RHS3)),
-                list(RCC = c(boot.res$t0[6], ci.RCC)),
-                list(RHS4 = c(boot.res$t0[7], ci.RHS4)),
-                list(boot.args = c(boot.type, conf.level, B)),
-                list(boot.warning = FALSE)
-    )
-    if(sign(output$anscombe$alternative$statistic[1]) != sign(output$anscombe$target$statistic[1])) { output$boot.warning <- TRUE }
+    # Run standard if it wasn't BCa originally OR if BCa failed above
+    if (boot.type != "bca") {
+      suppressWarnings(boot.out <- lapply(as.list(1:7), function(i, res) {
+        boot::boot.ci(res, conf = conf.level, type = boot.type, t0 = res$t0[i], t = res$t[, i])
+      }, res = boot.res))
+    }
   }
 
   response.name <- all.vars(formula(formula))[1]  # get name of response variable
