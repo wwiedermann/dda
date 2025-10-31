@@ -1,5 +1,5 @@
-#' @title Plot of \code{cdda.indep} class object
-#' @description \code{plot} returns graphs for CDDA test statistics obtained from competing conditional models.
+#' @title Plots of \code{cdda.indep} Class Objects
+#' @description \code{plot} returns graphs for results of \code{cdda.indep}.
 #' @name plot.cdda.indep
 #'
 #' @param x           An object of class \code{cdda.indep} when using \code{print} or \code{plot}.
@@ -12,8 +12,15 @@
 #' @export
 #' @rdname cdda.indep
 #' @method plot cdda.indep
-plot.cdda.indep <- function(x = NULL, stat = NULL, ylim =  NULL, ...){
+plot.cdda.indep <- function(x = NULL,
+                            stat = NULL, 
+                            ylim =  NULL, 
+                            ...
+                            ){
 
+  oldpar <- par(no.readonly = TRUE) 
+  on.exit(par(oldpar)) 
+  
   if(is.null(stat)){
     stop("stat argument must be specified. as 'hsic.diff', 'dcor.diff', or 'mi.diff'")
   }
@@ -93,7 +100,6 @@ plot.cdda.indep <- function(x = NULL, stat = NULL, ylim =  NULL, ...){
   } else{y.range <- ylim}
 
   ### Start two plots ###
-
   par(mfrow = c(1, 2))
 
   plot(plot.axis, out.tar$out.mean, type = "n",

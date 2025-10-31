@@ -12,10 +12,9 @@
 #' @param B           Number of bootstrap samples.
 #' @param boot.type   A character indicating the type of bootstrap confidence intervals. Must be one of c("perc","bca"). Default is "perc".
 #' @param conf.level  Confidence level for bootstrap confidence intervals.
-#' @param ...         Additional arguments to be passed to the function.
 #'
-#' @returns  An object of class \code{dda.vardist} containing the results of DDA tests
-#'           of asymmetry patterns of variable distributions.
+#' @returns An object of class \code{dda.vardist} containing the results of  
+#'          direction dependence tests of variable distributions.
 #'
 #' @examples
 #' set.seed(123)
@@ -30,6 +29,7 @@
 #' @seealso \code{\link{cdda.vardist}} for a conditional version.
 #' @export
 #' @rdname dda.vardist
+<<<<<<< Updated upstream
 dda.vardist <- function(
     formula,
     pred = NULL,
@@ -39,6 +39,15 @@ dda.vardist <- function(
     conf.level = 0.95,
     ...
 ) {
+=======
+dda.vardist <- function(formula,
+                        pred = NULL,
+                        data = list(),
+                        B = 200,
+                        boot.type = "perc",
+                        conf.level = 0.95
+                        ){
+>>>>>>> Stashed changes
 
   # --- helper functions for bootstrap CIs
 

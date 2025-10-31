@@ -1,6 +1,5 @@
 #' @title Conditional Direction Dependence Analysis: Independence Properties
-#' @description \code{cdda.indep} computes CDDA test statistics to
-#'              evaluate asymmetries of predictor-error independence of competing
+#' @description \code{cdda.indep} evaluates asymmetries of predictor-error independence of competing
 #'              conditional models (\code{y ~ x * m} vs. \code{x ~ y * m}
 #'              with \code{m} being a continuous or categorical moderator).
 #'
@@ -31,8 +30,8 @@
 #' @param parallelize A logical value indicating whether bootstrapping is performed on multiple cores. Only used if \code{diff = TRUE}.
 #' @param cores       A numeric value indicating the number of cores. Only used if \code{parallelize = TRUE}.
 #'
-#' @returns A list of class \code{cdda.indep} containing the results of CDDA
-#'          independence tests for pre-specified moderator values.
+#' @returns An object of class \code{dda.indep} containing the results of 
+#'          independence tests of Conditional Direction Dependence Analysis.
 #'
 #' @examples
 #' set.seed(321)
@@ -73,8 +72,9 @@
 #'                      parallelize = TRUE,
 #'                      cores = 2,
 #'                      nlfun = 2,
-#'                      B = 50)
-#'
+#'                      B = 2) 
+#' # Note: Only 2 bootstrap samples are created here to lower computation time
+#' 
 #'
 #' @references Wiedermann, W., & von Eye, A. (2025). \emph{Direction Dependence Analysis: Foundations and Statistical Methods}. Cambridge, UK: Cambridge University Press.
 #' @seealso \code{\link{dda.indep}} for an unconditional version.
