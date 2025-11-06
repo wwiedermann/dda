@@ -3,7 +3,6 @@
 #'              distributions for causally competing models
 #'              (\code{y ~ x} vs. \code{x ~ y}).
 #' @name dda.vardist
-#'
 #' @param formula     Symbolic formula of the model to be tested or a \code{lm}object.
 #' @param pred        Variable name of the predictor which serves as the outcome in the alternative model.
 #' @param data        An optional data frame containing the variables in the
@@ -13,7 +12,7 @@
 #' @param boot.type   A character indicating the type of bootstrap confidence intervals. Must be one of c("perc","bca"). Default is "perc".
 #' @param conf.level  Confidence level for bootstrap confidence intervals.
 #'
-#' @returns An object of class \code{dda.vardist} containing the results of  
+#' @returns An object of class \code{dda.vardist} containing the results of
 #'          direction dependence tests of variable distributions.
 #'
 #' @examples
@@ -29,26 +28,15 @@
 #' @seealso \code{\link{cdda.vardist}} for a conditional version.
 #' @export
 #' @rdname dda.vardist
-<<<<<<< Updated upstream
+#'
 dda.vardist <- function(
     formula,
     pred = NULL,
     data = list(),
     B = 200,
     boot.type = "perc",
-    conf.level = 0.95,
-    ...
-) {
-=======
-dda.vardist <- function(formula,
-                        pred = NULL,
-                        data = list(),
-                        B = 200,
-                        boot.type = "perc",
-                        conf.level = 0.95
-                        ){
->>>>>>> Stashed changes
-
+    conf.level = 0.95
+    ){
   # --- helper functions for bootstrap CIs
 
   mysd <- function(x) sqrt(sum((x - mean(x))^2) / length(x))

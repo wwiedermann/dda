@@ -7,7 +7,7 @@
 #' @param data         An optional data frame containing the variables in the model (by default variables are taken from the environment which \code{dda.indep} is called from).
 #' @param nlfun        Either a numeric value or a function of .Primitive type used for non-linear correlation tests. When \code{nlfun} is numeric the value is used in a power transformation.
 #' @param hetero       A logical value indicating whether separate homoscedasticity tests (i.e., standard and robust Breusch-Pagan tests) should be computed.
-#' @param hsic.method  A character indicating the inference method for the Hilbert-Schmidt Independence Criterion (HSIC). Must be one of the four specifications \code{c("gamma", "eigenvalue", "boot", "permutation")}. \code{hsic.method = "gamma"}is the default.
+#' @param hsic.method  A character indicating the inference method for the Hilbert-Schmidt Independence Criterion (HSIC). Must be one of the four specifications \code{c("gamma", "eigenvalue", "bootstrap", "permutation")}. \code{hsic.method = "gamma"}is the default.
 #' @param diff         A logical value indicating whether differences in HSIC, Distance Correlation (dCor), and MI values should be computed. Bootstrap confidence intervals are computed using B bootstrap samples.
 #' @param B            Number of permutations for separate dCor tests and number of resamples if \code{hsic.method = c("boot", "permutation")} or \code{diff = TRUE}.
 #' @param boot.type    A vector of character strings representing the type of bootstrap confidence intervals. Must be one of the two specifications \code{c("perc", "bca")}.\code{boot.type = "perc"} is the default.
@@ -15,9 +15,9 @@
 #' @param parallelize  A logical value indicating whether bootstrapping is performed on multiple cores. Only used if \code{diff = TRUE}.
 #' @param cores        A numeric value indicating the number of cores. Only used if \code{parallelize = TRUE}.
 #'
-#' @returns An object of class \code{dda.indep} containing the results of 
+#' @returns An object of class \code{dda.indep} containing the results of
 #'          independence tests of Direction Dependence Analysis.
-#' 
+#'
 #' @references Wiedermann, W., & von Eye, A. (2025). \emph{Direction Dependence Analysis: Foundations and Statistical Methods}. Cambridge, UK: Cambridge University Press.
 #'
 #' @examples

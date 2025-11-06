@@ -28,7 +28,8 @@ cdda.vardist(
 \arguments{
 \item{formula}{Symbolic formula of the model to be tested or a \code{lm} object}
 
-\item{pred}{A character indicating the variable name of the predictor which serves as the outcome in the alternative model.}
+\item{pred}{A character indicating the variable name of the predictor 
+which serves as the outcome in the alternative model.}
 
 \item{mod}{A character indicating the variable name of the moderator.}
 
@@ -72,20 +73,18 @@ pick-a-point approach is used for the selected numeric values.}
 \item{cokurt}{A logical value indicating whether co-kurtosis differences should be returned when using \code{summary}, default is \code{FALSE}.}
 }
 \value{
-A list of class \code{cdda.vardist} containing the results of
-         CDDA tests to evaluate distributional properties of observed
-         variables for pre-specified moderator values.
+An object of class \code{cdda.vardist} containing the results of  
+         conditional direction dependence tests of variable distributions.
 }
 \description{
-\code{cdda.vardist} computes DDA test statistics for observed
-             variable distributions of competing conditional models
-             (\code{y ~ x * m} vs.\code{x ~ y * m} with \code{m}
+\code{cdda.vardist} evaluates variable distributions of competing 
+             conditional models (\code{y ~ x * m} vs.\code{x ~ y * m} with \code{m}
              being a continuous or categorical moderator).
 
 \code{print} returns the output of standard linear model coefficients
              for competing target and alternative models.
 
-\code{plot} returns graphs for CDDA test statistics obtained from competing conditional models.
+\code{plot} returns graphs for results of \code{cdda.vardist}.
 
 \code{summary} returns test statistics from the \code{cdda.vardist} class object.
 }
