@@ -1,7 +1,6 @@
 #' @title Direction Dependence Analysis: Independence Properties
 #' @description \code{dda.indep} evaluates asymmetries of predictor-error independence of
 #'              causally competing models (\code{y ~ x} vs. \code{x ~ y}).
-#'
 #' @param formula      Symbolic formula of the model to be tested or a \code{lm} object.
 #' @param pred         A character indicating the variable name of the predictor which serves as the outcome in the alternative model.
 #' @param data         An optional data frame containing the variables in the model (by default variables are taken from the environment which \code{dda.indep} is called from).
@@ -9,7 +8,7 @@
 #' @param hetero       A logical value indicating whether separate homoscedasticity tests (i.e., standard and robust Breusch-Pagan tests) should be computed.
 #' @param hsic.method  A character indicating the inference method for the Hilbert-Schmidt Independence Criterion (HSIC). Must be one of the four specifications \code{c("gamma", "eigenvalue", "bootstrap", "permutation")}. \code{hsic.method = "gamma"}is the default.
 #' @param diff         A logical value indicating whether differences in HSIC, Distance Correlation (dCor), and MI values should be computed. Bootstrap confidence intervals are computed using B bootstrap samples.
-#' @param B            Number of permutations for separate dCor tests and number of resamples if \code{hsic.method = c("boot", "permutation")} or \code{diff = TRUE}.
+#' @param B            Number of permutations for separate dCor tests and number of resamples if \code{hsic.method = c("bootstrap", "permutation")} or \code{diff = TRUE}.
 #' @param boot.type    A vector of character strings representing the type of bootstrap confidence intervals. Must be one of the two specifications \code{c("perc", "bca")}.\code{boot.type = "perc"} is the default.
 #' @param conf.level   Confidence level for bootstrap confidence intervals.
 #' @param parallelize  A logical value indicating whether bootstrapping is performed on multiple cores. Only used if \code{diff = TRUE}.
@@ -150,7 +149,7 @@ dda.indep <- function(
 	if( !boot.type %in% c("bca", "perc") ) stop( "Unknown argument in boot.type." )
 
 	if( !is.null(hsic.method)){
-	    if (!hsic.method %in% c(NULL, "gamma", "boot", "permutation", "eigenvalue")) stop( "Unknown argument in hsic.method.")
+	    if (!hsic.method %in% c(NULL, "gamma", "bootstrap", "permutation", "eigenvalue")) stop( "Unknown argument in hsic.method.")
 	}
 
 	### --- prepare outcome, predictor, and model matrix for covariates
@@ -204,7 +203,7 @@ dda.indep <- function(
 	}
 
 
-	if(hsic.method %in% c("boot", "permutation")){
+	if(hsic.method %in% c("bootstrap", "permutation")){
 
 	   hsic.yx <- dHSIC::dhsic.test(rx, err.yx, method = hsic.method, kernel = "gaussian", B = B)
 	   hsic.xy <- dHSIC::dhsic.test(ry, err.xy, method = hsic.method, kernel = "gaussian", B = B)
@@ -331,7 +330,7 @@ print.dda.indep <- function(x, ...){
 	 cat("Omnibus Independence Tests:", "\n")
 
 	 #if(x$hsic.method[1] == "gamma") cat("Hilbert-Schmidt Independence Criterion: Gamma-Approximation", "\n")
-	 #if(x$hsic.method[1] == "boot") cat(paste("Hilbert-Schmidt Independence Criterion: Bootstrap-Approximation", " (", x$hsic.method[2], " resamples)", sep = ""), "\n")
+	 #if(x$hsic.method[1] == "bootstrap") cat(paste("Hilbert-Schmidt Independence Criterion: Bootstrap-Approximation", " (", x$hsic.method[2], " resamples)", sep = ""), "\n")
 
 	 cat(paste("HSIC = ", round(x$hsic.yx$statistic, 4), ", p-value = ", round(x$hsic.yx$p.value, 4), sep = ""))
 	 cat("\n")
@@ -390,7 +389,7 @@ print.dda.indep <- function(x, ...){
 	 cat("Omnibus Independence Tests:", "\n")
 
 	 #if(x$hsic.method[1] == "gamma") cat("Hilbert-Schmidt Independence Criterion: Gamma-Approximation", "\n")
-	 #if(x$hsic.method[1] == "boot") cat(paste("Hilbert-Schmidt Independence Criterion: Bootstrap-Approximation", " (", x$hsic.method[2], " resamples)", sep = ""), "\n")
+	 #if(x$hsic.method[1] == "bootstrap") cat(paste("Hilbert-Schmidt Independence Criterion: Bootstrap-Approximation", " (", x$hsic.method[2], " resamples)", sep = ""), "\n")
 
 	 cat(paste("HSIC = ", round(x$hsic.xy$statistic, 4), ", p-value = ", round(x$hsic.xy$p.value, 4), sep = ""))
 	 cat("\n")
