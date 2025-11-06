@@ -102,20 +102,19 @@ pick-a-point approach is used for the selected numeric values.}
 \item{mi.diff}{A logical value indicating whether Mutual Information (MI) difference statistics should be returned when using \code{summary}, default is \code{FALSE}.}
 }
 \value{
-A list of class \code{cdda.indep} containing the results of CDDA
-         independence tests for pre-specified moderator values.
+An object of class \code{dda.indep} containing the results of 
+         independence tests of Conditional Direction Dependence Analysis.
 
 An object of class \code{cdda.indep} with competing model coefficients.
 }
 \description{
-\code{cdda.indep} computes CDDA test statistics to
-             evaluate asymmetries of predictor-error independence of competing
+\code{cdda.indep} evaluates asymmetries of predictor-error independence of competing
              conditional models (\code{y ~ x * m} vs. \code{x ~ y * m}
              with \code{m} being a continuous or categorical moderator).
 
 \code{print} returns the output of standard linear model coefficients for competing target and alternative models.
 
-\code{plot} returns graphs for CDDA test statistics obtained from competing conditional models.
+\code{plot} returns graphs for results of \code{cdda.indep}.
 
 \code{summary} returns test statistics from the \code{cdda.indep} class object.
 }
@@ -158,7 +157,8 @@ result <- cdda.indep(m,
                      parallelize = TRUE,
                      cores = 2,
                      nlfun = 2,
-                     B = 50)
+                     B = 2) 
+# Note: Only 2 bootstrap samples are created here to lower computation time
 
 
 print(result)

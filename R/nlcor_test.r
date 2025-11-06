@@ -1,7 +1,6 @@
 #' @title Non-linear correlation (nlcor) tests
 #' @description The function \code{nlcor.test} computes non-linear correlation
-#'              tests between two variables. The function can be used to test
-#'              for non-linear relationships between two variables. The function
+#'              tests between two variables. The function
 #'              returns the correlation coefficient, t-value, degrees of freedom,
 #'              and p-value for three different tests: (1) Correlation between
 #'              \code{x^fun} and \code{y}, (2) Correlation between \code{x} and
@@ -15,7 +14,9 @@
 #' @param y     a numeric vector representing the tentative outcome.
 #' @param fun   a numeric value or a function of .Primitive type used for non-linear correlation tests. When \code{fun} is numeric the value is used in a power transformation.
 #'
+#' @returns A list of class \code{dda.nlcor} containing the results of non-linear correlation tests.
 #' @noRd
+#'
 nlcor.test <- function(x, y, fun)
   {
   varnames <- c(deparse(substitute(x)), deparse(substitute(y)))

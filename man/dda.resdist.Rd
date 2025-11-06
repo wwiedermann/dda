@@ -44,13 +44,13 @@ skewness and kurtosis difference tests.}
 \item{...}{Additional arguments to be passed to the method.}
 }
 \value{
-An object of class \code{ddaresdist} containing the results of DDA
-          tests of asymmetry patterns of error distributions obtained from
-          the causally competing models.
+An object of class \code{ddaresdist} containing the results of  
+         direction dependence tests of error distributions.
 }
 \description{
 \code{dda.resdist} evaluates patterns of asymmetry of error
-distributions of causally competing models (\code{y ~ x} vs. \code{x ~ y}).
+             distributions of causally competing models (\code{y ~ x} 
+             vs. \code{x ~ y}).
 
 \code{print} returns DDA test statistics associated with \code{dda.resdist} objects.
 }

@@ -33,7 +33,7 @@ dda.indep(
 
 \item{hetero}{A logical value indicating whether separate homoscedasticity tests (i.e., standard and robust Breusch-Pagan tests) should be computed.}
 
-\item{hsic.method}{A character indicating the inference method for the Hilbert-Schmidt Independence Criterion (HSIC). Must be one of the four specifications \code{c("gamma", "eigenvalue", "boot", "permutation")}. \code{hsic.method = "gamma"}is the default.}
+\item{hsic.method}{A character indicating the inference method for the Hilbert-Schmidt Independence Criterion (HSIC). Must be one of the four specifications \code{c("gamma", "eigenvalue", "bootstrap", "permutation")}. \code{hsic.method = "gamma"}is the default.}
 
 \item{diff}{A logical value indicating whether differences in HSIC, Distance Correlation (dCor), and MI values should be computed. Bootstrap confidence intervals are computed using B bootstrap samples.}
 
@@ -52,11 +52,11 @@ dda.indep(
 \item{...}{Additional arguments to be passed to the function.}
 }
 \value{
-An object of class \code{dda.indep} containing the results of DDA independence tests.
+An object of class \code{dda.indep} containing the results of
+         independence tests of Direction Dependence Analysis.
 }
 \description{
-\code{dda.indep} computes DDA test statistics to
-             evaluate asymmetries of predictor-error independence of
+\code{dda.indep} evaluates asymmetries of predictor-error independence of
              causally competing models (\code{y ~ x} vs. \code{x ~ y}).
 
 \code{print} returns DDA test statistics associated with \code{dda.indep} objects.
