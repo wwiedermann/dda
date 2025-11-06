@@ -1,6 +1,6 @@
 #' @title Direction Dependence Analysis: Residual Distributions
 #' @description \code{dda.resdist} evaluates patterns of asymmetry of error
-#'              distributions of causally competing models (\code{y ~ x} 
+#'              distributions of causally competing models (\code{y ~ x}
 #'              vs. \code{x ~ y}).
 #' @name dda.resdist
 #'
@@ -20,7 +20,7 @@
 #' @param conf.level  Confidence level for bootstrap confidence intervals.
 #' @param ...         Additional arguments to be passed to the function.
 #'
-#' @returns An object of class \code{ddaresdist} containing the results of  
+#' @returns An object of class \code{ddaresdist} containing the results of
 #'          direction dependence tests of error distributions.
 #'
 #' @examples
@@ -37,12 +37,12 @@
 #' @references Wiedermann, W., & von Eye, A. (2025). Direction Dependence Analysis: Foundations and Statistical Methods. Cambridge, UK: Cambridge University Press.
 #' @export
 #' @rdname dda.resdist
-dda.resdist <- function(formula, 
-                        pred = NULL, 
-                        data = list(), 
+dda.resdist <- function(formula,
+                        pred = NULL,
+                        data = list(),
                         B = 200,
-                        boot.type = "perc", 
-                        prob.trans = FALSE, 
+                        boot.type = "perc",
+                        prob.trans = FALSE,
                         conf.level = 0.95
                         ){
 
@@ -79,7 +79,7 @@ dda.resdist <- function(formula,
     x <- as.vector(scale(x))
     y <- as.vector(scale(y))
 
-    if(prob.trans == TRUE){
+    if( isTRUE(prob.trans) ){
 
       xboot <- dat[, 3] # tentative (cov-adjusted) predictor
       yboot <- dat[, 4] # tentative (cov-adjusted) outcome
@@ -264,7 +264,7 @@ dda.resdist <- function(formula,
                     out.adj = ry
   )  # note: residuals are standardized prior DDA
 
-  if( prob.trans == TRUE ){
+  if( isTRUE(prob.trans) ){
 
     trans <- prob.int(rx, ry)
     rx.trans <- trans$x
@@ -280,7 +280,7 @@ dda.resdist <- function(formula,
 
   ### --- run separate normality tests
 
-  if(prob.trans == TRUE){
+  if( isTRUE(prob.trans) ){
 
     agostino.out <- apply(dat[c("alternative.trans", "target.trans")], 2, moments::agostino.test)
     names(agostino.out) <- c("alternative", "target")
@@ -337,34 +337,45 @@ dda.resdist <- function(formula,
 
   ### --- run bootstrap confidence intervals
 
-  if (B > 0) {
-    # Pass prob.trans through boot so it reaches boot.diff
-    suppressWarnings(boot.res <- boot::boot(dat, boot.diff, R = B, prob.trans = prob.trans))
+  if(B > 0){
+    # suppressWarnings(boot.res <- boot::boot(dat, boot.diff, R = B, prob.trans = prob.trans))
+    #
+    # if( boot.type == "bca" && any( is.na( boot::empinf( boot.res ) ) ) ) stop("Acceleration constant cannot be calculated. Increase the number of resamples or use boot.type = 'perc'")
+    # suppressWarnings(boot.out <- lapply(as.list(1:7), function(i, boot.res) boot::boot.ci(boot.res, conf=conf.level, type=boot.type, t0=boot.res$t0[i], t=boot.res$t[,i]), boot.res=boot.res))
 
-    # If BCa is requested, try to run it safely first
-    if (boot.type == "bca") {
-      boot.out <- tryCatch({
-        suppressWarnings(lapply(as.list(1:7), function(i, res) {
-          boot::boot.ci(res, conf = conf.level, type = "bca", t0 = res$t0[i], t = res$t[, i])
-        }, res = boot.res))
-      }, error = function(e) {
-        # If ANY index fails, trigger warning and return NULL to signal fallback needed
-        warning("Acceleration constant cannot be calculated. Falling back to percentile bootstrap method. Consider increasing the number of resamples (B) for more stable results.", call. = FALSE)
-        return(NULL)
-      })
-
-      # If it failed (returned NULL), update boot.type to trigger the fallback below
-      if (is.null(boot.out)) {
-        boot.type <- "perc"
-      }
+    if( boot.type == "bca"){
+      boot.out <- suppressWarnings( try(
+        lapply(as.list(1:7), function(i, boot.res) boot.ci(boot.res, conf=conf.level, type="bca", t0=boot.res$t0[i], t=boot.res$t[,i]), boot.res=boot.res), silent = TRUE))
+      if (inherits(boot.out, "try-error")) { stop("Acceleration constant cannot be calculated. Increase the number of resamples or use boot.type = 'perc'") }
     }
 
-    # Run standard if it wasn't BCa originally OR if BCa failed above
-    if (boot.type != "bca") {
-      suppressWarnings(boot.out <- lapply(as.list(1:7), function(i, res) {
-        boot::boot.ci(res, conf = conf.level, type = boot.type, t0 = res$t0[i], t = res$t[, i])
-      }, res = boot.res))
+    if( boot.type == "perc"){
+      suppressWarnings(boot.out <- lapply(as.list(1:7), function(i, boot.res) boot.ci(boot.res, conf=conf.level, type="perc", t0=boot.res$t0[i], t=boot.res$t[,i]), boot.res=boot.res))
     }
+
+    names(boot.out) <- c("skew.diff", "kurt.diff", "cor12.diff", "cor13.diff", "RHS3", "RCC", "RHS4")
+
+    ci.skewdiff  <- unclass(boot.out$skew.diff)[[4]][4:5] ; names(ci.skewdiff) <- c("lower", "upper")
+    ci.kurtdiff  <- unclass(boot.out$kurt.diff)[[4]][4:5] ; names(ci.kurtdiff) <- c("lower", "upper")
+    ci.cor12diff <- unclass(boot.out$cor12.diff)[[4]][4:5] ; names(ci.cor12diff) <- c("lower", "upper")
+    ci.cor13diff <- unclass(boot.out$cor13.diff)[[4]][4:5] ; names(ci.cor13diff) <- c("lower", "upper")
+    ci.RHS3      <- unclass(boot.out$RHS3)[[4]][4:5] ; names(ci.RHS3) <- c("lower", "upper")
+    ci.RCC       <- unclass(boot.out$RCC)[[4]][4:5] ; names(ci.RCC) <- c("lower", "upper")
+    ci.RHS4      <- unclass(boot.out$RHS4)[[4]][4:5] ; names(ci.RHS4) <- c("lower", "upper")
+
+    output$skewdiff <- c(output$skewdiff, ci.skewdiff)
+    output$kurtdiff <-	c(output$kurtdiff, ci.kurtdiff)
+
+    output <- c(output,
+                list(cor12diff = c(boot.res$t0[3], ci.cor12diff)),
+                list(cor13diff = c(boot.res$t0[4], ci.cor13diff)),
+                list(RHS3 = c(boot.res$t0[5], ci.RHS3)),
+                list(RCC = c(boot.res$t0[6], ci.RCC)),
+                list(RHS4 = c(boot.res$t0[7], ci.RHS4)),
+                list(boot.args = c(boot.type, conf.level, B)),
+                list(boot.warning = FALSE)
+    )
+    if(sign(output$anscombe$alternative$statistic[1]) != sign(output$anscombe$target$statistic[1])) { output$boot.warning <- TRUE }
   }
 
   response.name <- all.vars(formula(formula))[1]  # get name of response variable
@@ -477,7 +488,7 @@ print.dda.resdist <- function(x, ...){
     cat(paste("      Under prob.trans = TRUE, skewness and kurtosis differences < 0 and", "\n", "     co-skewness and co-kurtosis differences > 0 suggest", varnames[2], "->", varnames[1], sep = " "))
   }
   cat("\n")
-  if (isTRUE(object$boot.warning)){ cat("Warning: Excess-kurtosis values of residuals have unequal signs", "\n", "        Also compute Co-Kurtosis and Hyvarinen-Smith Co-Kurtosis for", varnames[1], "->", varnames[2], "\n") }
+  if(object$boot.warning) { cat("Warning: Excess-kurtosis values of residuals have unequal signs", "\n", "        Also compute Co-Kurtosis and Hyvarinen-Smith Co-Kurtosis for", varnames[1], "->", varnames[2], "\n") }
 	cat("\n")
   }
 
