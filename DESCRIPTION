@@ -4,7 +4,7 @@ Title: Direction Dependence Analysis
 Version: 0.1.0
 License: MIT + file LICENSE
 Authors@R: c(
-    person("Wolfgang", "Wiedermann", email = "wiedermannw@missouri.edu",
+    person("Wolfgang", "Wiedermann", email = "mj.hirni@missouri.edu",
            role = c("aut", "cre")),
     person("Megan", "Hirni", email = "mjhirni@outlook.com", role = "aut")
            )
