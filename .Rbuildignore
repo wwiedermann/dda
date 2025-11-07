@@ -8,3 +8,4 @@
 ^Meta$
 ^vignettes/articles$
 ^Rplots.pdf
+^cran-comments\.md$
