@@ -14,7 +14,7 @@ Imports: dHSIC, energy, foreach, graphics, methods, stats
 Suggests: boot, doParallel, devtools, interactions, iterators, lmtest,
         moments, spelling, testthat (>= 3.0.0), waldo
 Encoding: UTF-8
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.3
 Config/testthat/edition: 3
 URL: https://github.com/wwiedermann/dda
 NeedsCompilation: no

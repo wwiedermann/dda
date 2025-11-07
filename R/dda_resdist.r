@@ -338,19 +338,18 @@ dda.resdist <- function(formula,
   ### --- run bootstrap confidence intervals
 
   if(B > 0){
-    # suppressWarnings(boot.res <- boot::boot(dat, boot.diff, R = B, prob.trans = prob.trans))
-    #
+    suppressWarnings(boot.res <- boot::boot(dat, boot.diff, R = B, prob.trans = prob.trans))    #
     # if( boot.type == "bca" && any( is.na( boot::empinf( boot.res ) ) ) ) stop("Acceleration constant cannot be calculated. Increase the number of resamples or use boot.type = 'perc'")
     # suppressWarnings(boot.out <- lapply(as.list(1:7), function(i, boot.res) boot::boot.ci(boot.res, conf=conf.level, type=boot.type, t0=boot.res$t0[i], t=boot.res$t[,i]), boot.res=boot.res))
 
     if( boot.type == "bca"){
       boot.out <- suppressWarnings( try(
-        lapply(as.list(1:7), function(i, boot.res) boot.ci(boot.res, conf=conf.level, type="bca", t0=boot.res$t0[i], t=boot.res$t[,i]), boot.res=boot.res), silent = TRUE))
+        lapply(as.list(1:7), function(i, boot.res) boot::boot.ci(boot.res, conf=conf.level, type="bca", t0=boot.res$t0[i], t=boot.res$t[,i]), boot.res=boot.res), silent = TRUE))
       if (inherits(boot.out, "try-error")) { stop("Acceleration constant cannot be calculated. Increase the number of resamples or use boot.type = 'perc'") }
     }
 
     if( boot.type == "perc"){
-      suppressWarnings(boot.out <- lapply(as.list(1:7), function(i, boot.res) boot.ci(boot.res, conf=conf.level, type="perc", t0=boot.res$t0[i], t=boot.res$t[,i]), boot.res=boot.res))
+      suppressWarnings(boot.out <- lapply(as.list(1:7), function(i, boot.res) boot::boot.ci(boot.res, conf=conf.level, type="perc", t0=boot.res$t0[i], t=boot.res$t[,i]), boot.res=boot.res))
     }
 
     names(boot.out) <- c("skew.diff", "kurt.diff", "cor12.diff", "cor13.diff", "RHS3", "RCC", "RHS4")
