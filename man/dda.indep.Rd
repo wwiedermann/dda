@@ -37,7 +37,7 @@ dda.indep(
 
 \item{diff}{A logical value indicating whether differences in HSIC, Distance Correlation (dCor), and MI values should be computed. Bootstrap confidence intervals are computed using B bootstrap samples.}
 
-\item{B}{Number of permutations for separate dCor tests and number of resamples if \code{hsic.method = c("boot", "permutation")} or \code{diff = TRUE}.}
+\item{B}{Number of permutations for separate dCor tests and number of resamples if \code{hsic.method = c("bootstrap", "permutation")} or \code{diff = TRUE}.}
 
 \item{boot.type}{A vector of character strings representing the type of bootstrap confidence intervals. Must be one of the two specifications \code{c("perc", "bca")}.\code{boot.type = "perc"} is the default.}
 

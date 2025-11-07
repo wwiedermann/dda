@@ -27,7 +27,7 @@ which \code{dda.vardist} is called from).}
 
 \item{B}{Number of bootstrap samples.}
 
-\item{boot.type}{A character indicating the type of bootstrap confidence intervals. Must be one of c("perc","bca"). Default is "perc".}
+\item{boot.type}{A character indicating the type of bootstrap confidence intervals. Must be one of the two specifications c("perc", "bca"). boot.type = "perc" is the default.}
 
 \item{conf.level}{Confidence level for bootstrap confidence intervals.}
 
@@ -51,16 +51,18 @@ An object of class \code{dda.vardist}.
 \examples{
 set.seed(123)
 n <- 500
+
 x <- rchisq(n, df = 4) - 4
 e <- rchisq(n, df = 3) - 3
 y <- 0.5 * x + e
 d <- data.frame(x, y)
+
 result <- dda.vardist(y ~ x, pred = "x", data = d, B = 50)
 
-# print(result)
+print(result)
 }
 \references{
-Wiedermann, W., & von Eye, A. (2025). Direction Dependence Analysis: Foundations and Statistical Methods. Cambridge University Press.
+Wiedermann, W., & von Eye, A. (2025). \emph{Direction Dependence Analysis: Foundations and Statistical Methods}. Cambridge, UK: Cambridge University Press.
 }
 \seealso{
 \code{\link{cdda.vardist}} for a conditional version.
