@@ -6,15 +6,13 @@
 #'              \code{x^fun} and \code{y}, (2) Correlation between \code{x} and
 #'              \code{y^fun}, and (3) Correlation between \code{x^fun} and \code{y^fun}.
 #'
-#' @export
-#' @keywords internal
-#' @rdname nlcor.test
+#' @returns A list of class \code{dda.nlcor} containing the results of non-linear correlation tests.
 #'
 #' @param x     a numeric vector representing the tentative predictor.
 #' @param y     a numeric vector representing the tentative outcome.
 #' @param fun   a numeric value or a function of .Primitive type used for non-linear correlation tests. When \code{fun} is numeric the value is used in a power transformation.
 #'
-#' @returns A list of class \code{dda.nlcor} containing the results of non-linear correlation tests.
+#' @keywords internal
 #' @noRd
 #'
 nlcor.test <- function(x, y, fun)
