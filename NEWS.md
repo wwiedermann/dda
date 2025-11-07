@@ -2,31 +2,25 @@
 
 ---
 
+### Bug fixes
 
-### Error Patch
-
-- In `dda.indep` for the bootstrap HSIC method, now specify `hsic.method = "bootstrap"`.
-- `dda.vardist` and `dda.resdist` should now consistently return errors when bootstraps (`B`) are too low (specifically for `boot.type = "bca"`)
-
-
+- In `dda.indep` the bootstrap HSIC method argument is now `hsic.method = "bootstrap"` (previously `hsic.method = "boot"` in 0.1.0).
+- `dda.vardist` and `dda.resdist` now consistently throw an error when the number of bootstrap replications (`B`) is too low for `boot.type = "bca"` (previously behavior could be inconsistent).
 
 ## dda 0.1.0
 
 ---
 
-
-### Initial Release
+### Initial release
 
 - First CRAN release of `dda`.
-- Includes five core `dda` functions along with `print`, `summary`, and `plot` generics when applicable.
-- Documentation provided for all external functions.
-
+- Includes five core `dda` functions and S3 generics where applicable (`print`, `summary`, `plot`).
+- Documentation provided for all exported/user-facing functions.
 
 ## version 0.0.0.9000
 
 ---
 
-### NEWS.md setup
+### Development
 
-- added NEWS.md creation with [newsmd](https://github.com/Dschaykib/newsmd)
-
+- Added automatic NEWS.md creation using [newsmd](https://github.com/Dschaykib/newsmd).
