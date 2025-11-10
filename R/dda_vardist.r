@@ -142,7 +142,8 @@ dda.vardist <- function(formula,
 
    if(B > 0){
      boot.res <- boot::boot(dat, boot.diff, R = B)
-     #if( boot.type == "bca" && any( is.na( empinf( boot.res ) ) ) ) stop("Acceleration constant cannot be calculated. Increase the number of resamples or use boot.type = 'perc'")
+
+    #if( boot.type == "bca" && any( is.na( empinf( boot.res ) ) ) ) stop("Acceleration constant cannot be calculated. Increase the number of resamples or use boot.type = 'perc'")
      if( boot.type == "bca"){
        boot.out <- suppressWarnings( try(
          lapply(as.list(1:7), function(i, boot.res) boot::boot.ci(boot.res, conf=conf.level, type="bca", t0=boot.res$t0[i], t=boot.res$t[,i]), boot.res=boot.res), silent = TRUE))

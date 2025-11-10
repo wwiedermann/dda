@@ -1,5 +1,17 @@
 # cran-comments.md for dda (0.1.1)
 
+## R CMD check results
+
+0 errors | 0 warnings | 0 notes
+
+We saw 3 new problems:
+
+* dda.indep
+* dda.vardist
+* dda.resdist
+
+Both maintainers were notified on Oct 29 (~1 week ago) and supplied with patches.
+
 Package: dda
 Version: 0.1.1
 Date: 2025-11-07

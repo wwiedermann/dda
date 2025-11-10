@@ -1,5 +1,4 @@
 library(testthat)
-library(waldo)
 
 set.seed(123)
 
