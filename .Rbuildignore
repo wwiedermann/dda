@@ -9,3 +9,4 @@
 ^vignettes/articles$
 ^Rplots.pdf
 ^cran-comments\.md$
+^revdep$
