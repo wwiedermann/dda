@@ -67,7 +67,11 @@ pick-a-point approach is used for the selected numeric values.}
 
 \item{diff}{A logical value indicating whether differences in HSIC, dCor, and MI values should be computed. Bootstrap confidence intervals are computed using B bootstrap samples.}
 
-\item{nlfun}{A logical value indicating whether non-linear correlation tests should be returned when using \code{summary}, default is \code{FALSE}.}
+\item{nlfun}{Determines handling of non-linear correlation tests depending on the function used:
+\itemize{
+  \item \strong{For \code{cdda.indep}:} Either a numeric value or a function of .Primitive type used for non-linear correlation tests. When numeric, the value is used in a power transformation.
+  \item \strong{For \code{summary}:} A logical value indicating whether non-linear correlation tests should be returned in the output. Default is \code{FALSE}.
+}}
 
 \item{hsic.method}{A character indicating the inference method for the Hilbert-Schmidt Independence Criterion. Must be one of the four specifications \code{c("gamma", "eigenvalue", "boot", "permutation")}.\code{hsic.method = "gamma"} is the default.}
 

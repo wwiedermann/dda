@@ -3,7 +3,6 @@
 #' @name summary.cdda.indep
 #'
 #' @param object          An object of class \code{cdda.indep} when using \code{summary}.
-#' @param nlfun           A logical value indicating whether non-linear correlation tests should be returned when using \code{summary}, default is \code{FALSE}.
 #' @param hetero          A logical value indicating whether separate homoscedasticity tests should be returned when using \code{summary}, default is \code{FALSE}.
 #' @param hsic            A logical value indicating whether deparate HSIC tests should be returned when using \code{summary}, default is \code{TRUE}.
 #' @param hsic.diff       A logical value indicating whether HSIC difference statistics should be returned when using \code{summary}, default is \code{FALSE}.
@@ -17,14 +16,14 @@
 #' @export
 #' @rdname cdda.indep
 #' @method summary cdda.indep
-summary.cdda.indep <- function(object, 
-                               nlfun = FALSE, 
+summary.cdda.indep <- function(object,
+                               nlfun = FALSE,
                                hetero = FALSE,
                                hsic = TRUE,
-                               hsic.diff = FALSE, 
+                               hsic.diff = FALSE,
                                dcor = TRUE,
-                               dcor.diff = FALSE, 
-                               mi.diff = FALSE, 
+                               dcor.diff = FALSE,
+                               mi.diff = FALSE,
                                ...
                                ){
 

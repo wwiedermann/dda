@@ -1,6 +1,6 @@
 # cran-comments.md for dda (0.1.1)
 
-## R CMD check results
+### R CMD check results
 
 0 errors | 0 warnings | 0 notes
 
@@ -10,7 +10,7 @@ We saw 3 new problems:
 * dda.vardist
 * dda.resdist
 
-Both maintainers were notified on Oct 29 (~1 week ago) and supplied with patches.
+Both maintainers were notified on Oct 29 (~2 weeks ago) and supplied with patches.
 
 Package: dda
 Version: 0.1.1
@@ -21,7 +21,7 @@ Summary of changes
 - See NEWS.md for the changelog.
 
 Check results
-- Ran R CMD check --as-cran locally (Windows 11 and macOS Sequoia) plus on win-builder.
+- Ran R CMD check --as-cran locally (Windows 11 and macOS Ventura) plus on win-builder.
 - Tested on the current CRAN release platform(s) and on Windows via the win-builder service. 
 
 Package details for CRAN reviewers
@@ -32,4 +32,4 @@ Package details for CRAN reviewers
 
 Contact
 - Maintainer: Wolfgang Wiedermann (wiedermannw@missouri.edu)
-- If you need additional details, test logs, or versions of R used for testing, please let me know and I will provide them.
+- If you need additional details, test logs, or versions of R used for testing, please reach out through email.
