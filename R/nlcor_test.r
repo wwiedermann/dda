@@ -10,7 +10,7 @@
 #'
 #' @param x     a numeric vector representing the tentative predictor.
 #' @param y     a numeric vector representing the tentative outcome.
-#' @param fun   a numeric value or a function of .Primitive type used for non-linear correlation tests. When \code{fun} is numeric the value is used in a power transformation.
+#' @param fun   a numeric value or a function of .Primitive type used for non-linear correlation tests. When \code{fun} is numeric, the value is used in a power transformation.
 #'
 #' @keywords internal
 #' @noRd
@@ -73,12 +73,12 @@ nlcor.test <- function(x, y, fun)
   output
 }
 
-#' @title Print Method for \code{dda.nlcor} Objects
+#' @title Print Method for \code{nlcor.test} Objects
 #' @description Displays non-linear correlation tests results between two variables.
-#' @param x     An object of class \code{dda.nlcor}.
+#' @param x     An object of class \code{nlcor.test}.
 #' @param ...   Additional arguments to be passed to the function.
 #'
-#' @returns \code{dda.nlcor} test statistics and p-values.
+#' @returns \code{nlcor.test} test statistics and p-values.
 #'
 #' @export
 #' @rdname nlcor
