@@ -81,11 +81,11 @@ nlcor.test <- function(x, y, fun)
 #' @returns \code{dda.nlcor} test statistics and p-values.
 #'
 #' @export
-#' @rdname dda.nlcor
-#' @method print dda.nlcor
+#' @rdname nlcor
+#' @method print nlcor.test
 #'
 #' @noRd
-print.dda.nlcor <- function(x, ...) {
+print.nlcor.test <- function(x, ...) {
   varnames <- x$varnames
   sigtests <- rbind(x$t1, x$t2, x$t3)
   sigtests <- round(sigtests, 4)
