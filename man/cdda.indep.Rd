@@ -102,7 +102,7 @@ pick-a-point approach is used for the selected numeric values.}
 \item{mi.diff}{A logical value indicating whether Mutual Information (MI) difference statistics should be returned when using \code{summary}, default is \code{FALSE}.}
 }
 \value{
-An object of class \code{dda.indep} containing the results of 
+An object of class \code{dda.indep} containing the results of
          independence tests of Conditional Direction Dependence Analysis.
 
 An object of class \code{cdda.indep} with competing model coefficients.
@@ -157,7 +157,7 @@ result <- cdda.indep(m,
                      parallelize = TRUE,
                      cores = 2,
                      nlfun = 2,
-                     B = 2) 
+                     B = 2)
 # Note: Only 2 bootstrap samples are created here to lower computation time
 
 

@@ -22,7 +22,11 @@
 #' @param data        A required data frame containing the variables in the model.
 #' @param hetero      A logical value indicating whether separate homoscedasticity tests (i.e., standard and robust Breusch-Pagan tests) should be computed.
 #' @param diff        A logical value indicating whether differences in HSIC, dCor, and MI values should be computed. Bootstrap confidence intervals are computed using B bootstrap samples.
-#' @param nlfun       Either a numeric value or a function of .Primitive type used for non-linear correlation tests. When nlfun is numeric the value is used in a power transformation.
+#' @param nlfun Determines handling of non-linear correlation tests depending on the function used:
+#' \itemize{
+#'   \item \strong{For \code{cdda.indep}:} Either a numeric value or a function of .Primitive type used for non-linear correlation tests. When numeric, the value is used in a power transformation.
+#'   \item \strong{For \code{summary}:} A logical value indicating whether non-linear correlation tests should be returned in the output. Default is \code{FALSE}.
+#' }
 #' @param hsic.method A character indicating the inference method for the Hilbert-Schmidt Independence Criterion. Must be one of the four specifications \code{c("gamma", "eigenvalue", "boot", "permutation")}.\code{hsic.method = "gamma"} is the default.
 #' @param B           Number of permutations for separate dCor tests and number of resamples when \code{hsic.method = c("boot", "permutation")} or \code{diff = TRUE}.
 #' @param boot.type   A character indicating the type of bootstrap confidence intervals. Must be one of the two specifications \code{c("perc", "bca")}. \code{boot.type = "perc"} is the default.
@@ -30,7 +34,7 @@
 #' @param parallelize A logical value indicating whether bootstrapping is performed on multiple cores. Only used if \code{diff = TRUE}.
 #' @param cores       A numeric value indicating the number of cores. Only used if \code{parallelize = TRUE}.
 #'
-#' @returns An object of class \code{dda.indep} containing the results of 
+#' @returns An object of class \code{dda.indep} containing the results of
 #'          independence tests of Conditional Direction Dependence Analysis.
 #'
 #' @examples
@@ -72,9 +76,9 @@
 #'                      parallelize = TRUE,
 #'                      cores = 2,
 #'                      nlfun = 2,
-#'                      B = 2) 
+#'                      B = 2)
 #' # Note: Only 2 bootstrap samples are created here to lower computation time
-#' 
+#'
 #'
 #' @references Wiedermann, W., & von Eye, A. (2025). \emph{Direction Dependence Analysis: Foundations and Statistical Methods}. Cambridge, UK: Cambridge University Press.
 #' @seealso \code{\link{dda.indep}} for an unconditional version.
