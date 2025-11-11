@@ -6,6 +6,7 @@
 
 - In `dda.indep` the bootstrap HSIC method argument is now `hsic.method = "bootstrap"` (previously `hsic.method = "boot"` in 0.1.0).
 - `dda.vardist` and `dda.resdist` now consistently throw an error when the number of bootstrap replications (`B`) is too low for `boot.type = "bca"` (previously behaviour could be inconsistent).
+- Various minor documentation changes and clarifications.
 
 ## dda 0.1.0
 
@@ -23,4 +24,4 @@
 
 ### Development
 
-- Added automatic NEWS.md creation using [newsmd](https://github.com/Dschaykib/newsmd).
+- Added NEWS.md using [newsmd](https://github.com/Dschaykib/newsmd) package.
