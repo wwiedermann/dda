@@ -16,7 +16,7 @@ Useful links:
 
 }
 \author{
-\strong{Maintainer}: Wolfgang Wiedermann \email{mj.hirni@missouri.edu}
+\strong{Maintainer}: Wolfgang Wiedermann \email{wiedermannw@missouri.edu}
 
 Authors:
 \itemize{
