@@ -67,7 +67,11 @@ pick-a-point approach is used for the selected numeric values.}
 
 \item{diff}{A logical value indicating whether differences in HSIC, dCor, and MI values should be computed. Bootstrap confidence intervals are computed using B bootstrap samples.}
 
-\item{nlfun}{A logical value indicating whether non-linear correlation tests should be returned when using \code{summary}, default is \code{FALSE}.}
+\item{nlfun}{Determines handling of non-linear correlation tests depending on the function used:
+\itemize{
+  \item \strong{For \code{cdda.indep}:} Either a numeric value or a function of .Primitive type used for non-linear correlation tests. When numeric, the value is used in a power transformation.
+  \item \strong{For \code{summary}:} A logical value indicating whether non-linear correlation tests should be returned in the output. Default is \code{FALSE}.
+}}
 
 \item{hsic.method}{A character indicating the inference method for the Hilbert-Schmidt Independence Criterion. Must be one of the four specifications \code{c("gamma", "eigenvalue", "boot", "permutation")}.\code{hsic.method = "gamma"} is the default.}
 
@@ -102,7 +106,7 @@ pick-a-point approach is used for the selected numeric values.}
 \item{mi.diff}{A logical value indicating whether Mutual Information (MI) difference statistics should be returned when using \code{summary}, default is \code{FALSE}.}
 }
 \value{
-An object of class \code{dda.indep} containing the results of 
+An object of class \code{dda.indep} containing the results of
          independence tests of Conditional Direction Dependence Analysis.
 
 An object of class \code{cdda.indep} with competing model coefficients.
@@ -157,7 +161,7 @@ result <- cdda.indep(m,
                      parallelize = TRUE,
                      cores = 2,
                      nlfun = 2,
-                     B = 2) 
+                     B = 2)
 # Note: Only 2 bootstrap samples are created here to lower computation time
 
 
