@@ -1,20 +1,26 @@
 #' @title Non-linear correlation (nlcor) tests
-#' @description The function \code{nlcor.test} computes non-linear correlation
-#'              tests between two variables. The function
-#'              returns the correlation coefficient, t-value, degrees of freedom,
-#'              and p-value for three different tests: (1) Correlation between
-#'              \code{x^fun} and \code{y}, (2) Correlation between \code{x} and
-#'              \code{y^fun}, and (3) Correlation between \code{x^fun} and \code{y^fun}.
+#' @description The function \code{nlcor.test} computes non-linear
+#'              correlation tests between two variables. The function
+#'              returns the correlation coefficient, t-value, degrees
+#'              of freedom, and p-value for three different tests:
+#'              (1) Correlation between \code{x^fun} and \code{y},
+#'              (2) Correlation between \code{x} and \code{y^fun},
+#'              and (3) Correlation between \code{x^fun} and \code{y^fun},
+#'			        with \code{fun} being a pre-selected non-linear function.
 #'
-#' @returns A list of class \code{dda.nlcor} containing the results of non-linear correlation tests.
+#' @returns     A list of class \code{dda.nlcor} containing the results
+#'              of the non-linear correlation tests.
 #'
-#' @param x     a numeric vector representing the tentative predictor.
-#' @param y     a numeric vector representing the tentative outcome.
-#' @param fun   a numeric value or a function of .Primitive type used for non-linear correlation tests. When \code{fun} is numeric the value is used in a power transformation.
+#' @param x     numeric vectors of data values. Must have the same length as y.
+#' @param y     numeric vectors of data values. Must have the same length as x.
+#' @param fun   a numeric value or a function of .Primitive type used to compute
+#'              non-linear correlation tests. When \code{fun} is numeric,
+#'              the value is used in a power transformation.
 #'
 #' @keywords internal
 #' @noRd
 #'
+
 nlcor.test <- function(x, y, fun)
   {
   varnames <- c(deparse(substitute(x)), deparse(substitute(y)))
@@ -73,18 +79,19 @@ nlcor.test <- function(x, y, fun)
   output
 }
 
-#' @title Print Method for \code{dda.nlcor} Objects
-#' @description Displays non-linear correlation tests results between two variables.
-#' @param x     An object of class \code{dda.nlcor}.
+#' @title Print Method for \code{nlcor.test} Objects
+#' @description Displays non-linear correlation results between two variables.
+#' @param x     An object of class \code{nlcor.test}.
 #' @param ...   Additional arguments to be passed to the function.
 #'
-#' @returns \code{dda.nlcor} test statistics and p-values.
+#' @returns \code{nlcor.test} test statistics and p-values.
 #'
 #' @export
-#' @rdname dda.nlcor
-#' @method print dda.nlcor
+#' @rdname nlcor
+#' @method print nlcor.test
 #'
 #' @noRd
+#'
 print.dda.nlcor <- function(x, ...) {
   varnames <- x$varnames
   sigtests <- rbind(x$t1, x$t2, x$t3)
