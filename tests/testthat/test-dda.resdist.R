@@ -56,3 +56,37 @@ test_that("dda.resdist print works", {
   # Verify that print can run without issues
   expect_output(print(test.dda.resdist))
 })
+
+# --- New: tests for error when BCa acceleration cannot be calculated ---
+
+test_that("dda.resdist errors when B is too small for bca (prob.trans = FALSE)", {
+  # With too few resamples, BCa acceleration constant cannot be calculated.
+  expect_error(
+    dda.resdist(
+      y ~ x,
+      pred = "x",
+      B = 50,
+      data = dat,
+      conf.level = 0.90,
+      boot.type = "bca",
+      prob.trans = FALSE
+    ),
+    regexp = "Acceleration constant cannot be calculated"
+  )
+})
+
+test_that("dda.resdist errors when B is too small for bca (prob.trans = TRUE)", {
+  # Same error expected when prob.trans = TRUE.
+  expect_error(
+    dda.resdist(
+      y ~ x,
+      pred = "x",
+      B = 50,
+      data = dat,
+      conf.level = 0.90,
+      boot.type = "bca",
+      prob.trans = TRUE
+    ),
+    regexp = "Acceleration constant cannot be calculated"
+  )
+})
