@@ -86,10 +86,10 @@ nlcor.test <- function(x, y, fun)
 #'
 #' @returns \code{nlcor.test} test statistics and p-values.
 #'
-#' @export
 #' @rdname nlcor
 #' @method print nlcor.test
 #'
+#' @keywords internal
 #' @noRd
 #'
 print.dda.nlcor <- function(x, ...) {

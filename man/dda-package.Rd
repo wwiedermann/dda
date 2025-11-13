@@ -12,6 +12,7 @@ A collection of tests to analyze the causal direction of dependence in linear mo
 Useful links:
 \itemize{
   \item \url{https://github.com/wwiedermann/dda}
+  \item Report bugs at \url{https://github.com/wwiedermann/dda/issues}
 }
 
 }
