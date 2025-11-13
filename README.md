@@ -8,7 +8,7 @@ Direction Dependence Analysis (Package: \code{dda}) provides framework for analy
 * `dda.resdist()` residual distribution tests, including D'Agostino and Anscombe–Glynn tests and bootstrap CIs on higher moment differences
 * `dda.vardist()` variable distribution‐based tests, including D'Agostino and Anscombe–Glynn tests and bootstrap CIs on higher moment differences
 
-If you are new to Direction Dependence Analysis (DDA) concepts, the best place to start is the [Direction Dependence in Statistical Modeling: Methods of Analysis](https://onlinelibrary.wiley.com/doi/book/10.1002/9781119523024) text.
+If you are new to Direction Dependence Analysis (DDA) concepts, the best place to start is the [Direction Dependence in Statistical Modeling: Methods of Analysis](https://www.cambridge.org/us/universitypress/subjects/psychology/psychology-research-methods-and-statistics/direction-dependence-analysis-foundations-and-statistical-methods) text.
 
 ## Installation
 
