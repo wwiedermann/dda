@@ -11,34 +11,17 @@ summary.dda_bagging_indep <- function(object, ...) {
     for (dname in names(decisions)) {
       prop <- decisions[[dname]]
 
-      # Initialize with 0 for all expected categories
-      out <- c("Undecided" = 0, "Target" = 0, "Alternative" = 0)
+      # Prepare title
+      cat(paste0("$", dname), "\n")
+      cat("x\n")
 
-      # Map internal names to display names
-      # internal: "undecided", "x->y", "y->x"
-      # display:  "Undecided", "Target", "Alternative"
-
-      if (!is.null(prop) && length(prop) > 0) {
-        if ("undecided" %in% names(prop)) out["Undecided"] <- prop["undecided"]
-        if ("x->y" %in% names(prop))      out["Target"]    <- prop["x->y"]
-        if ("y->x" %in% names(prop))      out["Alternative"] <- prop["y->x"]
-      }
-
-      # Mapping internal stat names to display headers
-      display_name <- switch(dname,
-                             "hsic" = "$hsic",
-                             "dcor" = "$dcor",
-                             dname)
-
-      cat(display_name, "\n")
-
-      # Create a clean data.frame for printing
-      # Using data.frame handles column alignment automatically
+      # Format into a data frame for clean printing
+      # prop is named c("Undecided", "Target", "Alternative")
       df_print <- data.frame(
-        Undecided = sprintf("%.2f", out["Undecided"]),
-        Target    = sprintf("%.2f", out["Target"]),
-        Alternative = sprintf("%.2f", out["Alternative"]),
-        row.names = "x"
+        Undecided   = sprintf("%.2f", prop["Undecided"]),
+        Target      = sprintf("%.2f", prop["Target"]),
+        Alternative = sprintf("%.2f", prop["Alternative"]),
+        row.names   = "" # suppress row names
       )
 
       print(df_print)
@@ -63,21 +46,14 @@ summary.dda_bagging_vardist <- function(object, ...) {
     for (dname in names(decisions)) {
       prop <- decisions[[dname]]
 
-      out <- c("Undecided" = 0, "Target" = 0, "Alternative" = 0)
-
-      if (!is.null(prop) && length(prop) > 0) {
-        if ("undecided" %in% names(prop)) out["Undecided"] <- prop["undecided"]
-        if ("x->y" %in% names(prop))      out["Target"]    <- prop["x->y"]
-        if ("y->x" %in% names(prop))      out["Alternative"] <- prop["y->x"]
-      }
-
       cat(paste0("$", dname), "\n")
+      cat("x\n")
 
       df_print <- data.frame(
-        Undecided = sprintf("%.2f", out["Undecided"]),
-        Target    = sprintf("%.2f", out["Target"]),
-        Alternative = sprintf("%.2f", out["Alternative"]),
-        row.names = "x"
+        Undecided   = sprintf("%.2f", prop["Undecided"]),
+        Target      = sprintf("%.2f", prop["Target"]),
+        Alternative = sprintf("%.2f", prop["Alternative"]),
+        row.names   = ""
       )
 
       print(df_print)
@@ -101,21 +77,15 @@ summary.dda_bagging_resdist <- function(object, ...) {
   if (!is.null(decisions) && length(decisions) > 0) {
     for (dname in names(decisions)) {
       prop <- decisions[[dname]]
-      out <- c("Undecided" = 0, "Target" = 0, "Alternative" = 0)
-
-      if (!is.null(prop) && length(prop) > 0) {
-        if ("undecided" %in% names(prop)) out["Undecided"] <- prop["undecided"]
-        if ("x->y" %in% names(prop))      out["Target"]    <- prop["x->y"]
-        if ("y->x" %in% names(prop))      out["Alternative"] <- prop["y->x"]
-      }
 
       cat(paste0("$", dname), "\n")
+      cat("x\n")
 
       df_print <- data.frame(
-        Undecided = sprintf("%.2f", out["Undecided"]),
-        Target    = sprintf("%.2f", out["Target"]),
-        Alternative = sprintf("%.2f", out["Alternative"]),
-        row.names = "x"
+        Undecided   = sprintf("%.2f", prop["Undecided"]),
+        Target      = sprintf("%.2f", prop["Target"]),
+        Alternative = sprintf("%.2f", prop["Alternative"]),
+        row.names   = ""
       )
 
       print(df_print)
