@@ -1,9 +1,3 @@
-### TO DO:
-### Get output to match classic print styles for
-### dda.resdist and dda.vardist and dda.indep
-
-
-
 #' Summary for dda_bagging Output (INDEP, robust S3, no type check)
 #'
 #' @param object Output from dda_bagging() for dda.indep objects (class: dda_bagging_indep)
