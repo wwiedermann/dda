@@ -112,25 +112,29 @@ dda.vardist <- function(formula,
 		   if (!is.matrix(X)) X <- as.matrix(X)
 	}
 
+
   ry <- lm.fit(X, y)$residuals
 	rx <- lm.fit(X, x)$residuals
 
 	ry <- as.vector(scale(ry))
 	rx <- as.vector(scale(rx))
 
-	dat <- data.frame(predictor = rx, outcome = ry)
+
+
+
+    dat <- data.frame(predictor = rx, outcome = ry)
 
 	### --- run separate normality tests
 
 	agostino.out <- apply(dat, 2, moments::agostino.test)
 	agostino.out <- lapply(agostino.out, unclass)
 	agostino.out$predictor[3:5] <- NULL
-    agostino.out$outcome[3:5] <- NULL
+  agostino.out$outcome[3:5] <- NULL
 
 	anscombe.out <- apply(dat, 2, moments::anscombe.test)
 	anscombe.out <- lapply(anscombe.out, unclass)
 	anscombe.out$predictor[3:5] <- NULL
-    anscombe.out$outcome[3:5] <- NULL
+  anscombe.out$outcome[3:5] <- NULL
 
 	output <- list(agostino.out, anscombe.out)
 	names(output) <- c("agostino", "anscombe")
@@ -181,6 +185,19 @@ dda.vardist <- function(formula,
 
 	response.name <- all.vars(formula(formula))[1]  # get name of response variable
 	output <- c(output, list(var.names = c(response.name, pred)))
+
+	call_info <- list(
+	  "function_call" = match.call(),
+	  "function_name" = "dda.vardist",  # or deparse(substitute(sys.function()))
+	  "all_args" = as.list(match.call())[-1],
+	  "formula" = formula,
+	  "data_name" = deparse(substitute(data)),
+	  "original_data" = if(missing(data) || is.null(data)) NULL else data
+	)
+
+	output <- c(output,
+	            list(call_info = call_info)
+	           )
 
 	class(output) <- "dda.vardist"
 	return(output)

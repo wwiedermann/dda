@@ -13,10 +13,10 @@
 #' @param conf.level   Confidence level for bootstrap confidence intervals.
 #' @param parallelize  A logical value indicating whether bootstrapping is performed on multiple cores. Only used if \code{diff = TRUE}.
 #' @param cores        A numeric value indicating the number of cores. Only used if \code{parallelize = TRUE}.
+#' @param robust       A logical value indicating whether Siegel non-parametric estimators should be used for residual extraction. If \code{robust = TRUE} Seigel estimation is used, otherwise ordinary least squares estimation is used.
 #'
-#' @returns An object of class \code{dda.indep} containing the results of
-#'          independence tests of Direction Dependence Analysis.
-#'
+#' @returns
+#' An object of class \code{dda.indep} containing the results of DDA independence tests.
 #' @references Wiedermann, W., & von Eye, A. (2025). \emph{Direction Dependence Analysis: Foundations and Statistical Methods}. Cambridge, UK: Cambridge University Press.
 #'
 #' @examples
@@ -35,6 +35,7 @@
 #' @seealso \code{\link{cdda.indep}} for a conditional version.
 #' @export
 #' @rdname dda.indep
+#'
 dda.indep <- function(
              formula,
              pred = NULL,
@@ -47,8 +48,9 @@ dda.indep <- function(
              boot.type = "perc",
              conf.level = 0.95,
              parallelize = FALSE,
-             cores = 1
-             ){
+             cores = 1,
+             robust = FALSE)
+  {
 
    ### --- helper functions for independence difference statistics
 
@@ -182,12 +184,25 @@ dda.indep <- function(
 
   ry <- lm.fit(X, y)$residuals
 	rx <- lm.fit(X, x)$residuals
-	#add logical indicator: if robust = TRUE
 
-	m.yx <- lm(ry ~ rx)
-	m.xy <- lm(rx ~ ry)
+	resid_df <- data.frame(ry, rx) # create data frame with residuals
 
-	err.yx <- resid(m.yx) #check here
+	if (robust == TRUE){ #use lm::bptest and edit the resi line, no wts necessary
+	  # m.yx <- mblm::mblm(ry ~ rx, repeated = TRUE)
+	   m.yx <- RobustLinearReg::siegel_regression(ry ~ rx)
+
+	  # m.xy <- mblm::mblm(rx ~ ry, repeated = TRUE)
+	   m.xy <- RobustLinearReg::siegel_regression(rx ~ ry)
+	}
+
+	else if (robust == FALSE) {
+	  m.yx <- lm(ry ~ rx)
+	  m.xy <- lm(rx ~ ry)
+	}
+
+	else stop("Invalid specification for robust argument. Please use TRUE or FALSE.")
+
+	err.yx <- resid(m.yx)
 	err.xy <- resid(m.xy)
 
 
@@ -217,19 +232,30 @@ dda.indep <- function(
 	dcor_yx <- energy::dcor.test(as.vector(rx), as.vector(err.yx), R = B) #rx & ry have an SPSS attribute?
 	dcor_xy <- energy::dcor.test(as.vector(ry), as.vector(err.xy), R = B)
 
-    output <- c(output,
-	            distance_cor = list(dcor_yx = dcor_yx, dcor_xy = dcor_xy, dcor.method = as.character(B))
-				)
+     output <- c(output,
+ 	            distance_cor = list(dcor_yx = dcor_yx, dcor_xy = dcor_xy, dcor.method = as.character(B))
+ 			        	)
 
 	### --- Homoscedasticity tests
 
     if(hetero){
 
-	  bp_yx <- lmtest::bptest(m.yx, studentize = FALSE)
-	  bp_xy <- lmtest::bptest(m.xy, studentize = FALSE)
+      if(robust){
+        bp_yx <- bptestrobust(ry ~ rx, studentize = FALSE)
+        bp_xy <- bptestrobust(rx ~ ry, studentize = FALSE)
 
-	  rbp_yx <- lmtest::bptest(m.yx, studentize = TRUE)
-	  rbp_xy <- lmtest::bptest(m.xy, studentize = TRUE)
+        rbp_yx <- bptestrobust(m.yx, studentize = TRUE)
+        rbp_xy <- bptestrobust(m.xy, studentize = TRUE)
+
+      } else{
+
+        bp_yx <- lmtest::bptest(ry ~ rx, studentize = FALSE)
+        bp_xy <- lmtest::bptest(rx ~ ry, studentize = FALSE)
+
+        rbp_yx <- lmtest::bptest(m.yx, studentize = TRUE)
+        rbp_xy <- lmtest::bptest(m.xy, studentize = TRUE)
+      }
+
 
 	  output <- c(output,
 	              list(breusch_pagan = list( bp_yx, rbp_yx, bp_xy, rbp_xy ) )
@@ -298,6 +324,19 @@ dda.indep <- function(
 
   response.name <- all.vars(formula(formula))[1]  # get name of response variable
   output <- c(output, list(var.names = c(response.name, pred)))
+
+  call_info <- list( #new for bagging
+    "function_call" = match.call(),
+    "function_name" = "dda.indep",  # or deparse(substitute(sys.function()))
+    "all_args" = as.list(match.call())[-1],
+    "formula" = formula,
+    "data_name" = deparse(substitute(data)),
+    "original_data" = if(missing(data) || is.null(data)) NULL else data
+  )
+
+  output <- c(output,
+              list(call_info = call_info)
+              )
 
   class(output) <- "dda.indep"
   return(output)
@@ -455,4 +494,3 @@ if(!is.null(x$out.diff)){
 	 cat("\n")
     }
 }
-
