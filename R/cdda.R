@@ -1,9 +1,10 @@
 #' @title Conditional Direction Dependence Analysis: Independence Properties
-#' @description \code{cdda.indep} evaluates asymmetries of predictor-error independence of competing
+#' @description \code{cdda} computes CDDA test statistics to
+#'              evaluate asymmetries of predictor-error independence of competing
 #'              conditional models (\code{y ~ x * m} vs. \code{x ~ y * m}
 #'              with \code{m} being a continuous or categorical moderator).
 #'
-#' @name cdda.indep
+#' @name cdda
 #'
 #' @param formula     Symbolic formula of the model to be tested or an \code{lm} object.
 #' @param pred        A character indicating the variable name of the predictor which serves as the outcome in the alternative model.
@@ -22,11 +23,7 @@
 #' @param data        A required data frame containing the variables in the model.
 #' @param hetero      A logical value indicating whether separate homoscedasticity tests (i.e., standard and robust Breusch-Pagan tests) should be computed.
 #' @param diff        A logical value indicating whether differences in HSIC, dCor, and MI values should be computed. Bootstrap confidence intervals are computed using B bootstrap samples.
-#' @param nlfun Determines handling of non-linear correlation tests depending on the function used:
-#' \itemize{
-#'   \item \strong{For \code{cdda.indep}:} Either a numeric value or a function of .Primitive type used for non-linear correlation tests. When numeric, the value is used in a power transformation.
-#'   \item \strong{For \code{summary}:} A logical value indicating whether non-linear correlation tests should be returned in the output. Default is \code{FALSE}.
-#' }
+#' @param nlfun       Either a numeric value or a function of .Primitive type used for non-linear correlation tests. When nlfun is numeric the value is used in a power transformation.
 #' @param hsic.method A character indicating the inference method for the Hilbert-Schmidt Independence Criterion. Must be one of the four specifications \code{c("gamma", "eigenvalue", "boot", "permutation")}.\code{hsic.method = "gamma"} is the default.
 #' @param B           Number of permutations for separate dCor tests and number of resamples when \code{hsic.method = c("boot", "permutation")} or \code{diff = TRUE}.
 #' @param boot.type   A character indicating the type of bootstrap confidence intervals. Must be one of the two specifications \code{c("perc", "bca")}. \code{boot.type = "perc"} is the default.
@@ -35,8 +32,8 @@
 #' @param cores       A numeric value indicating the number of cores. Only used if \code{parallelize = TRUE}.
 #' @param robust       A logical value indicating whether Siegel (1982) repeated median estimators should be used for residual extraction. If \code{robust = TRUE} repeated median estimation is used, otherwise ordinary least squares estimation is used.
 #'
-#' @returns An object of class \code{dda.indep} containing the results of
-#'          independence tests of Conditional Direction Dependence Analysis.
+#' @returns A list of class \code{cdda.indep} containing the results of CDDA
+#'          independence tests for pre-specified moderator values.
 #'
 #' @examples
 #' set.seed(321)
@@ -67,7 +64,7 @@
 #' m <- lm(y ~ x * z, data = d)
 #'
 #'
-#' result <- cdda.indep(m,
+#' result <- cdda(      m,
 #'                      pred = "x",
 #'                      mod = "z",
 #'                      modval = c(-1, 1),
@@ -77,8 +74,7 @@
 #'                      parallelize = TRUE,
 #'                      cores = 2,
 #'                      nlfun = 2,
-#'                      B = 2)
-#' # Note: Only 2 bootstrap samples are created here to lower computation time
+#'                      B = 50)
 #'
 #'
 #' @references Wiedermann, W., & von Eye, A. (2025). \emph{Direction Dependence Analysis: Foundations and Statistical Methods}. Cambridge, UK: Cambridge University Press.
@@ -86,7 +82,7 @@
 #'
 #' @export
 #' @rdname cdda.indep
-cdda.indep <- function(
+cdda <- function(
     formula = NULL,
     pred = NULL,
     mod = NULL,
@@ -267,7 +263,7 @@ cdda.indep <- function(
       mdat <- data.frame(x, y, X, moderator)
 
       jnoutput <- unclass(interactions::johnson_neyman( lm(y ~ x + moderator + moderator:x + X, data = mdat), pred = x,
-                                          modx = moderator, control.fdr = FALSE ) )
+                                                        modx = moderator, control.fdr = FALSE ) )
       twobounds <- jnoutput[["bounds"]]
 
       if(twobounds[1] < min(moderator, na.rm = TRUE) &
@@ -361,49 +357,11 @@ cdda.indep <- function(
                            "mod_name" = mod,
                            "mod_levels" = moderator_levels,
                            "mod_data" = data[,mod]
-                          )
-  cdda.output[[5]] <- list(
-                          "function_call" = match.call(),
-                          "function_name" = as.character(match.call()[[1]]),
-                          "all_args" = as.list(match.call())[-1],  # Remove function name
-                          "environment" = parent.frame(),
-                          "formula" = if(exists("formula")) formula else NULL,
-                          "data_name" = deparse(substitute(data))
-                          )
+  )
 
-  names(cdda.output) <- c("cdda_target", "cdda_alternative", "models",
-                          "df_original", "call_info")
+  names(cdda.output) <- c("cdda_target", "cdda_alternative", "models", "df_original")
   class(cdda.output) <- "cdda.indep"
   return(cdda.output)
-}
 
-#' @title Print Method for \code{cdda.indep} Objects.
-#' @description \code{print} returns the output of standard linear model coefficients for competing target and alternative models.
-#' @param x     An object of class \code{cdda.indep} when using \code{print} or \code{plot}.
-#' @param ...   Additional arguments to be passed to the function.
-#'
-#' @examples print(result)
-#'
-#' @returns An object of class \code{cdda.indep} with competing model coefficients.
-#' @export
-#' @rdname cdda.indep
-#' @method print cdda.indep
-print.cdda.indep <- function(x, ...){
-  cdda.output <- x
-  cat("\n")
-  cat(paste0("-----------------------------------------------------"))
-  cat("\n")
-
-  cat("OLS Summary: Target Model", "\n")
-  cat("\n")
-  print(round(cdda.output[[3]]$target_model, 4))
-
-  cat(paste0("-----------------------------------------------------"))
-  cat("\n")
-
-  cat("OLS Summary: Alternative Model", "\n")
-  cat("\n")
-  print(round(cdda.output[[3]]$alternate_model, 4))
-  cat("\n")
-}
+  }
 

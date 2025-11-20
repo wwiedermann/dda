@@ -12,7 +12,8 @@ dda.resdist(
   B = 200,
   boot.type = "perc",
   prob.trans = FALSE,
-  conf.level = 0.95
+  conf.level = 0.95,
+  robust = FALSE
 )
 
 \method{print}{dda.resdist}(x, ...)
@@ -38,6 +39,8 @@ transformation should be performed prior computation of
 skewness and kurtosis difference tests.}
 
 \item{conf.level}{Confidence level for bootstrap confidence intervals.}
+
+\item{robust}{A logical value indicating whether Siegel non-parametric estimators should be used for residual extraction. If \code{robust = TRUE} Seigel estimation is used, otherwise ordinary least squares estimation is used.}
 
 \item{x}{An object of class \code{dda.resdist} when using \code{print}.}
 
