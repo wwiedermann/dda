@@ -8,7 +8,7 @@ d <- data.frame(x, y)
 
 # 1. dda.indep: Direction Dependence Analysis - Independence
 # result_indep <- dda.indep(mpg ~ wt + hp, pred = "wt", data = mtcars)
-# print(result_indep)
+#print(result_indep)
 
 res_ex_indep <- dda.indep(y ~ x, pred = "x", data = d, parallelize = TRUE, cores = 2,
                                      nlfun = 2, B = 50, hetero = TRUE, diff = TRUE)
@@ -17,9 +17,8 @@ print(res_ex_indep)
 init <- Sys.time()
 bagged_indep <- dda_bagging(res_ex_indep, iter = 15)
 Sys.time() - init
-#print.dda_bagging_indep(bagged_indep)
+print.dda_bagging_indep(bagged_indep)
 summary.dda_bagging_indep(bagged_indep)
-
 
 
 # 2. dda.resdist: Direction Dependence Analysis - Residual Distribution
