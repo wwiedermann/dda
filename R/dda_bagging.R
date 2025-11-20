@@ -7,7 +7,7 @@ y <- 0.5 * x + e
 d <- data.frame(x, y)
 
 # 1. dda.indep: Direction Dependence Analysis - Independence
-# result_indep <- dda.indep(mpg ~ wt + hp, pred = "wt", data = mtcars)
+#res_ex_indep <- dda.indep(mpg ~ wt + hp, pred = "wt", data = mtcars)
 #print(result_indep)
 
 res_ex_indep <- dda.indep(y ~ x, pred = "x", data = d, parallelize = TRUE, cores = 2,
@@ -23,11 +23,11 @@ summary.dda_bagging_indep(bagged_indep)
 
 # 2. dda.resdist: Direction Dependence Analysis - Residual Distribution
 
-#result_resdist <- dda.resdist(mpg ~ wt + hp, pred = "wt", data = mtcars)
+result_resdist <- dda.resdist(mpg ~ wt + hp, pred = "wt", data = mtcars)
 result_resdist <- dda.resdist(y ~ x, pred = "x", data = d,
                       B = 2000, conf.level = 0.90)
 
-
+print(result_resdist)
 bagged_resdist <- dda_bagging(result_resdist, iter = 10)
 Sys.time() - init # Time difference of 3.210665 mins
 print.dda_bagging_resdist(bagged_resdist)
@@ -45,6 +45,7 @@ init <- Sys.time()
 bagged_vardist <- dda_bagging(result_vardist, iter = 100)
 Sys.time() - init #Time difference of 2.703492 mins
 summary.dda_bagging_vardist(bagged_vardist)
+print.dda_bagging_vardist(bagged_vardist)
 
 
 #############################################################################
