@@ -7,11 +7,11 @@ y <- 0.5 * x + e
 d <- data.frame(x, y)
 
 # 1. dda.indep: Direction Dependence Analysis - Independence
-#res_ex_indep <- dda.indep(mpg ~ wt + hp, pred = "wt", data = mtcars)
+res_ex_indep <- dda.indep(mpg ~ wt + hp, pred = "wt", data = mtcars)
 #print(result_indep)
 
 res_ex_indep <- dda.indep(y ~ x, pred = "x", data = d, parallelize = TRUE, cores = 2,
-                                     nlfun = 2, B = 50, hetero = TRUE, diff = TRUE)
+                                     nlfun = 2, B = 50, hetero = TRUE, diff = FALSE)
 print(res_ex_indep)
 
 ##
@@ -62,7 +62,7 @@ print(res_ex_indep)
 ##
 
 init <- Sys.time()
-bagged_indep <- dda_bagging(res_ex_indep, iter = 100)
+bagged_indep <- dda_bagging(res_ex_indep, iter = 10)
 Sys.time() - init # Time difference of 2.177385 mins
 
 print.dda_bagging_indep(bagged_indep)
@@ -121,7 +121,7 @@ summary.dda_bagging_indep(bagged_indep, show = c("hsic"))
 
 result_resdist <- dda.resdist(mpg ~ wt + hp, pred = "wt", data = mtcars)
 result_resdist <- dda.resdist(y ~ x, pred = "x", data = d,
-                      B = 2000, conf.level = 0.90)
+                      B = 200, conf.level = 0.90)
 
 print(result_resdist)
 
@@ -152,7 +152,7 @@ print(result_resdist)
 # Alternative is y -> x
 # Difference statistics > 0 suggest the model x -> y
 
-bagged_resdist <- dda_bagging(result_resdist, iter = 100)
+bagged_resdist <- dda_bagging(result_resdist, iter = 10)
 Sys.time() - init # Time difference of 13.46777 mins
 print.dda_bagging_resdist(bagged_resdist)
 
