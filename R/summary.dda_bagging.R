@@ -104,9 +104,9 @@ print_bagging_decisions <- function(object, show = NULL, moment = NULL, type = "
     cat(display_title, "\n")
 
     # Extract values (names in prop are "Undecided", "Target", "Alternative")
-    u_val <- if ("Undecided" %in% names(prop)) prop["Undecided"] else 0
     t_val <- if ("Target" %in% names(prop)) prop["Target"] else 0
     a_val <- if ("Alternative" %in% names(prop)) prop["Alternative"] else 0
+    u_val <- if ("Undecided" %in% names(prop)) prop["Undecided"] else 0
 
     if (type == "indep") {
       # Indep columns: Target, Alternative, Confounding (mapped from Undecided)
@@ -119,9 +119,9 @@ print_bagging_decisions <- function(object, show = NULL, moment = NULL, type = "
     } else {
       # Var/Res columns: Undecided, Target, Alternative
       df_print <- data.frame(
-        Undecided   = sprintf("%.2f", u_val),
         Target      = sprintf("%.2f", t_val),
         Alternative = sprintf("%.2f", a_val),
+        Undecided   = sprintf("%.2f", u_val),
         check.names = FALSE
       )
     }
