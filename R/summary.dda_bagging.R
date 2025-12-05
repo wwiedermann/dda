@@ -11,7 +11,7 @@ print_bagging_decisions <- function(object, show = NULL, moment = NULL, type = "
                         "indep" = "Independence Properties",
                         "resdist" = "Residual Distributions",
                         "vardist" = "Variable Distributions",
-                        "Generic")
+                        "Generic") #To do for condit cases
 
   cat("\n")
   cat(paste0("DIRECTION DEPENDENCE ANALYSIS SUMMARY: ", header_type, " (Bagged)"), "\n")
