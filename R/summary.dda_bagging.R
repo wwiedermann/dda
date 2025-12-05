@@ -1,9 +1,21 @@
-#' Internal helper to print decision summary
+# Internal helper to print decision summary
 #' @noRd
 print_bagging_decisions <- function(object, show = NULL, moment = NULL, type = "generic") {
-  fn <- object$parameters$function_name
-  iter <- object$parameters$iter
-  cat(paste0(fn, ", ", iter, " bootstrap aggregations\n\n"))
+
+  # --- Header Construction ---
+  # Match print function style:
+  # DIRECTION DEPENDENCE ANALYSIS SUMMARY: [Type] (Bagged)
+  # Number of Bootstrap Aggregated Results: [N]
+
+  header_type <- switch(type,
+                        "indep" = "Independence Properties",
+                        "resdist" = "Residual Distributions",
+                        "vardist" = "Variable Distributions",
+                        "Generic")
+
+  cat("\n")
+  cat(paste0("DIRECTION DEPENDENCE ANALYSIS SUMMARY: ", header_type, " (Bagged)"), "\n")
+  cat(paste0("Number of Bootstrap Aggregated Results: ", object$n_valid_iterations), "\n\n")
 
   decisions <- object$decision_percentages
   if (length(decisions) == 0) {
@@ -34,8 +46,8 @@ print_bagging_decisions <- function(object, show = NULL, moment = NULL, type = "
     "diff_hsic"     = "HSIC Difference",
     "diff_dcor"     = "dCor Difference",
     "diff_mi"       = "MI Difference",
-    "dec_agost"     = "Agostino",
-    "dec_anscom"    = "Anscombe",
+    "dec_agost"     = "Separate D’Agostino Tests",
+    "dec_anscom"    = "Separate Anscombe-Glynn Tests",
     "dec_skewdiff"  = "Skewness Difference",
     "dec_kurtdiff"  = "Kurtosis Difference",
     "dec_cor12diff" = "Co-Skewness Difference",
@@ -90,6 +102,9 @@ print_bagging_decisions <- function(object, show = NULL, moment = NULL, type = "
   keys_to_show <- intersect(all_keys, keys_to_show)
 
   if (length(keys_to_show) == 0) {
+    if(!is.null(show) || !is.null(moment)) {
+      cat("No statistics matched the specified filters.\n")
+    }
     return()
   }
 
@@ -110,6 +125,7 @@ print_bagging_decisions <- function(object, show = NULL, moment = NULL, type = "
 
     if (type == "indep") {
       # Indep columns: Target, Alternative, Confounding (mapped from Undecided)
+      # Order: Target, Alternative, Confounding
       df_print <- data.frame(
         Target      = sprintf("%.2f", t_val),
         Alternative = sprintf("%.2f", a_val),
@@ -118,16 +134,62 @@ print_bagging_decisions <- function(object, show = NULL, moment = NULL, type = "
       )
     } else {
       # Var/Res columns: Undecided, Target, Alternative
+      # Order: Undecided, Target, Alternative
       df_print <- data.frame(
+        Undecided   = sprintf("%.2f", u_val),
         Target      = sprintf("%.2f", t_val),
         Alternative = sprintf("%.2f", a_val),
-        Undecided   = sprintf("%.2f", u_val),
         check.names = FALSE
       )
     }
 
     print(df_print, row.names = FALSE)
     cat("\n")
+  }
+
+  # --- Footnote Construction ---
+  # Match print function style:
+  # Note: Target is [y] -> [x]
+  #       Alternative is [x] -> [y]
+  #       Difference statistics > 0 suggest the model [y] -> [x]
+
+  # Try to retrieve variable names from aggregated stats or parameters
+  stats <- object$aggregated_stats
+  varnames <- NULL
+  if (!is.null(stats$var.names) && length(stats$var.names) == 2) {
+    varnames <- stats$var.names
+  } else if (!is.null(object$parameters$var.names) && length(object$parameters$var.names) == 2) {
+    varnames <- object$parameters$var.names
+  } else {
+    # Fallback default names based on type
+    if (type == "indep") varnames <- c("y", "x")
+    else if (type == "resdist") varnames <- c("target", "alternative")
+    else varnames <- c("Outcome", "Predictor")
+  }
+
+  # Note for INDEP is simpler/different in print function:
+  if (type == "indep") {
+    cat("---\n")
+    # For indep, print function says: "Difference statistics > 0 suggest x -> y"
+    # where varnames[2] is predictor (x) and varnames[1] is outcome (y)
+    cat(paste("Note: Target is", varnames[2], "->", varnames[1]), "\n")
+    cat(paste("      Alternative is", varnames[1], "->", varnames[2]), "\n")
+    cat(paste("      Difference statistics > 0 suggest", varnames[2], "->", varnames[1]), "\n")
+  } else if (type == "resdist") {
+    cat("---\n")
+    cat(paste("Note: Target is", varnames[2], "->", varnames[1]), "\n")
+    cat(paste("      Alternative is", varnames[1], "->", varnames[2]), "\n")
+
+    probtrans <- if(!is.null(stats$probtrans)) stats$probtrans else FALSE
+    if(isFALSE(probtrans)){
+      cat(paste("      Difference statistics > 0 suggest the model", varnames[2], "->", varnames[1]), "\n")
+    } else {
+      cat(paste("      Under prob.trans = TRUE, skewness and kurtosis differences < 0 and", "\n",
+                "      co-skewness and co-kurtosis differences > 0 suggest", varnames[2], "->", varnames[1]), "\n")
+    }
+  } else if (type == "vardist") {
+    cat("---\n")
+    cat(paste("Note: (Cor^2[i,j] - Cor^2[j,i]) > 0 suggests the model", varnames[2], "->", varnames[1]), "\n")
   }
 }
 
