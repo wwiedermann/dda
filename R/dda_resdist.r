@@ -48,6 +48,7 @@ dda.resdist <- function(formula,
 ) {
   # --- Helper functions ---
   mysd <- function(x) sqrt(sum((x - mean(x))^2) / length(x))
+
   cor.ij <- function(x, y, i = 1, j = 1) {
     n <- length(x)
     mx <- mean(x)
@@ -57,12 +58,12 @@ dda.resdist <- function(formula,
     if (denom == 0) return(NA_real_)
     Cov / denom
   }
+
   # Safe probability integral transform used in original code
   prob.int <- function(x, y) {
     x <- as.numeric(x)
     y <- as.numeric(y)
     fval <- ecdf(y)(y)
-    # if y contains duplicates, approxfun will work but we must ensure unique x for approxfun
     # create monotone mapping of fval -> y by averaging y for same fval
     df <- data.frame(f = fval, y = y)
     df2 <- aggregate(y ~ f, data = df, FUN = mean)
@@ -120,7 +121,7 @@ dda.resdist <- function(formula,
     c(skew.diff, kurt.diff, cor12.diff, cor13.diff, RHS3, RCC, RHS4)
   }
 
-  # --- Normality test helpers (unchanged, but defensive) ---
+  # --- Normality test helpers ---
   skew.diff.test <- function(x, y){
     agostino.zvalue <- function(x){
       n  <- length(x)
@@ -137,6 +138,7 @@ dda.resdist <- function(formula,
     pval <- (1 - pnorm(abs(zval))) * 2
     return(list(z.value = zval, p.value = pval))
   }
+
   kurt.diff.test <- function(x, y){
     anscombe.zvalue <- function(x){
       n   <- length(x)
@@ -154,6 +156,7 @@ dda.resdist <- function(formula,
     pval <- (1 - pnorm(abs(zval))) * 2
     return(list(z.value = zval, p.value = pval))
   }
+
   myanscombe.test <- function(x, alternative = c("two.sided", "less", "greater")){
     n   <- length(x)
     DNAME <- deparse(substitute(x))
@@ -207,6 +210,7 @@ dda.resdist <- function(formula,
   resid_df <- data.frame(rx = rx, ry = ry)
 
   # fit target and alternative regressions (on residualized variables)
+  # Uses 'RobustLinearReg' namespace if robust=TRUE, assume package is installed/loaded or import handled
   tar <- tryCatch(if (robust) RobustLinearReg::siegel_regression(ry ~ rx, data = resid_df) else lm(ry ~ rx, data = resid_df), error = function(e) NULL)
   alt <- tryCatch(if (robust) RobustLinearReg::siegel_regression(rx ~ ry, data = resid_df) else lm(rx ~ ry, data = resid_df), error = function(e) NULL)
   if (is.null(tar) || is.null(alt)) stop("Model fitting failed on residuals. Consider using robust = FALSE or checking data.")
@@ -224,7 +228,7 @@ dda.resdist <- function(formula,
     tar.trans <- tryCatch(if (robust) RobustLinearReg::siegel_regression(ry.trans ~ rx.trans, data = data.frame(ry.trans = ry.trans, rx.trans = rx.trans)) else lm(ry.trans ~ rx.trans), error = function(e) NULL)
     alt.trans <- tryCatch(if (robust) RobustLinearReg::siegel_regression(rx.trans ~ ry.trans, data = data.frame(rx.trans = rx.trans, ry.trans = ry.trans)) else lm(rx.trans ~ ry.trans), error = function(e) NULL)
     dat$alternative.trans <- if (!is.null(alt.trans)) as.vector(scale(resid(alt.trans))) else rep(NA_real_, nrow(dat))
-    dat$target.trans     <- if (!is.null(tar.trans)) as.vector(scale(resid(tar.trans))) else rep(NA_real_, nrow(dat))
+    dat$target.trans      <- if (!is.null(tar.trans)) as.vector(scale(resid(tar.trans))) else rep(NA_real_, nrow(dat))
   }
 
   # --- Run separate normality tests ---
@@ -249,6 +253,8 @@ dda.resdist <- function(formula,
 
   output <- list(agostino.out, anscombe.out)
   names(output) <- c("agostino", "anscombe")
+  # adjust statistic to be kurtosis excess if needed, though anscombe test already returns kurtosis.
+  # original code does -3 adjustment
   output$anscombe$target$statistic[1] <- output$anscombe$target$statistic[1] - 3
   output$anscombe$alternative$statistic[1] <- output$anscombe$alternative$statistic[1] - 3
 
@@ -269,12 +275,13 @@ dda.resdist <- function(formula,
     output$kurtdiff <- c((moments::kurtosis(dat$alternative)-3)^2 - (moments::kurtosis(dat$target)-3)^2, output$kurtdiff)
   }
 
-  # --- Run bootstrap confidence intervals (defensive) ---
+  # --- Run bootstrap confidence intervals ---
   boot.warning <- FALSE
   if (B > 0) {
     suppressWarnings({
       boot.res <- tryCatch(boot::boot(dat, boot.diff, R = B, prob.trans = prob.trans), error = function(e) NULL)
     })
+
     if (is.null(boot.res)) {
       boot.warning <- "Bootstrap failed entirely (boot::boot returned NULL)."
       output$boot.args <- c(boot.type, conf.level, B)
@@ -288,7 +295,7 @@ dda.resdist <- function(formula,
           boot.warning <- "Bootstrap failed: empinf() contains NA. BCa CIs not available; computed percentiles when possible."
         }
       }
-      # compute CIs safely for each statistic
+
       stat_names <- c("skew.diff", "kurt.diff", "cor12.diff", "cor13.diff", "RHS3", "RCC", "RHS4")
       boot.out <- vector("list", length = length(stat_names))
       names(boot.out) <- stat_names
@@ -297,13 +304,13 @@ dda.resdist <- function(formula,
         t_vec <- boot.res$t[, i]
         t0 <- boot.res$t0[i]
         t_non_na <- t_vec[!is.na(t_vec)]
-        # if degenerate or insufficient replicates => produce NA CIs and continue
+
         if (length(t_non_na) < 2 || sd(t_non_na) == 0 || is.na(t0)) {
           boot.out[[i]] <- list(type = boot.type, t0 = t0, lower = NA_real_, upper = NA_real_, t = t_vec)
           next
         }
+
         if (boot.type == "perc" || !empinf_ok) {
-          # percentile CI fallback (works with NAs removed)
           alpha <- (1 - conf.level)/2
           lower <- as.numeric(stats::quantile(t_non_na, probs = alpha, na.rm = TRUE, names = FALSE))
           upper <- as.numeric(stats::quantile(t_non_na, probs = 1 - alpha, na.rm = TRUE, names = FALSE))
@@ -311,14 +318,11 @@ dda.resdist <- function(formula,
         } else { # BCa requested and empinf OK
           ci_try <- tryCatch(boot::boot.ci(boot.res, conf = conf.level, type = "bca", t0 = t0, t = t_vec), error = function(e) NULL, warning = function(w) NULL)
           if (is.null(ci_try)) {
-            # fallback to percentiles
             alpha <- (1 - conf.level)/2
             lower <- as.numeric(stats::quantile(t_non_na, probs = alpha, na.rm = TRUE, names = FALSE))
             upper <- as.numeric(stats::quantile(t_non_na, probs = 1 - alpha, na.rm = TRUE, names = FALSE))
             boot.out[[i]] <- list(type = "perc_fallback", t0 = t0, lower = lower, upper = upper, t = t_vec)
           } else {
-            # extract percentile interval from the boot.ci output safely
-            # the structure differs across types; for BCa it's available in $bca[,4:5]
             ci_vals <- tryCatch({
               if (!is.null(ci_try$bca)) {
                 as.numeric(ci_try$bca[4:5])
@@ -331,9 +335,9 @@ dda.resdist <- function(formula,
             boot.out[[i]] <- list(type = "bca", t0 = t0, lower = ci_vals[1], upper = ci_vals[2], t = t_vec)
           }
         }
-      } # end for each stat
+      }
 
-      # Build the CI results into output similar to original structure but defensively
+      # Build the CI results
       ci.skewdiff  <- c(lower = boot.out$skew.diff$lower, upper = boot.out$skew.diff$upper)
       ci.kurtdiff  <- c(lower = boot.out$kurt.diff$lower, upper = boot.out$kurt.diff$upper)
       ci.cor12diff <- c(lower = boot.out$cor12.diff$lower, upper = boot.out$cor12.diff$upper)
@@ -342,7 +346,6 @@ dda.resdist <- function(formula,
       ci.RCC       <- c(lower = boot.out$RCC$lower, upper = boot.out$RCC$upper)
       ci.RHS4      <- c(lower = boot.out$RHS4$lower, upper = boot.out$RHS4$upper)
 
-      # Attach CI info to output (mirrors original layout)
       output$skewdiff <- c(output$skewdiff, ci.skewdiff)
       output$kurtdiff <- c(output$kurtdiff, ci.kurtdiff)
       output <- c(output,
@@ -359,102 +362,20 @@ dda.resdist <- function(formula,
 
   response.name <- all.vars(formula)[1]
   output <- c(output, list(var.names = c(response.name, pred), probtrans = prob.trans))
+
+  # --- CRITICAL FIX: Add call_info so dda_bagging can find data ---
   call_info <- list(
     "function_call" = match.call(),
-    "function_name" = "dda.resdist_siegel",
+    "function_name" = "dda.resdist",
     "all_args" = as.list(match.call())[-1],
     "formula" = formula,
     "data_name" = deparse(substitute(data)),
     "original_data" = if(missing(data) || is.null(data)) NULL else data
   )
   output <- c(output, list(call_info = call_info))
+
   class(output) <- "dda.resdist"
   return(output)
-}
-
-  if(B > 0){
-    suppressWarnings(boot.res <- boot::boot(dat, boot.diff, R = B, prob.trans = prob.trans))    #
-
-    # if( boot.type == "bca" && any( is.na( boot::empinf( boot.res ) ) ) ) stop("Acceleration constant cannot be calculated. Increase the number of resamples or use boot.type = 'perc'")
-    # suppressWarnings(boot.out <- lapply(as.list(1:7), function(i, boot.res) boot::boot.ci(boot.res, conf=conf.level, type=boot.type, t0=boot.res$t0[i], t=boot.res$t[,i]), boot.res=boot.res))
-
-    if( boot.type == "bca"){
-      boot.out <- suppressWarnings( try(
-        lapply(as.list(1:7), function(i, boot.res) boot::boot.ci(boot.res, conf=conf.level, type="bca", t0=boot.res$t0[i], t=boot.res$t[,i]), boot.res=boot.res), silent = TRUE))
-      if (inherits(boot.out, "try-error")) { stop("Acceleration constant cannot be calculated. Increase the number of resamples or use boot.type = 'perc'") }
-    }
-
-    if( boot.type == "perc"){
-      suppressWarnings(boot.out <- lapply(as.list(1:7), function(i, boot.res) boot::boot.ci(boot.res, conf=conf.level, type="perc", t0=boot.res$t0[i], t=boot.res$t[,i]), boot.res=boot.res))
-    }
-
-  varnames <- object$var.names
-  cat("\n")
-  cat("DIRECTION DEPENDENCE ANALYSIS: Residual Distributions", "\n", "\n")
-  cat("Skewness and kurtosis tests:", "\n")
-
-  sigtests <- rbind( c(object[[1]]$target$statistic, object[[1]]$target$p.value, object[[1]]$alternative$statistic, object[[1]]$alternative$p.value),
-                     c(object[[2]]$target$statistic, object[[2]]$target$p.value, object[[2]]$alternative$statistic, object[[2]]$alternative$p.value)
-  )
-  sigtests <- round(sigtests, 4)
-  rownames(sigtests) <- c("Skewness", "Kurtosis")
-  colnames(sigtests) <- c("target", "z-value", "Pr(>|z|)", "alternative", "z-value", "Pr(>|z|)")
-  print.default(format( sigtests, digits = max(3L, getOption("digits") - 3L), scientific = NA, scipen = 999), print.gap = 2L, quote = FALSE)
-
-  if(is.null(object$boot.args)){
-    cat("\n")
-    cat("Skewness and kurtosis difference tests:", "\n")
-
-    citests <- rbind(object$skewdiff, object$kurtdiff)
-    citests <- round(citests, 4)
-    rownames(citests) <- c("Skewness", "Kurtosis")
-    colnames(citests) <- c("diff", "z-value", "Pr(>|z|)")
-    print.default(format( citests, digits = max(3L, getOption("digits") - 3L)), print.gap = 2L, quote = FALSE)
-    cat("\n")
-  }
-
-  if(!is.null(object$boot.args)){
-    ci.level <- as.numeric(object$boot.args[2]) * 100
-    cat("\n")
-
-    if(object$boot.args[1] == "bca")  cat("Skewness and kurtosis difference tests and ", ci.level, "% ", "BCa bootstrap CIs:", "\n", "\n", sep = "")
-    if(object$boot.args[1] == "perc") cat("Skewness and kurtosis difference tests and ", ci.level, "% ", "Percentile bootstrap CIs:", "\n", "\n", sep = "")
-
-    citests <- rbind(object$skewdiff, object$kurtdiff)
-    citests <- round(citests, 4)
-    rownames(citests) <- c("Skewness", "Kurtosis")
-    colnames(citests) <- c("diff", "z-value", "Pr(>|z|)", "lower", "upper")
-    print.default(format( citests, digits = max(3L, getOption("digits") - 3L)), print.gap = 2L, quote = FALSE)
-    cat("\n")
-
-    if(object$boot.args[1] == "bca") cat(ci.level, "% ", "BCa bootstrap CIs for joint higher moment differences:", "\n", sep = "")
-    if(object$boot.args[1] == "perc") cat(ci.level, "% ", "Percentile bootstrap CIs for joint higher moment differences:", "\n", sep = "")
-
-    jointtests <- rbind(object$cor12diff, object$RHS3, object$cor13diff, object$RHS4, object$RCC)
-    jointtests <- round(jointtests, 4)
-    rownames(jointtests) <- c("Co-Skewness", "Hyvarinen-Smith (Co-Skewness)", "Co-Kurtosis", "Hyvarinen-Smith (Co-Kurtosis)", "Chen-Chan (Co-Kurtosis)")
-    colnames(jointtests) <- c("estimate", "lower", "upper")
-    print.default(format( jointtests, digits = max(3L, getOption("digits") - 3L)), print.gap = 2L, quote = FALSE)
-
-    cat("\n")
-    cat(paste("Number of resamples:", object$boot.args[3]))
-    cat("\n")
-  }
-
-  cat("---")
-  cat("\n")
-  cat(paste("Note: Target is", varnames[2], "->", varnames[1], sep = " "))
-  cat("\n")
-  cat(paste("      Alternative is", varnames[1], "->", varnames[2], sep = " "))
-  cat("\n")
-  if(isFALSE(object$probtrans)){
-    cat(paste("      Difference statistics > 0 suggest the model", varnames[2], "->", varnames[1], sep = " "))
-  } else {
-    cat(paste("      Under prob.trans = TRUE, skewness and kurtosis differences < 0 and", "\n", "     co-skewness and co-kurtosis differences > 0 suggest", varnames[2], "->", varnames[1], sep = " "))
-  }
-  cat("\n")
-  if(object$boot.warning) { cat("Warning: Excess-kurtosis values of residuals have unequal signs", "\n", "        Also compute Co-Kurtosis and Hyvarinen-Smith Co-Kurtosis for", varnames[1], "->", varnames[2], "\n") }
-  cat("\n")
 }
 
 #' @name print.dda.resdist
