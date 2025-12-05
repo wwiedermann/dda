@@ -52,7 +52,7 @@ print.dda_bagging_indep <- function(object, digits = 4, alpha = 0.05) {
     )
     rownames(bp_tab) <- c("BP-test", "Robust BP-test")
     if(ncol(bp_tab) >= 3) {
-      bp_tab <- bp_tab[, c("statistic", "parameter", "p. value"), drop=FALSE]
+      bp_tab <- bp_tab[, c("statistic", "parameter", "p.value"), drop=FALSE]
       colnames(bp_tab) <- c("X-squared", "df", "p-value")
       print(round(bp_tab, digits))
     }
