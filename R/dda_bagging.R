@@ -19,12 +19,17 @@ dda_bagging <- function(
   # Capture the calling environment immediately to use for data retrieval later
   call_env <- parent.frame()
 
+  ### Helper Functions ### ------
+
+  # Safely extract numerics from structures
   get_numeric <- function(x) {
     if (is.null(x)) return(NA_real_)
     if (is.numeric(x)) return(as.numeric(x[1]))
     if (is.list(x)) return(get_numeric(x[[1]]))
     return(NA_real_)
   }
+
+  # harmonic mean p-values
   harmonic_p <- function(pvec) {
     pvec <- as.numeric(pvec)
     pvec <- pvec[!is.na(pvec) & pvec > 0 & pvec < 1]
@@ -36,7 +41,7 @@ dda_bagging <- function(
     harmonicmeanp::p.hmp(pvec, L = length(pvec))
   }
 
-  # Helper to calculate decision proportions with fixed labels
+  # decision proportions with fixed labels
   calc_props <- function(dec_vec) {
     levs <- c("Undecided", "Target", "Alternative")
     dec_fac <- factor(dec_vec, levels = levs)
@@ -44,6 +49,26 @@ dda_bagging <- function(
     prop <- tab / sum(tab)
     prop
   }
+
+  # calc decisions from the DDA difference matrix rows
+  calc_diff_decision <- function(row_idx) {
+    # Index 2 is typically the lower BCa confidence limit, Index 3 is the upper [cite: 82, 86]
+    lowers <- sapply(valid_results, function(x) {
+      mat <- x$out.diff
+      if (!is.null(mat) && nrow(mat) >= row_idx) mat[row_idx, 2] else NA
+    })
+    uppers <- sapply(valid_results, function(x) {
+      mat <- x$out.diff
+      if (!is.null(mat) && nrow(mat) >= row_idx) mat[row_idx, 3] else NA
+    })
+
+    # Decision: Target preferred if CI is entirely positive; Alt if CI is entirely negative
+    d <- ifelse(!is.na(lowers) & !is.na(uppers) & lowers > 0 & uppers > 0, "Target",
+                ifelse(!is.na(lowers) & !is.na(uppers) & lowers < 0 & uppers < 0, "Alternative", "Undecided"))
+    calc_props(d)
+  }
+
+  ### End Helper Functions ### ------
 
   # Extract call info
   if (inherits(dda_result, "dda.indep") ||
@@ -134,17 +159,19 @@ dda_bagging <- function(
     hsic_yx_pval <- sapply(valid_results, function(x) get_numeric(x$hsic.yx$p.value))
     hsic_xy_pval <- sapply(valid_results, function(x) get_numeric(x$hsic.xy$p.value))
 
-    # Check if 'distance_cor.dcor_yx' exists (classic structure) or nested 'distance_cor$dcor_yx'
+    # Check for 'distance_cor.dcor_yx' (flattened) or nested 'distance_cor$dcor_yx'
     dcor_yx <- sapply(valid_results, function(x) {
-      val <- x$distance_cor.dcor_yx$statistic
-      if(is.null(val)) val <- x$distance_cor$dcor_yx$statistic
+      # prioritize flattened name if present, otherwise try nested structure
+      val <- if(!is.null(x$distance_cor.dcor_yx)) x$distance_cor.dcor_yx$statistic else x$distance_cor$dcor_yx$statistic
       get_numeric(val)
     })
+
     dcor_xy <- sapply(valid_results, function(x) {
-      val <- x$distance_cor.dcor_xy$statistic
-      if(is.null(val)) val <- x$distance_cor$dcor_xy$statistic
+      # symmetry for the alt model dCor statistic
+      val <- if(!is.null(x$distance_cor.dcor_xy)) x$distance_cor.dcor_xy$statistic else x$distance_cor$dcor_xy$statistic
       get_numeric(val)
     })
+
     dcor_yx_pval <- sapply(valid_results, function(x) {
       val <- x$distance_cor.dcor_yx$p.value
       if(is.null(val)) val <- x$distance_cor$dcor_yx$p.value
@@ -213,12 +240,15 @@ dda_bagging <- function(
     }
 
     # --- Decision Proportions (INDEP) ---
+    # Tar is selected if Tar p >= alpha (Indep) & Alt p < alpha (Dep)
     dec_hsic <- ifelse(hsic_yx_pval >= alpha & hsic_xy_pval < alpha, "Target",
                        ifelse(hsic_yx_pval < alpha & hsic_xy_pval >= alpha, "Alternative", "Undecided"))
     decisions$hsic <- calc_props(dec_hsic)
 
+    # (dCor): Tar is selected if Tar p >= alpha (Indep) & Alt p < alpha (Dep)
     dec_dcor <- ifelse(dcor_yx_pval >= alpha & dcor_xy_pval < alpha, "Target",
                        ifelse(dcor_yx_pval < alpha & dcor_xy_pval >= alpha, "Alternative", "Undecided"))
+
     decisions$dcor <- calc_props(dec_dcor)
 
     # Difference statistics
@@ -234,20 +264,6 @@ dda_bagging <- function(
       })
       diff_array <- simplify2array(diff_mat)
       agg$diff_matrix <- apply(diff_array, c(1,2), function(xx) mean(xx, na.rm=TRUE))
-
-      calc_diff_decision <- function(row_idx) {
-        lowers <- sapply(valid_results, function(x) {
-          mat <- x$out.diff
-          if (!is.null(mat) && nrow(mat) >= row_idx) mat[row_idx, 2] else NA
-        })
-        uppers <- sapply(valid_results, function(x) {
-          mat <- x$out.diff
-          if (!is.null(mat) && nrow(mat) >= row_idx) mat[row_idx, 3] else NA
-        })
-        d <- ifelse(!is.na(lowers) & !is.na(uppers) & lowers > 0 & uppers > 0, "Target",
-                    ifelse(!is.na(lowers) & !is.na(uppers) & lowers < 0 & uppers < 0, "Alternative", "Undecided"))
-        calc_props(d)
-      }
 
       decisions$diff_hsic <- calc_diff_decision(1)
       if(nrow(first_diff) >= 2) decisions$diff_dcor <- calc_diff_decision(2)
@@ -314,12 +330,17 @@ dda_bagging <- function(
 
     ago_tar_z <- sapply(valid_results, function(x) get_numeric(x$agostino$target$statistic[2]))
     ago_alt_z <- sapply(valid_results, function(x) get_numeric(x$agostino$alternative$statistic[2]))
+
+    # RES (Agostino): Tar is selected if Tar errors are Gaussian (abs(z) < crit) AND Alt are not
     dec_ago <- ifelse(abs(ago_tar_z) < crit_val & abs(ago_alt_z) >= crit_val, "Target",
                       ifelse(abs(ago_tar_z) >= crit_val & abs(ago_alt_z) < crit_val, "Alternative", "Undecided"))
     decisions$dec_agost <- calc_props(dec_ago)
 
+
     ans_tar_z <- sapply(valid_results, function(x) get_numeric(x$anscombe$target$statistic[2]))
     ans_alt_z <- sapply(valid_results, function(x) get_numeric(x$anscombe$alternative$statistic[2]))
+
+    # RES (Anscombe): Tar is selected if Tar errors are Gaussian (abs(z) < crit) AND Alt are not
     dec_ans <- ifelse(abs(ans_tar_z) < crit_val & abs(ans_alt_z) >= crit_val, "Target",
                       ifelse(abs(ans_tar_z) >= crit_val & abs(ans_alt_z) < crit_val, "Alternative", "Undecided"))
     decisions$dec_anscom <- calc_props(dec_ans)
@@ -386,14 +407,20 @@ dda_bagging <- function(
     agg$Rtanh     <- mean_vec("Rtanh",     3)
     agg$RCC       <- mean_vec("RCC",       3)
 
+    # Extract pred and out Z-scores for Agostino test
     ago_pred_z <- sapply(valid_results, function(x) get_numeric(x$agostino$predictor$statistic[2]))
     ago_out_z  <- sapply(valid_results, function(x) get_numeric(x$agostino$outcome$statistic[2]))
+
+    # VARD (Agostino): Tar is selected if Pred is non-Gaussian (abs(z) >= crit) AND Outc is Gaussian
     dec_ago <- ifelse(abs(ago_pred_z) >= crit_val & abs(ago_out_z) < crit_val, "Target",
                       ifelse(abs(ago_pred_z) < crit_val & abs(ago_out_z) >= crit_val, "Alternative", "Undecided"))
     decisions$dec_agost <- calc_props(dec_ago)
 
+    # Extract pred and out Z-scores for Anscombe test
     ans_pred_z <- sapply(valid_results, function(x) get_numeric(x$anscombe$predictor$statistic[2]))
     ans_out_z  <- sapply(valid_results, function(x) get_numeric(x$anscombe$outcome$statistic[2]))
+
+    # VAR (Anscombe): Tar is selected if Pred is non-Gaussian (abs(z) >= crit) AND Outc is Gaussian
     dec_ans <- ifelse(abs(ans_pred_z) >= crit_val & abs(ans_out_z) < crit_val, "Target",
                       ifelse(abs(ans_pred_z) < crit_val & abs(ans_out_z) >= crit_val, "Alternative", "Undecided"))
     decisions$dec_anscom <- calc_props(dec_ans)
