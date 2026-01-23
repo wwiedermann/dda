@@ -136,9 +136,9 @@ print_bagging_decisions <- function(object, show = NULL, moment = NULL, type = "
       # Var/Res columns: Undecided, Target, Alternative
       # Order: Undecided, Target, Alternative
       df_print <- data.frame(
-        Undecided   = sprintf("%.2f", u_val),
         Target      = sprintf("%.2f", t_val),
         Alternative = sprintf("%.2f", a_val),
+        Undecided   = sprintf("%.2f", u_val),
         check.names = FALSE
       )
     }
