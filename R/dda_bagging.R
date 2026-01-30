@@ -1,11 +1,11 @@
-#' Bootstrap Aggregated DDA Analysis (harmonic mean for p-values, mean for other stats)
+#' Bootstrap Aggregated DDA Analysis
 #'
-#' @param dda_result Output from any DDA function (dda.indep, dda.vardist, dda.resdist, etc.)
+#' @param dda_result Output from any DDA function (dda.indep, dda.vardist, dda.resdist)
 #' @param iter Number of bootstrap iterations (default: 100)
 #' @param progress Whether to show progress bar (default: TRUE)
 #' @param save_file Optional file path to save results
 #' @param alpha Significance level for decisions (default: 0.05)
-#' @param data Optional data frame to use for bootstrapping if it cannot be retrieved automatically.
+#' @param data Optional data frame for bootstrapping
 #' @return A list containing bootstrap and aggregated results
 #' @export
 dda_bagging <- function(
@@ -16,12 +16,8 @@ dda_bagging <- function(
     alpha = 0.05,
     data = NULL
 ) {
-  # Capture the calling environment immediately to use for data retrieval later
-  call_env <- parent.frame()
 
-  ### Helper Functions ### ------
-
-  # Safely extract numerics from structures
+  # --- Helper: Safe Extraction ---
   get_numeric <- function(x) {
     if (is.null(x)) return(NA_real_)
     if (is.numeric(x)) return(as.numeric(x[1]))
@@ -29,439 +25,308 @@ dda_bagging <- function(
     return(NA_real_)
   }
 
-  # harmonic mean p-values
+  # --- Helper: Harmonic Mean P-values (Wilson 2019) ---
   harmonic_p <- function(pvec) {
     pvec <- as.numeric(pvec)
     pvec <- pvec[!is.na(pvec) & pvec > 0 & pvec < 1]
     if (length(pvec) == 0) return(NA_real_)
-    if (!requireNamespace("harmonicmeanp", quietly = TRUE)) {
-      warning("harmonicmeanp package not found, using mean for p-values")
-      return(mean(pvec))
-    }
+    if (!requireNamespace("harmonicmeanp", quietly = TRUE)) return(mean(pvec))
     harmonicmeanp::p.hmp(pvec, L = length(pvec))
   }
 
-  # decision proportions with fixed labels
+  # --- Helper: Decision Percentages ---
   calc_props <- function(dec_vec) {
     levs <- c("Undecided", "Target", "Alternative")
-    dec_fac <- factor(dec_vec, levels = levs)
-    tab <- table(dec_fac)
-    prop <- tab / sum(tab)
-    prop
+    tab <- table(factor(dec_vec, levels = levs))
+    return(tab / sum(tab))
   }
 
-  # calc decisions from the DDA difference matrix rows
-  calc_diff_decision <- function(row_idx) {
-    # Index 2 is typically the lower BCa confidence limit, Index 3 is the upper [cite: 82, 86]
-    lowers <- sapply(valid_results, function(x) {
-      mat <- x$out.diff
-      if (!is.null(mat) && nrow(mat) >= row_idx) mat[row_idx, 2] else NA
-    })
-    uppers <- sapply(valid_results, function(x) {
-      mat <- x$out.diff
-      if (!is.null(mat) && nrow(mat) >= row_idx) mat[row_idx, 3] else NA
-    })
-
-    # Decision: Target preferred if CI is entirely positive; Alt if CI is entirely negative
-    d <- ifelse(!is.na(lowers) & !is.na(uppers) & lowers > 0 & uppers > 0, "Target",
-                ifelse(!is.na(lowers) & !is.na(uppers) & lowers < 0 & uppers < 0, "Alternative", "Undecided"))
-    calc_props(d)
+  # --- Validate Input ---
+  if (!inherits(dda_result, c("dda.indep", "dda.resdist", "dda.vardist"))) {
+    stop("Unsupported DDA object. Must be dda.indep, dda.resdist, or dda.vardist")
   }
 
-  ### End Helper Functions ### ------
-
-  # Extract call info
-  if (inherits(dda_result, "dda.indep") ||
-      inherits(dda_result, "dda.vardist") ||
-      inherits(dda_result, "dda.resdist") ||
-      inherits(dda_result, "cdda.indep") ||
-      inherits(dda_result, "cdda.vardist")) {
-    call_info <- dda_result$call_info
-    function_name <- call_info$function_name
-    all_args <- call_info$all_args
-    data_name <- call_info$data_name
-    stored_data <- call_info$original_data
-  } else if (length(dda_result) >= 5 && !is.null(dda_result[[5]])) {
-    call_info <- dda_result[[5]]
-    function_name <- call_info$function_name
-    all_args <- call_info$all_args
-    data_name <- call_info$data_name
-    stored_data <- tryCatch(get(data_name, envir = call_info$environment), error = function(e) NULL)
-  } else {
-    stop("Unrecognized DDA result structure. Please ensure you're using a supported DDA object.")
-  }
-
-  # Determine which data to use
-  original_data <- NULL
-
-  if (!is.null(data)) {
-    original_data <- data
-  } else if (!is.null(stored_data)) {
-    original_data <- stored_data
-  } else {
-    if (length(data_name) > 1) data_name <- paste(data_name, collapse = "")
-    original_data <- tryCatch({
-      get(data_name, envir = call_env)
-    }, error = function(e) {
-      tryCatch({
-        get(data_name, envir = globalenv())
-      }, error = function(e2) {
-        found <- NULL
-        for (i in 1:sys.nframe()) {
-          try({
-            obj <- get(data_name, envir = sys.frame(i))
-            if (!is.null(obj)) { found <- obj; break }
-          }, silent = TRUE)
-        }
-        if(!is.null(found)) return(found)
-        stop(paste("Could not retrieve original data:", data_name,
-                   "\nPlease pass the data frame explicitly using the 'data' argument in dda_bagging()."))
-      })
-    })
-  }
-
+  # --- Setup ---
+  call_info <- dda_result$call_info
+  original_data <- if (!is.null(data)) data else call_info$original_data
   nobs <- nrow(original_data)
-  dda_function <- get(function_name)
+  dda_func <- get(call_info$function_name)
+  obj_type <- class(dda_result)[1]
 
-  bagged_results <- vector("list", iter)
-  if (progress) {
-    pb <- txtProgressBar(min = 0, max = iter, style = 3, width = 50, char = "=")
-    cat(paste("\n", "Running", iter, "bootstrap iterations of", function_name, "\n"))
+  # Extract variable names from ORIGINAL dda_result
+  var_names <- dda_result$var.names
+  if (is.null(var_names) || length(var_names) != 2) {
+    var_names <- c("y", "x")  # fallback
   }
 
-  for(i in seq_len(iter)) {
-    boot_indices <- sample(seq_len(nobs), nobs, replace = TRUE)
-    boot_data <- original_data[boot_indices, ]
-    boot_args <- all_args
+  # --- Bootstrap Execution ---
+  bagged_results <- vector("list", iter)
+  if (progress) pb <- txtProgressBar(min = 0, max = iter, style = 3)
+
+  for(i in 1:iter) {
+    boot_data <- original_data[sample(1:nobs, nobs, replace = TRUE), ]
+    boot_args <- call_info$all_args
     boot_args$data <- boot_data
-    res <- tryCatch({
-      do.call(dda_function, boot_args)
-    }, error = function(e) NA)
-    bagged_results[[i]] <- res
+    bagged_results[[i]] <- tryCatch(do.call(dda_func, boot_args), error = function(e) NA)
     if (progress) setTxtProgressBar(pb, i)
   }
-  if (progress) { close(pb); cat("\nBootstrap iterations completed.\n") }
+  if (progress) close(pb)
 
-  valid_results <- bagged_results[!sapply(bagged_results, function(x) all(is.na(x)) || is.null(x))]
-  object_type <- class(dda_result)[1]
+  # --- Filter Valid Results ---
+  valid_res <- bagged_results[!sapply(bagged_results, function(x) all(is.na(x)) || is.null(x))]
+  n_valid <- length(valid_res)
   agg <- list()
-  decisions <- list()
-  n_valid <- length(valid_results)
-  class_label <- "dda_bagging"
+  decs <- list()
+  crit <- qnorm(1 - alpha/2)
 
-  crit_val <- qnorm(1 - alpha/2)
+  ## ============================================================================
+  ## INDEP Block
+  ## ============================================================================
+  if (obj_type == "dda.indep") {
 
-  ## --- DDA.INDEP block ---
-  if (n_valid > 0 && object_type == "dda.indep") {
-    # Fix for dCor accessor: using dot notation as dda.indep flattens list names
-    hsic_yx <- sapply(valid_results, function(x) get_numeric(x$hsic.yx$statistic))
-    hsic_xy <- sapply(valid_results, function(x) get_numeric(x$hsic.xy$statistic))
-    hsic_yx_pval <- sapply(valid_results, function(x) get_numeric(x$hsic.yx$p.value))
-    hsic_xy_pval <- sapply(valid_results, function(x) get_numeric(x$hsic.xy$p.value))
+    # Store variable names
+    agg$var.names <- var_names
 
-    # Check for 'distance_cor.dcor_yx' (flattened) or nested 'distance_cor$dcor_yx'
-    dcor_yx <- sapply(valid_results, function(x) {
-      # prioritize flattened name if present, otherwise try nested structure
-      val <- if(!is.null(x$distance_cor.dcor_yx)) x$distance_cor.dcor_yx$statistic else x$distance_cor$dcor_yx$statistic
-      get_numeric(val)
-    })
+    # --- HSIC Statistics ---
+    agg$hsic_yx_stat <- mean(sapply(valid_res, function(x) get_numeric(x$hsic.yx$statistic)), na.rm=TRUE)
+    agg$hsic_xy_stat <- mean(sapply(valid_res, function(x) get_numeric(x$hsic.xy$statistic)), na.rm=TRUE)
+    agg$hsic_yx_pval <- harmonic_p(sapply(valid_res, function(x) get_numeric(x$hsic.yx$p.value)))
+    agg$hsic_xy_pval <- harmonic_p(sapply(valid_res, function(x) get_numeric(x$hsic.xy$p.value)))
 
-    dcor_xy <- sapply(valid_results, function(x) {
-      # symmetry for the alt model dCor statistic
-      val <- if(!is.null(x$distance_cor.dcor_xy)) x$distance_cor.dcor_xy$statistic else x$distance_cor$dcor_xy$statistic
-      get_numeric(val)
-    })
+    # HSIC Decision: Target indep (p>.05) AND Alternative dep (p<=.05)
+    h_p_yx <- sapply(valid_res, function(x) get_numeric(x$hsic.yx$p.value))
+    h_p_xy <- sapply(valid_res, function(x) get_numeric(x$hsic.xy$p.value))
+    decs$hsic <- calc_props(ifelse(h_p_yx > alpha & h_p_xy <= alpha, "Target",
+                                   ifelse(h_p_xy > alpha & h_p_yx <= alpha, "Alternative",
+                                          "Undecided")))
 
-    dcor_yx_pval <- sapply(valid_results, function(x) {
-      val <- x$distance_cor.dcor_yx$p.value
-      if(is.null(val)) val <- x$distance_cor$dcor_yx$p.value
-      get_numeric(val)
-    })
-    dcor_xy_pval <- sapply(valid_results, function(x) {
-      val <- x$distance_cor.dcor_xy$p.value
-      if(is.null(val)) val <- x$distance_cor$dcor_xy$p.value
-      get_numeric(val)
-    })
+    # --- dCor Statistics (if available) ---
+    if (!is.null(valid_res[[1]]$dcor.yx)) {
+      agg$dcor_yx_stat <- mean(sapply(valid_res, function(x) get_numeric(x$dcor.yx$statistic)), na.rm=TRUE)
+      agg$dcor_xy_stat <- mean(sapply(valid_res, function(x) get_numeric(x$dcor.xy$statistic)), na.rm=TRUE)
+      agg$dcor_yx_pval <- harmonic_p(sapply(valid_res, function(x) get_numeric(x$dcor.yx$p.value)))
+      agg$dcor_xy_pval <- harmonic_p(sapply(valid_res, function(x) get_numeric(x$dcor.xy$p.value)))
 
-    agg$hsic_yx_stat <- mean(hsic_yx, na.rm = TRUE)
-    agg$hsic_xy_stat <- mean(hsic_xy, na.rm = TRUE)
-    agg$dcor_yx_stat <- mean(dcor_yx, na.rm = TRUE)
-    agg$dcor_xy_stat <- mean(dcor_xy, na.rm = TRUE)
+      d_p_yx <- sapply(valid_res, function(x) get_numeric(x$dcor.yx$p.value))
+      d_p_xy <- sapply(valid_res, function(x) get_numeric(x$dcor.xy$p.value))
+      decs$dcor <- calc_props(ifelse(d_p_yx > alpha & d_p_xy <= alpha, "Target",
+                                     ifelse(d_p_xy > alpha & d_p_yx <= alpha, "Alternative",
+                                            "Undecided")))
+    }
 
-    agg$hsic_yx_pval <- harmonic_p(hsic_yx_pval)
-    agg$hsic_xy_pval <- harmonic_p(hsic_xy_pval)
-    agg$dcor_yx_pval <- harmonic_p(dcor_yx_pval)
-    agg$dcor_xy_pval <- harmonic_p(dcor_xy_pval)
+    # --- Breusch-Pagan Tests ---
+    if (!is.null(valid_res[[1]]$breusch_pagan)) {
+      bp_yx_stat <- sapply(valid_res, function(x) get_numeric(x$breusch_pagan[[1]]$statistic))
+      bp_yx_df <- sapply(valid_res, function(x) get_numeric(x$breusch_pagan[[1]]$parameter))
+      bp_yx_p <- sapply(valid_res, function(x) get_numeric(x$breusch_pagan[[1]]$p.value))
 
-    # Aggregation of Breusch-Pagan Tests
-    if (!is.null(valid_results[[1]]$breusch_pagan)) {
-      agg$breusch_pagan <- list()
-      for(k in 1:4) {
-        stat_vals <- sapply(valid_results, function(x) get_numeric(x$breusch_pagan[[k]]$statistic))
-        df_vals   <- sapply(valid_results, function(x) get_numeric(x$breusch_pagan[[k]]$parameter))
-        p_vals    <- sapply(valid_results, function(x) get_numeric(x$breusch_pagan[[k]]$p.value))
-        agg$breusch_pagan[[k]] <- list(
-          statistic = mean(stat_vals, na.rm=TRUE),
-          parameter = mean(df_vals, na.rm=TRUE),
-          p.value   = harmonic_p(p_vals)
-        )
+      rbp_yx_stat <- sapply(valid_res, function(x) get_numeric(x$breusch_pagan[[2]]$statistic))
+      rbp_yx_df <- sapply(valid_res, function(x) get_numeric(x$breusch_pagan[[2]]$parameter))
+      rbp_yx_p <- sapply(valid_res, function(x) get_numeric(x$breusch_pagan[[2]]$p.value))
+
+      bp_xy_stat <- sapply(valid_res, function(x) get_numeric(x$breusch_pagan[[3]]$statistic))
+      bp_xy_df <- sapply(valid_res, function(x) get_numeric(x$breusch_pagan[[3]]$parameter))
+      bp_xy_p <- sapply(valid_res, function(x) get_numeric(x$breusch_pagan[[3]]$p.value))
+
+      rbp_xy_stat <- sapply(valid_res, function(x) get_numeric(x$breusch_pagan[[4]]$statistic))
+      rbp_xy_df <- sapply(valid_res, function(x) get_numeric(x$breusch_pagan[[4]]$parameter))
+      rbp_xy_p <- sapply(valid_res, function(x) get_numeric(x$breusch_pagan[[4]]$p.value))
+
+      agg$breusch_pagan <- list(
+        list(statistic = mean(bp_yx_stat, na.rm=TRUE),
+             parameter = mean(bp_yx_df, na.rm=TRUE),
+             p.value = harmonic_p(bp_yx_p)),
+        list(statistic = mean(rbp_yx_stat, na.rm=TRUE),
+             parameter = mean(rbp_yx_df, na.rm=TRUE),
+             p.value = harmonic_p(rbp_yx_p)),
+        list(statistic = mean(bp_xy_stat, na.rm=TRUE),
+             parameter = mean(bp_xy_df, na.rm=TRUE),
+             p.value = harmonic_p(bp_xy_p)),
+        list(statistic = mean(rbp_xy_stat, na.rm=TRUE),
+             parameter = mean(rbp_xy_df, na.rm=TRUE),
+             p.value = harmonic_p(rbp_xy_p))
+      )
+
+      # Decision using robust BP
+      decs$dec_bp <- calc_props(ifelse(rbp_yx_p > alpha & rbp_xy_p <= alpha, "Target",
+                                       ifelse(rbp_yx_p <= alpha & rbp_xy_p > alpha, "Alternative",
+                                              "Undecided")))
+    }
+
+    # --- Non-linear Correlation Tests ---
+    if (!is.null(valid_res[[1]]$nlcor.yx)) {
+      nlcor_yx_t1 <- do.call(rbind, lapply(valid_res, function(x) as.numeric(x$nlcor.yx$t1)))
+      nlcor_yx_t2 <- do.call(rbind, lapply(valid_res, function(x) as.numeric(x$nlcor.yx$t2)))
+      nlcor_yx_t3 <- do.call(rbind, lapply(valid_res, function(x) as.numeric(x$nlcor.yx$t3)))
+
+      nlcor_xy_t1 <- do.call(rbind, lapply(valid_res, function(x) as.numeric(x$nlcor.xy$t1)))
+      nlcor_xy_t2 <- do.call(rbind, lapply(valid_res, function(x) as.numeric(x$nlcor.xy$t2)))
+      nlcor_xy_t3 <- do.call(rbind, lapply(valid_res, function(x) as.numeric(x$nlcor.xy$t3)))
+
+      agg$nlcor.yx <- list(
+        t1 = c(mean(nlcor_yx_t1[,1], na.rm=TRUE), mean(nlcor_yx_t1[,2], na.rm=TRUE),
+               mean(nlcor_yx_t1[,3], na.rm=TRUE), harmonic_p(nlcor_yx_t1[,4])),
+        t2 = c(mean(nlcor_yx_t2[,1], na.rm=TRUE), mean(nlcor_yx_t2[,2], na.rm=TRUE),
+               mean(nlcor_yx_t2[,3], na.rm=TRUE), harmonic_p(nlcor_yx_t2[,4])),
+        t3 = c(mean(nlcor_yx_t3[,1], na.rm=TRUE), mean(nlcor_yx_t3[,2], na.rm=TRUE),
+               mean(nlcor_yx_t3[,3], na.rm=TRUE), harmonic_p(nlcor_yx_t3[,4])),
+        func = valid_res[[1]]$nlcor.yx$func
+      )
+
+      agg$nlcor.xy <- list(
+        t1 = c(mean(nlcor_xy_t1[,1], na.rm=TRUE), mean(nlcor_xy_t1[,2], na.rm=TRUE),
+               mean(nlcor_xy_t1[,3], na.rm=TRUE), harmonic_p(nlcor_xy_t1[,4])),
+        t2 = c(mean(nlcor_xy_t2[,1], na.rm=TRUE), mean(nlcor_xy_t2[,2], na.rm=TRUE),
+               mean(nlcor_xy_t2[,3], na.rm=TRUE), harmonic_p(nlcor_xy_t2[,4])),
+        t3 = c(mean(nlcor_xy_t3[,1], na.rm=TRUE), mean(nlcor_xy_t3[,2], na.rm=TRUE),
+               mean(nlcor_xy_t3[,3], na.rm=TRUE), harmonic_p(nlcor_xy_t3[,4])),
+        func = valid_res[[1]]$nlcor.xy$func
+      )
+
+      # Minimum p-value approach
+      nlcor_yx_min <- apply(cbind(nlcor_yx_t1[,4], nlcor_yx_t2[,4], nlcor_yx_t3[,4]), 1, min)
+      nlcor_xy_min <- apply(cbind(nlcor_xy_t1[,4], nlcor_xy_t2[,4], nlcor_xy_t3[,4]), 1, min)
+      decs$dec_nl.min <- calc_props(ifelse(nlcor_yx_min > alpha & nlcor_xy_min <= alpha, "Target",
+                                           ifelse(nlcor_yx_min <= alpha & nlcor_xy_min > alpha, "Alternative",
+                                                  "Undecided")))
+    }
+
+    # --- Difference Statistics ---
+    if (!is.null(valid_res[[1]]$out.diff)) {
+      diff_arr <- simplify2array(lapply(valid_res, function(x) as.matrix(x$out.diff)))
+      agg$diff_matrix <- apply(diff_arr, c(1,2), mean, na.rm=TRUE)
+
+      calc_diff <- function(row) {
+        low <- sapply(valid_res, function(x) x$out.diff[row, 2])
+        upp <- sapply(valid_res, function(x) x$out.diff[row, 3])
+        calc_props(ifelse(low > 0 & upp > 0, "Target",
+                          ifelse(low < 0 & upp < 0, "Alternative",
+                                 "Undecided")))
       }
+      decs$diff_hsic <- calc_diff(1)
+      decs$diff_dcor <- calc_diff(2)
+      decs$diff_mi <- calc_diff(3)
     }
-
-    # Aggregation of Non-linear Correlation Tests
-    if (!is.null(valid_results[[1]]$nlcor.yx)) {
-      agg$nlcor.yx <- list()
-      agg$nlcor.xy <- list()
-
-      agg_nl <- function(side_key) {
-        res_list <- list()
-        agg_t_vec <- function(comp_key) {
-          mat <- sapply(valid_results, function(x) {
-            v <- x[[side_key]][[comp_key]]
-            if(length(v) >= 4) as.numeric(v) else rep(NA, 4)
-          })
-          c(mean(mat[1,], na.rm=TRUE), # est
-            mean(mat[2,], na.rm=TRUE), # t
-            mean(mat[3,], na.rm=TRUE), # df
-            harmonic_p(mat[4,]))       # p
-        }
-        res_list$t1 <- agg_t_vec("t1")
-        res_list$t2 <- agg_t_vec("t2")
-        res_list$t3 <- agg_t_vec("t3")
-        first_valid <- valid_results[[1]]
-        res_list$func <- first_valid[[side_key]]$func
-        res_list$fname <- first_valid[[side_key]]$fname
-        res_list$varnames <- first_valid[[side_key]]$varnames
-        res_list
-      }
-      agg$nlcor.yx <- agg_nl("nlcor.yx")
-      agg$nlcor.xy <- agg_nl("nlcor.xy")
-      agg$nlfun <- valid_results[[1]]$nlfun
-    }
-
-    # --- Decision Proportions (INDEP) ---
-    # Tar is selected if Tar p >= alpha (Indep) & Alt p < alpha (Dep)
-    dec_hsic <- ifelse(hsic_yx_pval >= alpha & hsic_xy_pval < alpha, "Target",
-                       ifelse(hsic_yx_pval < alpha & hsic_xy_pval >= alpha, "Alternative", "Undecided"))
-    decisions$hsic <- calc_props(dec_hsic)
-
-    # (dCor): Tar is selected if Tar p >= alpha (Indep) & Alt p < alpha (Dep)
-    dec_dcor <- ifelse(dcor_yx_pval >= alpha & dcor_xy_pval < alpha, "Target",
-                       ifelse(dcor_yx_pval < alpha & dcor_xy_pval >= alpha, "Alternative", "Undecided"))
-
-    decisions$dcor <- calc_props(dec_dcor)
-
-    # Difference statistics
-    if (!is.null(valid_results[[1]]$out.diff)) {
-      first_diff <- valid_results[[1]]$out.diff
-      diff_mat <- lapply(valid_results, function(x) {
-        if (!is.null(x$out.diff)) {
-          as.matrix(x$out.diff)
-        } else {
-          matrix(NA_real_, nrow = nrow(first_diff), ncol = ncol(first_diff),
-                 dimnames = dimnames(first_diff))
-        }
-      })
-      diff_array <- simplify2array(diff_mat)
-      agg$diff_matrix <- apply(diff_array, c(1,2), function(xx) mean(xx, na.rm=TRUE))
-
-      decisions$diff_hsic <- calc_diff_decision(1)
-      if(nrow(first_diff) >= 2) decisions$diff_dcor <- calc_diff_decision(2)
-      if(nrow(first_diff) >= 3) decisions$diff_mi   <- calc_diff_decision(3)
-    }
-
-    class_label <- "dda_bagging_indep"
   }
 
-  ## --- DDA.RESDIST block ---
-  if (n_valid > 0 && object_type == "dda.resdist") {
-    agg$var.names <- if (!is.null(valid_results[[1]]$var.names)) valid_results[[1]]$var.names else c("target", "alternative")
-    agg$probtrans <- if (!is.null(valid_results[[1]]$probtrans)) valid_results[[1]]$probtrans else FALSE
+  ## ============================================================================
+  ## RESDIST Block
+  ## ============================================================================
+  if (obj_type == "dda.resdist") {
 
-    agg$agostino.target.statistic <- mean(sapply(valid_results, function(x) get_numeric(x$agostino$target$statistic[1])), na.rm=TRUE)
-    agg$agostino.target.z         <- mean(sapply(valid_results, function(x) get_numeric(x$agostino$target$statistic[2])), na.rm=TRUE)
-    agg$agostino.target.p.value   <- harmonic_p(sapply(valid_results, function(x) get_numeric(x$agostino$target$p.value)))
-    agg$agostino.alternative.statistic <- mean(sapply(valid_results, function(x) get_numeric(x$agostino$alternative$statistic[1])), na.rm=TRUE)
-    agg$agostino.alternative.z         <- mean(sapply(valid_results, function(x) get_numeric(x$agostino$alternative$statistic[2])), na.rm=TRUE)
-    agg$agostino.alternative.p.value   <- harmonic_p(sapply(valid_results, function(x) get_numeric(x$agostino$alternative$p.value)))
+    # Store variable names
+    agg$var.names <- var_names
 
-    agg$anscombe.target.statistic <- mean(sapply(valid_results, function(x) get_numeric(x$anscombe$target$statistic[1])), na.rm=TRUE)
-    agg$anscombe.target.z         <- mean(sapply(valid_results, function(x) get_numeric(x$anscombe$target$statistic[2])), na.rm=TRUE)
-    agg$anscombe.target.p.value   <- harmonic_p(sapply(valid_results, function(x) get_numeric(x$anscombe$target$p.value)))
-    agg$anscombe.alternative.statistic <- mean(sapply(valid_results, function(x) get_numeric(x$anscombe$alternative$statistic[1])), na.rm=TRUE)
-    agg$anscombe.alternative.z         <- mean(sapply(valid_results, function(x) get_numeric(x$anscombe$alternative$statistic[2])), na.rm=TRUE)
-    agg$anscombe.alternative.p.value   <- harmonic_p(sapply(valid_results, function(x) get_numeric(x$anscombe$alternative$p.value)))
+    # Extract z-scores
+    z_tar <- sapply(valid_res, function(x) get_numeric(x$agostino$target$statistic[2]))
+    z_alt <- sapply(valid_res, function(x) get_numeric(x$agostino$alternative$statistic[2]))
 
-    mean_diff <- function(key, len) {
-      out <- lapply(valid_results, function(x) {
-        v <- x[[key]]
-        if (is.null(v)) return(rep(NA, len))
-        vnum <- suppressWarnings(as.numeric(v))
-        if (length(vnum) != len) return(rep(NA, len))
-        vnum
-      })
-      mat <- do.call(rbind, out)
-      if (is.null(mat) || length(mat) == 0) return(rep(NA, len))
-      colMeans(mat, na.rm = TRUE)
+    # D'Agostino Decision: Alternative NON-Gaussian AND Target Gaussian
+    decs$dec_agost <- calc_props(ifelse(abs(z_alt) >= crit & abs(z_tar) < crit, "Target",
+                                        ifelse(abs(z_tar) >= crit & abs(z_alt) < crit, "Alternative",
+                                               "Undecided")))
+
+    z_tar_kurt <- sapply(valid_res, function(x) get_numeric(x$anscombe$target$statistic[2]))
+    z_alt_kurt <- sapply(valid_res, function(x) get_numeric(x$anscombe$alternative$statistic[2]))
+
+    decs$dec_anscom <- calc_props(ifelse(abs(z_alt_kurt) >= crit & abs(z_tar_kurt) < crit, "Target",
+                                         ifelse(abs(z_tar_kurt) >= crit & abs(z_alt_kurt) < crit, "Alternative",
+                                                "Undecided")))
+
+    # Aggregate statistics
+    agg$agostino.target.statistic <- mean(sapply(valid_res, function(x) get_numeric(x$agostino$target$statistic[1])), na.rm=TRUE)
+    agg$agostino.target.z <- mean(z_tar, na.rm=TRUE)
+    agg$agostino.target.p.value <- harmonic_p(sapply(valid_res, function(x) get_numeric(x$agostino$target$p.value)))
+
+    agg$agostino.alternative.statistic <- mean(sapply(valid_res, function(x) get_numeric(x$agostino$alternative$statistic[1])), na.rm=TRUE)
+    agg$agostino.alternative.z <- mean(z_alt, na.rm=TRUE)
+    agg$agostino.alternative.p.value <- harmonic_p(sapply(valid_res, function(x) get_numeric(x$agostino$alternative$p.value)))
+
+    agg$anscombe.target.statistic <- mean(sapply(valid_res, function(x) get_numeric(x$anscombe$target$statistic[1])), na.rm=TRUE)
+    agg$anscombe.target.z <- mean(z_tar_kurt, na.rm=TRUE)
+    agg$anscombe.target.p.value <- harmonic_p(sapply(valid_res, function(x) get_numeric(x$anscombe$target$p.value)))
+
+    agg$anscombe.alternative.statistic <- mean(sapply(valid_res, function(x) get_numeric(x$anscombe$alternative$statistic[1])), na.rm=TRUE)
+    agg$anscombe.alternative.z <- mean(z_alt_kurt, na.rm=TRUE)
+    agg$anscombe.alternative.p.value <- harmonic_p(sapply(valid_res, function(x) get_numeric(x$anscombe$alternative$p.value)))
+
+    # Joint moments
+    for(k in c("skewdiff", "kurtdiff", "cor12diff", "cor13diff", "RHS3", "RCC", "RHS4")) {
+      mat <- do.call(rbind, lapply(valid_res, function(x) as.numeric(x[[k]])))
+      agg[[k]] <- colMeans(mat, na.rm=TRUE)
+
+      decs[[paste0("dec_", k)]] <- calc_props(ifelse(mat[,2] > 0 & mat[,3] > 0, "Target",
+                                                     ifelse(mat[,2] < 0 & mat[,3] < 0, "Alternative",
+                                                            "Undecided")))
     }
-    agg$skewdiff <- mean_diff("skewdiff", 5)
-    agg$kurtdiff <- mean_diff("kurtdiff", 5)
-    agg$cor12diff <- mean_diff("cor12diff", 3)
-    agg$cor13diff <- mean_diff("cor13diff", 3)
-    agg$RHS3      <- mean_diff("RHS3", 3)
-    agg$RHS4      <- mean_diff("RHS4", 3)
-    agg$RCC       <- mean_diff("RCC", 3)
-
-    calc_ci_decision <- function(key) {
-      lowers <- sapply(valid_results, function(x) { v <- x[[key]]; if(length(v)>=2) v[2] else NA })
-      uppers <- sapply(valid_results, function(x) { v <- x[[key]]; if(length(v)>=3) v[3] else NA })
-      d <- ifelse(!is.na(lowers) & !is.na(uppers) & lowers > 0 & uppers > 0, "Target",
-                  ifelse(!is.na(lowers) & !is.na(uppers) & lowers < 0 & uppers < 0, "Alternative", "Undecided"))
-      calc_props(d)
-    }
-
-    decisions$dec_skewdiff  <- calc_ci_decision("skewdiff")
-    decisions$dec_kurtdiff  <- calc_ci_decision("kurtdiff")
-    decisions$dec_cor12diff <- calc_ci_decision("cor12diff")
-    decisions$dec_cor13diff <- calc_ci_decision("cor13diff")
-    decisions$dec_RHS3      <- calc_ci_decision("RHS3")
-    decisions$dec_RCC       <- calc_ci_decision("RCC")
-    decisions$dec_RHS4      <- calc_ci_decision("RHS4")
-
-    ago_tar_z <- sapply(valid_results, function(x) get_numeric(x$agostino$target$statistic[2]))
-    ago_alt_z <- sapply(valid_results, function(x) get_numeric(x$agostino$alternative$statistic[2]))
-
-    # RES (Agostino): Tar is selected if Tar errors are Gaussian (abs(z) < crit) AND Alt are not
-    dec_ago <- ifelse(abs(ago_tar_z) < crit_val & abs(ago_alt_z) >= crit_val, "Target",
-                      ifelse(abs(ago_tar_z) >= crit_val & abs(ago_alt_z) < crit_val, "Alternative", "Undecided"))
-    decisions$dec_agost <- calc_props(dec_ago)
-
-
-    ans_tar_z <- sapply(valid_results, function(x) get_numeric(x$anscombe$target$statistic[2]))
-    ans_alt_z <- sapply(valid_results, function(x) get_numeric(x$anscombe$alternative$statistic[2]))
-
-    # RES (Anscombe): Tar is selected if Tar errors are Gaussian (abs(z) < crit) AND Alt are not
-    dec_ans <- ifelse(abs(ans_tar_z) < crit_val & abs(ans_alt_z) >= crit_val, "Target",
-                      ifelse(abs(ans_tar_z) >= crit_val & abs(ans_alt_z) < crit_val, "Alternative", "Undecided"))
-    decisions$dec_anscom <- calc_props(dec_ans)
-
-    class_label <- "dda_bagging_resdist"
   }
 
-  ## --- DDA.VARDIST block ---
-  if (n_valid > 0 && object_type == "dda.vardist") {
-    agg$var.names <- if (!is.null(valid_results[[1]]$var.names)) valid_results[[1]]$var.names else c("Outcome", "Predictor")
+  ## ============================================================================
+  ## VARDIST Block
+  ## ============================================================================
+  if (obj_type == "dda.vardist") {
 
-    get_mean <- function(f) {
-      vals <- sapply(valid_results, function(x) {
-        out <- tryCatch(f(x), error = function(e) NA_real_)
-        get_numeric(out)
-      })
-      mean(vals, na.rm = TRUE)
+    # Store variable names
+    agg$var.names <- var_names
+
+    # Extract z-scores
+    z_pre <- sapply(valid_res, function(x) get_numeric(x$agostino$predictor$statistic[2]))
+    z_out <- sapply(valid_res, function(x) get_numeric(x$agostino$outcome$statistic[2]))
+
+    # D'Agostino Decision: Predictor NON-Gaussian AND Outcome Gaussian
+    decs$dec_agost <- calc_props(ifelse(abs(z_pre) >= crit & abs(z_out) < crit, "Target",
+                                        ifelse(abs(z_pre) < crit & abs(z_out) >= crit, "Alternative",
+                                               "Undecided")))
+
+    z_pre_kurt <- sapply(valid_res, function(x) get_numeric(x$anscombe$predictor$statistic[2]))
+    z_out_kurt <- sapply(valid_res, function(x) get_numeric(x$anscombe$outcome$statistic[2]))
+
+    decs$dec_anscom <- calc_props(ifelse(abs(z_pre_kurt) >= crit & abs(z_out_kurt) < crit, "Target",
+                                         ifelse(abs(z_pre_kurt) < crit & abs(z_out_kurt) >= crit, "Alternative",
+                                                "Undecided")))
+
+    # Aggregate statistics
+    agg$agostino.predictor.statistic.skew <- mean(sapply(valid_res, function(x) get_numeric(x$agostino$predictor$statistic[1])), na.rm=TRUE)
+    agg$agostino.predictor.statistic.z <- mean(z_pre, na.rm=TRUE)
+    agg$agostino.predictor.p.value <- harmonic_p(sapply(valid_res, function(x) get_numeric(x$agostino$predictor$p.value)))
+
+    agg$agostino.outcome.statistic.skew <- mean(sapply(valid_res, function(x) get_numeric(x$agostino$outcome$statistic[1])), na.rm=TRUE)
+    agg$agostino.outcome.statistic.z <- mean(z_out, na.rm=TRUE)
+    agg$agostino.outcome.p.value <- harmonic_p(sapply(valid_res, function(x) get_numeric(x$agostino$outcome$p.value)))
+
+    agg$anscombe.predictor.statistic.kurt <- mean(sapply(valid_res, function(x) get_numeric(x$anscombe$predictor$statistic[1])), na.rm=TRUE)
+    agg$anscombe.predictor.statistic.z <- mean(z_pre_kurt, na.rm=TRUE)
+    agg$anscombe.predictor.p.value <- harmonic_p(sapply(valid_res, function(x) get_numeric(x$anscombe$predictor$p.value)))
+
+    agg$anscombe.outcome.statistic.kurt <- mean(sapply(valid_res, function(x) get_numeric(x$anscombe$outcome$statistic[1])), na.rm=TRUE)
+    agg$anscombe.outcome.statistic.z <- mean(z_out_kurt, na.rm=TRUE)
+    agg$anscombe.outcome.p.value <- harmonic_p(sapply(valid_res, function(x) get_numeric(x$anscombe$outcome$p.value)))
+
+    # Joint moments
+    for(k in c("skewdiff", "kurtdiff", "cor12diff", "cor13diff", "RHS", "RCC", "Rtanh")) {
+      mat <- do.call(rbind, lapply(valid_res, function(x) as.numeric(x[[k]])))
+      agg[[k]] <- colMeans(mat, na.rm=TRUE)
+
+      decs[[paste0("dec_", k)]] <- calc_props(ifelse(mat[,2] > 0 & mat[,3] > 0, "Target",
+                                                     ifelse(mat[,2] < 0 & mat[,3] < 0, "Alternative",
+                                                            "Undecided")))
     }
-    get_hmp <- function(f) {
-      pvals <- sapply(valid_results, function(x) {
-        out <- tryCatch(f(x), error = function(e) NA_real_)
-        get_numeric(out)
-      })
-      harmonic_p(pvals)
-    }
-    mean_vec <- function(key, len) {
-      rows <- lapply(valid_results, function(x) {
-        v <- tryCatch(x[[key]], error = function(e) NULL)
-        if (is.null(v)) return(rep(NA, len))
-        vnum <- suppressWarnings(as.numeric(v))
-        if (length(vnum) < len) {
-          vnum <- c(vnum, rep(NA_real_, len - length(vnum)))
-        } else if (length(vnum) > len) {
-          vnum <- vnum[seq_len(len)]
-        }
-        vnum
-      })
-      mat <- do.call(rbind, rows)
-      if (is.null(mat) || length(mat) == 0) return(rep(NA_real_, len))
-      as.numeric(colMeans(mat, na.rm = TRUE))
-    }
-
-    agg$agostino.outcome.statistic.skew   <- get_mean(function(x) x$agostino$outcome$statistic[1])
-    agg$agostino.outcome.statistic.z      <- get_mean(function(x) x$agostino$outcome$statistic[2])
-    agg$agostino.outcome.p.value          <- get_hmp(function(x) x$agostino$outcome$p.value)
-
-    agg$agostino.predictor.statistic.skew <- get_mean(function(x) x$agostino$predictor$statistic[1])
-    agg$agostino.predictor.statistic.z    <- get_mean(function(x) x$agostino$predictor$statistic[2])
-    agg$agostino.predictor.p.value        <- get_hmp(function(x) x$agostino$predictor$p.value)
-
-    agg$anscombe.outcome.statistic.kurt   <- get_mean(function(x) x$anscombe$outcome$statistic[1])
-    agg$anscombe.outcome.statistic.z      <- get_mean(function(x) x$anscombe$outcome$statistic[2])
-    agg$anscombe.outcome.p.value          <- get_hmp(function(x) x$anscombe$outcome$p.value)
-
-    agg$anscombe.predictor.statistic.kurt <- get_mean(function(x) x$anscombe$predictor$statistic[1])
-    agg$anscombe.predictor.statistic.z    <- get_mean(function(x) x$anscombe$predictor$statistic[2])
-    agg$anscombe.predictor.p.value        <- get_hmp(function(x) x$anscombe$predictor$p.value)
-
-    agg$skewdiff  <- mean_vec("skewdiff",  3)
-    agg$kurtdiff  <- mean_vec("kurtdiff",  3)
-    agg$cor12diff <- mean_vec("cor12diff", 3)
-    agg$cor13diff <- mean_vec("cor13diff", 3)
-    agg$RHS       <- mean_vec("RHS",       3)
-    agg$Rtanh     <- mean_vec("Rtanh",     3)
-    agg$RCC       <- mean_vec("RCC",       3)
-
-    # Extract pred and out Z-scores for Agostino test
-    ago_pred_z <- sapply(valid_results, function(x) get_numeric(x$agostino$predictor$statistic[2]))
-    ago_out_z  <- sapply(valid_results, function(x) get_numeric(x$agostino$outcome$statistic[2]))
-
-    # VARD (Agostino): Tar is selected if Pred is non-Gaussian (abs(z) >= crit) AND Outc is Gaussian
-    dec_ago <- ifelse(abs(ago_pred_z) >= crit_val & abs(ago_out_z) < crit_val, "Target",
-                      ifelse(abs(ago_pred_z) < crit_val & abs(ago_out_z) >= crit_val, "Alternative", "Undecided"))
-    decisions$dec_agost <- calc_props(dec_ago)
-
-    # Extract pred and out Z-scores for Anscombe test
-    ans_pred_z <- sapply(valid_results, function(x) get_numeric(x$anscombe$predictor$statistic[2]))
-    ans_out_z  <- sapply(valid_results, function(x) get_numeric(x$anscombe$outcome$statistic[2]))
-
-    # VAR (Anscombe): Tar is selected if Pred is non-Gaussian (abs(z) >= crit) AND Outc is Gaussian
-    dec_ans <- ifelse(abs(ans_pred_z) >= crit_val & abs(ans_out_z) < crit_val, "Target",
-                      ifelse(abs(ans_pred_z) < crit_val & abs(ans_out_z) >= crit_val, "Alternative", "Undecided"))
-    decisions$dec_anscom <- calc_props(dec_ans)
-
-    calc_ci_decision <- function(key) {
-      lowers <- sapply(valid_results, function(x) { v <- x[[key]]; if(length(v)>=2) v[2] else NA })
-      uppers <- sapply(valid_results, function(x) { v <- x[[key]]; if(length(v)>=3) v[3] else NA })
-      d <- ifelse(!is.na(lowers) & !is.na(uppers) & lowers > 0 & uppers > 0, "Target",
-                  ifelse(!is.na(lowers) & !is.na(uppers) & lowers < 0 & uppers < 0, "Alternative", "Undecided"))
-      calc_props(d)
-    }
-
-    decisions$dec_skewdiff  <- calc_ci_decision("skewdiff")
-    decisions$dec_kurtdiff  <- calc_ci_decision("kurtdiff")
-    decisions$dec_cor12diff <- calc_ci_decision("cor12diff")
-    decisions$dec_cor13diff <- calc_ci_decision("cor13diff")
-    decisions$dec_RHS       <- calc_ci_decision("RHS")
-    decisions$dec_RCC       <- calc_ci_decision("RCC")
-    decisions$dec_Rtanh     <- calc_ci_decision("Rtanh")
-
-    class_label <- "dda_bagging_vardist"
   }
 
-  output <- list(
-    bagged_results = bagged_results,
-    aggregated_stats = agg,
-    decision_percentages = decisions,
-    n_valid_iterations = n_valid,
-    original_result = dda_result,
-    parameters = list(
-      function_name = function_name,
-      object_type = object_type,
-      iter = iter,
-      successful_iterations = n_valid,
-      failed_iterations = iter - n_valid
-    )
-  )
+  # --- Save if requested ---
   if (!is.null(save_file)) {
-    save(output, file = save_file)
-    cat(paste("Results saved to:", save_file, "\n"))
+    saveRDS(list(bagged_results = bagged_results,
+                 aggregated_stats = agg,
+                 decision_percentages = decs,
+                 n_valid_iterations = n_valid),
+            file = save_file)
   }
-  class(output) <- c(class_label, "dda_bagging", class(output))
-  return(output)
+
+  # --- Return ---
+  out <- list(bagged_results = bagged_results,
+              aggregated_stats = agg,
+              decision_percentages = decs,
+              n_valid_iterations = n_valid)
+  class(out) <- c(paste0("dda_bagging_", gsub("dda.", "", obj_type)), "dda_bagging")
+  return(out)
 }
