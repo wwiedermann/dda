@@ -191,8 +191,8 @@ dda.vardist <- function(formula,
 	  "function_name" = "dda.vardist",  # or deparse(substitute(sys.function()))
 	  "all_args" = as.list(match.call())[-1],
 	  "formula" = formula,
-	  "data_name" = deparse(substitute(data)),
-	  "original_data" = if(missing(data) || is.null(data)) NULL else data
+	  "data_name" = deparse(substitute(data))#, RM original_data from all ddas
+	 # "original_data" = if(missing(data) || is.null(data)) NULL else data
 	)
 
 	output <- c(output,

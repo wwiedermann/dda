@@ -14,7 +14,7 @@ dda_bagging <- function(
     progress = TRUE,
     save_file = NULL,
     alpha = 0.05,
-    data = NULL
+    data = NULL #Now we need to include
 ) {
 
   # --- Helper: Safe Extraction ---
@@ -63,11 +63,20 @@ dda_bagging <- function(
   bagged_results <- vector("list", iter)
   if (progress) pb <- txtProgressBar(min = 0, max = iter, style = 3)
 
-  for(i in 1:iter) {
+  for(i in 1:iter) { #original_data is passed by the user
     boot_data <- original_data[sample(1:nobs, nobs, replace = TRUE), ]
-    boot_args <- call_info$all_args
+    boot_args <- call_info$all_args #grabbed arguments from first model
     boot_args$data <- boot_data
-    bagged_results[[i]] <- tryCatch(do.call(dda_func, boot_args), error = function(e) NA)
+
+    #X <- covariates
+    #ry <- as.vector(scale(resid(lm.fit(y, X))))
+    #rx <- as.vector(scale(resid(lm.fit(x, X))))
+    #boot_processed <- data.frame(ry, rx)
+    # & Then rework bagged results
+
+    bagged_results[[i]] <- tryCatch(do.call(dda_func, boot_args),
+                                    error = function(e) NA)
+
     if (progress) setTxtProgressBar(pb, i)
   }
   if (progress) close(pb)
@@ -211,6 +220,7 @@ dda_bagging <- function(
     }
   }
 
+
   ## ============================================================================
   ## RESDIST Block
   ## ============================================================================
@@ -224,16 +234,17 @@ dda_bagging <- function(
     z_alt <- sapply(valid_res, function(x) get_numeric(x$agostino$alternative$statistic[2]))
 
     # D'Agostino Decision: Alternative NON-Gaussian AND Target Gaussian
+    # Reverses when prob.trans = TRUE
     decs$dec_agost <- calc_props(ifelse(abs(z_alt) >= crit & abs(z_tar) < crit, "Target",
                                         ifelse(abs(z_tar) >= crit & abs(z_alt) < crit, "Alternative",
                                                "Undecided")))
 
     z_tar_kurt <- sapply(valid_res, function(x) get_numeric(x$anscombe$target$statistic[2]))
     z_alt_kurt <- sapply(valid_res, function(x) get_numeric(x$anscombe$alternative$statistic[2]))
-
+    # Reverses when prob.trans = TRUE (decision proportions)
     decs$dec_anscom <- calc_props(ifelse(abs(z_alt_kurt) >= crit & abs(z_tar_kurt) < crit, "Target",
                                          ifelse(abs(z_tar_kurt) >= crit & abs(z_alt_kurt) < crit, "Alternative",
-                                                "Undecided")))
+                                                "Undecided"))) #ifelse reversed
 
     # Aggregate statistics
     agg$agostino.target.statistic <- mean(sapply(valid_res, function(x) get_numeric(x$agostino$target$statistic[1])), na.rm=TRUE)
@@ -253,6 +264,9 @@ dda_bagging <- function(
     agg$anscombe.alternative.p.value <- harmonic_p(sapply(valid_res, function(x) get_numeric(x$anscombe$alternative$p.value)))
 
     # Joint moments
+
+    # skewdiff & kurdiff Reverses when prob.trans = TRUE
+    #ifelse
     for(k in c("skewdiff", "kurtdiff", "cor12diff", "cor13diff", "RHS3", "RCC", "RHS4")) {
       mat <- do.call(rbind, lapply(valid_res, function(x) as.numeric(x[[k]])))
       agg[[k]] <- colMeans(mat, na.rm=TRUE)
