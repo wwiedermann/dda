@@ -2,16 +2,12 @@
 #' @noRd
 print_bagging_decisions <- function(object, show = NULL, moment = NULL, type = "generic") {
 
-  # --- Header Construction ---
-  # Match print function style:
-  # DIRECTION DEPENDENCE ANALYSIS SUMMARY: [Type] (Bagged)
-  # Number of Bootstrap Aggregated Results: [N]
-
+  # --- Header ---
   header_type <- switch(type,
                         "indep" = "Independence Properties",
                         "resdist" = "Residual Distributions",
                         "vardist" = "Variable Distributions",
-                        "Generic") #To do for condit cases
+                        "Generic")
 
   cat("\n")
   cat(paste0("DIRECTION DEPENDENCE ANALYSIS SUMMARY: ", header_type, " (Bagged)"), "\n")
@@ -24,7 +20,6 @@ print_bagging_decisions <- function(object, show = NULL, moment = NULL, type = "
   }
 
   # --- Mappings ---
-  # Map aliases to internal keys for 'show' argument
   alias_map <- list(
     "skew"   = c("dec_agost", "dec_skewdiff"),
     "kurt"   = c("dec_anscom", "dec_kurtdiff"),
@@ -32,21 +27,23 @@ print_bagging_decisions <- function(object, show = NULL, moment = NULL, type = "
     "cokurt" = c("dec_cor13diff", "dec_RCC", "dec_RHS4", "dec_Rtanh"),
     "hsic"   = c("hsic", "diff_hsic"),
     "dcor"   = c("dcor", "diff_dcor"),
-    "mi"     = c("diff_mi")
+    "mi"     = c("diff_mi"),
+    "bp"     = c("dec_bp"),
+    "nlcor"  = c("dec_nl.min")
   )
 
-  # Map Moments to internal keys
   keys_m3 <- c("dec_agost", "dec_skewdiff", "dec_cor12diff", "dec_RHS", "dec_RHS3")
   keys_m4 <- c("dec_anscom", "dec_kurtdiff", "dec_cor13diff", "dec_RCC", "dec_RHS4", "dec_Rtanh")
 
-  # Label Map for Display Titles
   label_map <- list(
     "hsic"          = "HSIC",
     "dcor"          = "dCor",
     "diff_hsic"     = "HSIC Difference",
     "diff_dcor"     = "dCor Difference",
     "diff_mi"       = "MI Difference",
-    "dec_agost"     = "Separate D’Agostino Tests",
+    "dec_bp"        = "Breusch-Pagan",
+    "dec_nl.min"    = "Non-linear Correlation (minimum)",
+    "dec_agost"     = "Separate D'Agostino Tests",
     "dec_anscom"    = "Separate Anscombe-Glynn Tests",
     "dec_skewdiff"  = "Skewness Difference",
     "dec_kurtdiff"  = "Kurtosis Difference",
@@ -63,8 +60,6 @@ print_bagging_decisions <- function(object, show = NULL, moment = NULL, type = "
   keys_to_show <- c()
 
   # --- Logic for 'show' and 'moment' ---
-
-  # 1. Resolve 'show' argument
   if (!is.null(show)) {
     expanded_show <- c()
     for (s in show) {
@@ -74,11 +69,9 @@ print_bagging_decisions <- function(object, show = NULL, moment = NULL, type = "
         expanded_show <- c(expanded_show, s)
       }
     }
-    # Only keep keys that actually exist in the object
     keys_to_show <- intersect(expanded_show, all_keys)
   }
 
-  # 2. Resolve 'moment' argument
   moment_keys <- c()
   if (!is.null(moment)) {
     if (3 %in% moment) moment_keys <- c(moment_keys, keys_m3)
@@ -86,19 +79,14 @@ print_bagging_decisions <- function(object, show = NULL, moment = NULL, type = "
     moment_keys <- intersect(moment_keys, all_keys)
   }
 
-  # 3. Combine Logic
   if (is.null(show) && is.null(moment)) {
-    # Default: Show everything
     keys_to_show <- all_keys
   } else if (is.null(show) && !is.null(moment)) {
-    # Only moment specified
     keys_to_show <- moment_keys
   } else if (!is.null(show) && !is.null(moment)) {
-    # Union: Show items in 'show' OR items in 'moment'
     keys_to_show <- unique(c(keys_to_show, moment_keys))
   }
 
-  # Ensure print order follows original object order
   keys_to_show <- intersect(all_keys, keys_to_show)
 
   if (length(keys_to_show) == 0) {
@@ -108,24 +96,24 @@ print_bagging_decisions <- function(object, show = NULL, moment = NULL, type = "
     return()
   }
 
+  # --- Print Decision Tables ---
   for (dname in keys_to_show) {
     prop <- decisions[[dname]]
 
-    # SKIP if all NaNs (stat not calculated/requested in original function)
     if (all(is.nan(prop)) || all(is.na(prop))) next
 
-    # Title
     display_title <- if (!is.null(label_map[[dname]])) label_map[[dname]] else dname
     cat(display_title, "\n")
 
-    # Extract values (names in prop are "Undecided", "Target", "Alternative")
+    # Extract values
     t_val <- if ("Target" %in% names(prop)) prop["Target"] else 0
     a_val <- if ("Alternative" %in% names(prop)) prop["Alternative"] else 0
     u_val <- if ("Undecided" %in% names(prop)) prop["Undecided"] else 0
 
+    # CORRECTED COLUMN ORDERING
+    # For INDEP: Target, Alternative, Confounding (Confounding replaces Undecided)
+    # For VARDIST/RESDIST: Target, Alternative, Undecided
     if (type == "indep") {
-      # Indep columns: Target, Alternative, Confounding (mapped from Undecided)
-      # Order: Target, Alternative, Confounding
       df_print <- data.frame(
         Target      = sprintf("%.2f", t_val),
         Alternative = sprintf("%.2f", a_val),
@@ -133,8 +121,6 @@ print_bagging_decisions <- function(object, show = NULL, moment = NULL, type = "
         check.names = FALSE
       )
     } else {
-      # Var/Res columns: Undecided, Target, Alternative
-      # Order: Undecided, Target, Alternative
       df_print <- data.frame(
         Target      = sprintf("%.2f", t_val),
         Alternative = sprintf("%.2f", a_val),
@@ -147,36 +133,36 @@ print_bagging_decisions <- function(object, show = NULL, moment = NULL, type = "
     cat("\n")
   }
 
-  # --- Footnote Construction ---
-  # Match print function style:
-  # Note: Target is [y] -> [x]
-  #       Alternative is [x] -> [y]
-  #       Difference statistics > 0 suggest the model [y] -> [x]
-
-  # Try to retrieve variable names from aggregated stats or parameters
+  # --- Footnote with Actual Variable Names ---
   stats <- object$aggregated_stats
   varnames <- NULL
+
+  # Try to get variable names from aggregated stats
   if (!is.null(stats$var.names) && length(stats$var.names) == 2) {
     varnames <- stats$var.names
-  } else if (!is.null(object$parameters$var.names) && length(object$parameters$var.names) == 2) {
-    varnames <- object$parameters$var.names
   } else {
-    # Fallback default names based on type
-    if (type == "indep") varnames <- c("y", "x")
-    else if (type == "resdist") varnames <- c("target", "alternative")
-    else varnames <- c("Outcome", "Predictor")
+    # Fallback defaults
+    if (type == "indep") {
+      varnames <- c("y", "x")
+    } else if (type == "resdist") {
+      varnames <- c("target", "alternative")
+    } else {
+      varnames <- c("Outcome", "Predictor")
+    }
   }
 
-  # Note for INDEP is simpler/different in print function:
+  # Print footnote using actual variable names
+  cat("---\n")
+
   if (type == "indep") {
-    cat("---\n")
-    # For indep, print function says: "Difference statistics > 0 suggest x -> y"
-    # where varnames[2] is predictor (x) and varnames[1] is outcome (y)
+    # For indep: varnames[2] is predictor (x), varnames[1] is outcome (y)
+    # Target is x->y
     cat(paste("Note: Target is", varnames[2], "->", varnames[1]), "\n")
     cat(paste("      Alternative is", varnames[1], "->", varnames[2]), "\n")
     cat(paste("      Difference statistics > 0 suggest", varnames[2], "->", varnames[1]), "\n")
   } else if (type == "resdist") {
-    cat("---\n")
+    # For resdist: varnames[2] is predictor (x), varnames[1] is outcome (y)
+    # Target is x->y
     cat(paste("Note: Target is", varnames[2], "->", varnames[1]), "\n")
     cat(paste("      Alternative is", varnames[1], "->", varnames[2]), "\n")
 
@@ -188,7 +174,8 @@ print_bagging_decisions <- function(object, show = NULL, moment = NULL, type = "
                 "      co-skewness and co-kurtosis differences > 0 suggest", varnames[2], "->", varnames[1]), "\n")
     }
   } else if (type == "vardist") {
-    cat("---\n")
+    # For vardist: varnames[2] is predictor (x), varnames[1] is outcome (y)
+    # Target is x->y
     cat(paste("Note: (Cor^2[i,j] - Cor^2[j,i]) > 0 suggests the model", varnames[2], "->", varnames[1]), "\n")
   }
 }
@@ -196,7 +183,7 @@ print_bagging_decisions <- function(object, show = NULL, moment = NULL, type = "
 #' Summary for dda_bagging Output (INDEP)
 #'
 #' @param object Output from dda_bagging() for dda.indep objects
-#' @param show Character vector of stats to show (e.g. c("hsic", "dcor")).
+#' @param show Character vector of stats to show (e.g. c("hsic", "dcor", "bp"))
 #' @param ... Additional arguments
 #' @export
 #' @method summary dda_bagging_indep
@@ -208,8 +195,8 @@ summary.dda_bagging_indep <- function(object, show = NULL, ...) {
 #' Summary for dda_bagging Output (VARDIST)
 #'
 #' @param object Output from dda_bagging() for dda.vardist objects
-#' @param show Character vector of stats to show (e.g. c("skew", "cokurt")).
-#' @param moment Numeric vector for moments to include (3, 4).
+#' @param show Character vector of stats to show (e.g. c("skew", "cokurt"))
+#' @param moment Numeric vector for moments to include (3, 4)
 #' @param ... Additional arguments
 #' @export
 #' @method summary dda_bagging_vardist
@@ -221,8 +208,8 @@ summary.dda_bagging_vardist <- function(object, show = NULL, moment = NULL, ...)
 #' Summary for dda_bagging Output (RESDIST)
 #'
 #' @param object Output from dda_bagging() for dda.resdist objects
-#' @param show Character vector of stats to show.
-#' @param moment Numeric vector for moments to include (3, 4).
+#' @param show Character vector of stats to show
+#' @param moment Numeric vector for moments to include (3, 4)
 #' @param ... Additional arguments
 #' @export
 #' @method summary dda_bagging_resdist
