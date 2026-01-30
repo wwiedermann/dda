@@ -149,7 +149,8 @@ dda_bagging <- function(
 
       # Decision using robust BP
       decs$dec_bp <- calc_props(ifelse(rbp_yx_p > alpha & rbp_xy_p <= alpha, "Target",
-                                       ifelse(rbp_yx_p <= alpha & rbp_xy_p > alpha, "Alternative",
+                                       ifelse(rbp_yx_p <= alpha &
+                                                rbp_xy_p > alpha, "Alternative",
                                               "Undecided")))
     }
 
@@ -187,7 +188,8 @@ dda_bagging <- function(
       nlcor_yx_min <- apply(cbind(nlcor_yx_t1[,4], nlcor_yx_t2[,4], nlcor_yx_t3[,4]), 1, min)
       nlcor_xy_min <- apply(cbind(nlcor_xy_t1[,4], nlcor_xy_t2[,4], nlcor_xy_t3[,4]), 1, min)
       decs$dec_nl.min <- calc_props(ifelse(nlcor_yx_min > alpha & nlcor_xy_min <= alpha, "Target",
-                                           ifelse(nlcor_yx_min <= alpha & nlcor_xy_min > alpha, "Alternative",
+                                           ifelse(nlcor_yx_min <= alpha &
+                                                    nlcor_xy_min > alpha, "Alternative",
                                                   "Undecided")))
     }
 
