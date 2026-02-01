@@ -41,45 +41,130 @@ dda_bagging <- function(
     return(tab / sum(tab))
   }
 
-  # --- Validate Input ---
+
+
+
+
   if (!inherits(dda_result, c("dda.indep", "dda.resdist", "dda.vardist"))) {
     stop("Unsupported DDA object. Must be dda.indep, dda.resdist, or dda.vardist")
   }
 
-  # --- Setup ---
   call_info <- dda_result$call_info
-  original_data <- if (!is.null(data)) data else call_info$original_data
-  nobs <- nrow(original_data)
   dda_func <- get(call_info$function_name)
   obj_type <- class(dda_result)[1]
 
-  # Extract variable names from ORIGINAL dda_result
+  # Get original data (user must provide raw data with covariates)
+  if (is.null(data)) {
+    stop("Please provide the original raw data (with covariates) via the 'data' argument.")
+  }
+  original_data <- data
+  nobs <- nrow(original_data)
+
+  # Extract variable names from DDA result
   var_names <- dda_result$var.names
   if (is.null(var_names) || length(var_names) != 2) {
-    var_names <- c("y", "x")  # fallback
+    stop("Variable names not found in DDA result.")
   }
 
-  # --- Bootstrap Execution ---
+  # var_names[1] = outcome (y), var_names[2] = predictor (x)
+  y_name <- var_names[1]
+  x_name <- var_names[2]
+  pred_name <- x_name
+
+  # --- Formula Extraction (KEEP YOUR WORKING CODE) ---
+  call_obj <- call_info$formula$call
+
+  # Extract the formula component
+  raw_formula <- call_obj$formula
+  if (is.null(raw_formula)) {
+    raw_formula <- call_obj[[2]]
+  }
+
+  # Ensure it is a valid formula object
+  original_formula <- as.formula(raw_formula)
+
+  if (!inherits(original_formula, "formula")) {
+    stop("Formula not found in DDA result. Cannot proceed with bagging.")
+  }
+
+  # --- Extract covariates by building model matrix ONCE ---
+  mf <- model.frame(original_formula, data = original_data)
+  X_full <- model.matrix(original_formula, data = original_data)
+
+  # Find predictor column
+  delete.pred <- which(colnames(X_full) == pred_name)
+  if (length(delete.pred) == 0) {
+    stop(paste("Predictor", pred_name, "not found in model matrix."))
+  }
+
+  # Identify covariate columns (everything except intercept and predictor)
+  covariate_cols <- setdiff(1:ncol(X_full), c(1, delete.pred))  # 1 = intercept
+  has_covariates <- length(covariate_cols) > 0
+
+  # --- Bootstrap Execution Loop ---
   bagged_results <- vector("list", iter)
   if (progress) pb <- txtProgressBar(min = 0, max = iter, style = 3)
 
-  for(i in 1:iter) { #original_data is passed by the user
-    boot_data <- original_data[sample(1:nobs, nobs, replace = TRUE), ]
-    boot_args <- call_info$all_args #grabbed arguments from first model
-    boot_args$data <- boot_data
+  for(i in 1:iter) {
 
-    #X <- covariates
-    #ry <- as.vector(scale(resid(lm.fit(y, X))))
-    #rx <- as.vector(scale(resid(lm.fit(x, X))))
-    #boot_processed <- data.frame(ry, rx)
-    # & Then rework bagged results
+    # Step 1: Bootstrap the RAW data
+    boot_indices <- sample(1:nobs, nobs, replace = TRUE)
+    boot_data <- original_data[boot_indices, ]
 
-    bagged_results[[i]] <- tryCatch(do.call(dda_func, boot_args),
-                                    error = function(e) NA)
+    # Step 2: Extract variables from bootstrap sample
+    mf_boot <- model.frame(original_formula, data = boot_data)
+    y_boot <- model.response(mf_boot)
+    X_boot <- model.matrix(original_formula, data = boot_data)
+
+    # Extract predictor
+    x_boot <- X_boot[, delete.pred]
+
+    # Extract covariates (if any)
+    if (has_covariates) {
+      X_cov <- X_boot[, covariate_cols, drop = FALSE]
+      if (!is.matrix(X_cov)) X_cov <- as.matrix(X_cov)
+    } else {
+      X_cov <- matrix(1, nrow = nrow(X_boot), ncol = 1)  # Just intercept
+    }
+
+    # Step 3: Residualize (following dda.indep pattern)
+    if (has_covariates) {
+      ry <- tryCatch(
+        as.vector(scale(lm.fit(X_cov, y_boot)$residuals)),
+        error = function(e) as.vector(scale(y_boot))
+      )
+      rx <- tryCatch(
+        as.vector(scale(lm.fit(X_cov, x_boot)$residuals)),
+        error = function(e) as.vector(scale(x_boot))
+      )
+    } else {
+      # No covariates - just scale
+      ry <- as.vector(scale(y_boot))
+      rx <- as.vector(scale(x_boot))
+    }
+
+    # Step 4: Create processed data frame
+    boot_processed <- data.frame(rx, ry)
+    names(boot_processed) <- c(x_name, y_name)
+
+    # Step 5: Run DDA with fresh data
+    boot_args <- call_info$all_args
+    boot_args$data <- boot_processed
+
+    bagged_results[[i]] <- tryCatch(
+      do.call(dda_func, boot_args),
+      error = function(e) {
+        warning(paste("Iteration", i, "failed:", e$message))
+        NA
+      }
+    )
 
     if (progress) setTxtProgressBar(pb, i)
   }
+
   if (progress) close(pb)
+
+
 
   # --- Filter Valid Results ---
   valid_res <- bagged_results[!sapply(bagged_results, function(x) all(is.na(x)) || is.null(x))]
