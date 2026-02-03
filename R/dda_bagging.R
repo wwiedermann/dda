@@ -105,18 +105,20 @@ dda_bagging <- function(
   bagged_results <- vector("list", iter)
   if (progress) pb <- txtProgressBar(min = 0, max = iter, style = 3)
 
-  for(i in 1:iter) {
 
-    # Step 1: Bootstrap the RAW data
-    boot_indices <- sample(1:nobs, nobs, replace = TRUE)
-    boot_data <- original_data[boot_indices, ]
 
-    # Step 2: Extract variables from bootstrap sample
+  # Step 1: Generate ALL bootstrap indices at once
+  boot_indices_list <- replicate(iter, sample(1:nobs, nobs, replace = TRUE), simplify = FALSE)
+
+  # Step 2: Create all bootstrap datasets at once
+  boot_data_list <- lapply(boot_indices_list, function(idx) original_data[idx, ])
+
+  # Step 3: Pre-extract model components for all bootstrap samples
+  # This vectorizes the model.frame and model.matrix operations
+  boot_components <- lapply(boot_data_list, function(boot_data) {
     mf_boot <- model.frame(original_formula, data = boot_data)
-    y_boot <- model.response(mf_boot)
     X_boot <- model.matrix(original_formula, data = boot_data)
-
-    # Extract predictor
+    y_boot <- model.response(mf_boot)
     x_boot <- X_boot[, delete.pred]
 
     # Extract covariates (if any)
@@ -124,30 +126,40 @@ dda_bagging <- function(
       X_cov <- X_boot[, covariate_cols, drop = FALSE]
       if (!is.matrix(X_cov)) X_cov <- as.matrix(X_cov)
     } else {
-      X_cov <- matrix(1, nrow = nrow(X_boot), ncol = 1)  # Just intercept
+      X_cov <- matrix(1, nrow = nrow(X_boot), ncol = 1)
     }
 
-    # Step 3: Residualize (following dda.indep pattern)
+    list(y = y_boot, x = x_boot, X_cov = X_cov)
+  })
+
+  # This is the minimal loop - only DDA execution remains inside
+  bagged_results <- vector("list", iter)
+  if (progress) pb <- txtProgressBar(min = 0, max = iter, style = 3)
+
+  for(i in 1:iter) {
+    comp <- boot_components[[i]]
+
+    # Residualize (following dda.indep pattern)
     if (has_covariates) {
       ry <- tryCatch(
-        as.vector(scale(lm.fit(X_cov, y_boot)$residuals)),
-        error = function(e) as.vector(scale(y_boot))
+        as.vector(scale(lm.fit(comp$X_cov, comp$y)$residuals)),
+        error = function(e) as.vector(scale(comp$y))
       )
       rx <- tryCatch(
-        as.vector(scale(lm.fit(X_cov, x_boot)$residuals)),
-        error = function(e) as.vector(scale(x_boot))
+        as.vector(scale(lm.fit(comp$X_cov, comp$x)$residuals)),
+        error = function(e) as.vector(scale(comp$x))
       )
     } else {
       # No covariates - just scale
-      ry <- as.vector(scale(y_boot))
-      rx <- as.vector(scale(x_boot))
+      ry <- as.vector(scale(comp$y))
+      rx <- as.vector(scale(comp$x))
     }
 
-    # Step 4: Create processed data frame
+    # Create processed data frame
     boot_processed <- data.frame(rx, ry)
     names(boot_processed) <- c(x_name, y_name)
 
-    # Step 5: Run DDA with fresh data
+    # Run DDA with fresh data
     boot_args <- call_info$all_args
     boot_args$data <- boot_processed
 
@@ -163,8 +175,6 @@ dda_bagging <- function(
   }
 
   if (progress) close(pb)
-
-
 
   # --- Filter Valid Results ---
   valid_res <- bagged_results[!sapply(bagged_results, function(x) all(is.na(x)) || is.null(x))]
