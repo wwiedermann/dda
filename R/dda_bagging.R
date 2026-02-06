@@ -5,7 +5,7 @@
 #' @param progress Whether to show progress bar (default: TRUE)
 #' @param save_file Optional file path to save results
 #' @param alpha Significance level for decisions (default: 0.05)
-#' @param data Optional data frame for bootstrapping
+#' @param data Raw data frame with ALL variables (outcome, predictor, covariates)
 #' @return A list containing bootstrap and aggregated results
 #' @export
 dda_bagging <- function(
@@ -14,7 +14,7 @@ dda_bagging <- function(
     progress = TRUE,
     save_file = NULL,
     alpha = 0.05,
-    data = NULL #Now we need to include
+    data = NULL
 ) {
 
   # --- Helper: Safe Extraction ---
@@ -41,26 +41,25 @@ dda_bagging <- function(
     return(tab / sum(tab))
   }
 
-
-
-
-
+  # --- Validate Input ---
   if (!inherits(dda_result, c("dda.indep", "dda.resdist", "dda.vardist"))) {
     stop("Unsupported DDA object. Must be dda.indep, dda.resdist, or dda.vardist")
   }
 
+  # --- Setup ---
   call_info <- dda_result$call_info
-  dda_func <- get(call_info$function_name)
-  obj_type <- class(dda_result)[1]
 
-  # Get original data (user must provide raw data with covariates)
+  # Get original data
   if (is.null(data)) {
-    stop("Please provide the original raw data (with covariates) via the 'data' argument.")
+    stop("Please provide the original raw data (with all variables) via the 'data' argument.")
   }
   original_data <- data
   nobs <- nrow(original_data)
 
-  # Extract variable names from DDA result
+  dda_func <- get(call_info$function_name)
+  obj_type <- class(dda_result)[1]
+
+  # Extract variable names from ORIGINAL dda_result
   var_names <- dda_result$var.names
   if (is.null(var_names) || length(var_names) != 2) {
     stop("Variable names not found in DDA result.")
@@ -69,105 +68,121 @@ dda_bagging <- function(
   # var_names[1] = outcome (y), var_names[2] = predictor (x)
   y_name <- var_names[1]
   x_name <- var_names[2]
-  pred_name <- x_name
 
-  # --- Formula Extraction (KEEP YOUR WORKING CODE) ---
-  call_obj <- call_info$formula$call
+  # --- CRITICAL: Extract Formula from call_info ---
+  # Handle both lm() objects and raw formulas
+  original_formula <- NULL
 
-  # Extract the formula component
-  raw_formula <- call_obj$formula
-  if (is.null(raw_formula)) {
-    raw_formula <- call_obj[[2]]
+  # Try to get formula from call_info
+  if (!is.null(call_info$formula)) {
+    # Case 1: It's already a formula object
+    if (inherits(call_info$formula, "formula")) {
+      original_formula <- call_info$formula
+    }
+    # Case 2: It's an lm object
+    else if (inherits(call_info$formula, "lm")) {
+      original_formula <- formula(call_info$formula)
+    }
+    # Case 3: Extract from all_args
+    else if (!is.null(call_info$all_args$formula)) {
+      if (inherits(call_info$all_args$formula, "formula")) {
+        original_formula <- call_info$all_args$formula
+      } else if (inherits(call_info$all_args$formula, "lm")) {
+        original_formula <- formula(call_info$all_args$formula)
+      } else {
+        # Try to convert to formula
+        original_formula <- tryCatch(
+          as.formula(call_info$all_args$formula),
+          error = function(e) NULL
+        )
+      }
+    }
   }
 
-  # Ensure it is a valid formula object
-  original_formula <- as.formula(raw_formula)
-
-  if (!inherits(original_formula, "formula")) {
-    stop("Formula not found in DDA result. Cannot proceed with bagging.")
+  if (is.null(original_formula)) {
+    stop("Could not extract formula from DDA result. Please check your input.")
   }
 
-  # --- Extract covariates by building model matrix ONCE ---
+  # --- Extract Model Components ONCE from original data ---
   mf <- model.frame(original_formula, data = original_data)
+  y_orig <- model.response(mf)
   X_full <- model.matrix(original_formula, data = original_data)
 
-  # Find predictor column
-  delete.pred <- which(colnames(X_full) == pred_name)
+  # Find predictor column in model matrix
+  delete.pred <- which(colnames(X_full) == x_name)
   if (length(delete.pred) == 0) {
-    stop(paste("Predictor", pred_name, "not found in model matrix."))
+    stop(paste("Predictor", x_name, "not found in model matrix."))
   }
 
-  # Identify covariate columns (everything except intercept and predictor)
-  covariate_cols <- setdiff(1:ncol(X_full), c(1, delete.pred))  # 1 = intercept
-  has_covariates <- length(covariate_cols) > 0
+  # Extract predictor
+  x_orig <- X_full[, delete.pred]
 
-  # --- Bootstrap Execution Loop ---
-  bagged_results <- vector("list", iter)
-  if (progress) pb <- txtProgressBar(min = 0, max = iter, style = 3)
+  # Extract covariate matrix (everything except intercept and predictor)
+  X_cov_cols <- setdiff(1:ncol(X_full), c(1, delete.pred))  # 1 = intercept
+  has_covariates <- length(X_cov_cols) > 0
 
+  if (has_covariates) {
+    X_cov_names <- colnames(X_full)[X_cov_cols]
+  }
 
-
-  # Step 1: Generate ALL bootstrap indices at once
-  boot_indices_list <- replicate(iter, sample(1:nobs, nobs, replace = TRUE), simplify = FALSE)
-
-  # Step 2: Create all bootstrap datasets at once
-  boot_data_list <- lapply(boot_indices_list, function(idx) original_data[idx, ])
-
-  # Step 3: Pre-extract model components for all bootstrap samples
-  # This vectorizes the model.frame and model.matrix operations
-  boot_components <- lapply(boot_data_list, function(boot_data) {
-    mf_boot <- model.frame(original_formula, data = boot_data)
-    X_boot <- model.matrix(original_formula, data = boot_data)
-    y_boot <- model.response(mf_boot)
-    x_boot <- X_boot[, delete.pred]
-
-    # Extract covariates (if any)
-    if (has_covariates) {
-      X_cov <- X_boot[, covariate_cols, drop = FALSE]
-      if (!is.matrix(X_cov)) X_cov <- as.matrix(X_cov)
-    } else {
-      X_cov <- matrix(1, nrow = nrow(X_boot), ncol = 1)
-    }
-
-    list(y = y_boot, x = x_boot, X_cov = X_cov)
-  })
-
-  # This is the minimal loop - only DDA execution remains inside
+  # --- Bootstrap Execution Loop (FOLLOWING CH8 ORDER OF OPERATIONS) ---
   bagged_results <- vector("list", iter)
   if (progress) pb <- txtProgressBar(min = 0, max = iter, style = 3)
 
   for(i in 1:iter) {
-    comp <- boot_components[[i]]
 
-    # Residualize (following dda.indep pattern)
+    # STEP 1: Bootstrap the RAW data (Ch8 line 168)
+    boot_indices <- sample(1:nobs, nobs, replace = TRUE)
+    datboot <- original_data[boot_indices, ]
+
+    # STEP 2: Build lm models and extract residuals from BOOTSTRAPPED data (Ch8 lines 170-171)
+    # This is the CRITICAL STEP that was missing
+
     if (has_covariates) {
-      ry <- tryCatch(
-        as.vector(scale(lm.fit(comp$X_cov, comp$y)$residuals)),
-        error = function(e) as.vector(scale(comp$y))
-      )
-      rx <- tryCatch(
-        as.vector(scale(lm.fit(comp$X_cov, comp$x)$residuals)),
-        error = function(e) as.vector(scale(comp$x))
-      )
+      # Build covariate formula (excluding the predictor of interest)
+      cov_formula_y <- as.formula(paste(y_name, "~", paste(X_cov_names, collapse = " + ")))
+      cov_formula_x <- as.formula(paste(x_name, "~", paste(X_cov_names, collapse = " + ")))
+
+      # Residualize Y and X with respect to covariates on BOOTSTRAPPED data
+      ry <- tryCatch({
+        as.vector(scale(resid(lm(cov_formula_y, data = datboot))))
+      }, error = function(e) {
+        as.vector(scale(datboot[[y_name]]))
+      })
+
+      rx <- tryCatch({
+        as.vector(scale(resid(lm(cov_formula_x, data = datboot))))
+      }, error = function(e) {
+        as.vector(scale(datboot[[x_name]]))
+      })
     } else {
-      # No covariates - just scale
-      ry <- as.vector(scale(comp$y))
-      rx <- as.vector(scale(comp$x))
+      # No covariates - just scale the variables
+      ry <- as.vector(scale(datboot[[y_name]]))
+      rx <- as.vector(scale(datboot[[x_name]]))
     }
 
-    # Create processed data frame
+    # STEP 3: Call DDA function with RESIDUALIZED variables (Ch8 lines 174-178)
+    # The DDA functions will do ADDITIONAL residualization internally, which is correct
+
+    # Get original arguments
+    boot_args <- call_info$all_args
+
+    # Create simple formula with residualized variables
+    # Using the SAME variable names as in the original call
+    boot_args$formula <- as.formula(paste(y_name, "~", x_name))
+    boot_args$pred <- x_name
+
+    # Create data frame with residualized variables using ORIGINAL names
     boot_processed <- data.frame(rx, ry)
     names(boot_processed) <- c(x_name, y_name)
-
-    # Run DDA with fresh data
-    boot_args <- call_info$all_args
     boot_args$data <- boot_processed
 
+    # Execute DDA function
     bagged_results[[i]] <- tryCatch(
       do.call(dda_func, boot_args),
       error = function(e) {
-        warning(paste("Iteration", i, "failed:", e$message))
-        NA
+        warning(paste("Bootstrap iteration", i, "failed:", e$message))
+        return(NA)
       }
     )
 
@@ -179,6 +194,11 @@ dda_bagging <- function(
   # --- Filter Valid Results ---
   valid_res <- bagged_results[!sapply(bagged_results, function(x) all(is.na(x)) || is.null(x))]
   n_valid <- length(valid_res)
+
+  if (n_valid == 0) {
+    stop("No valid bootstrap iterations. Check your data and DDA function arguments.")
+  }
+
   agg <- list()
   decs <- list()
   crit <- qnorm(1 - alpha/2)
@@ -339,7 +359,7 @@ dda_bagging <- function(
     # Reverses when prob.trans = TRUE (decision proportions)
     decs$dec_anscom <- calc_props(ifelse(abs(z_alt_kurt) >= crit & abs(z_tar_kurt) < crit, "Target",
                                          ifelse(abs(z_tar_kurt) >= crit & abs(z_alt_kurt) < crit, "Alternative",
-                                                "Undecided"))) #ifelse reversed
+                                                "Undecided")))
 
     # Aggregate statistics
     agg$agostino.target.statistic <- mean(sapply(valid_res, function(x) get_numeric(x$agostino$target$statistic[1])), na.rm=TRUE)
@@ -359,9 +379,6 @@ dda_bagging <- function(
     agg$anscombe.alternative.p.value <- harmonic_p(sapply(valid_res, function(x) get_numeric(x$anscombe$alternative$p.value)))
 
     # Joint moments
-
-    # skewdiff & kurdiff Reverses when prob.trans = TRUE
-    #ifelse
     for(k in c("skewdiff", "kurtdiff", "cor12diff", "cor13diff", "RHS3", "RCC", "RHS4")) {
       mat <- do.call(rbind, lapply(valid_res, function(x) as.numeric(x[[k]])))
       agg[[k]] <- colMeans(mat, na.rm=TRUE)
