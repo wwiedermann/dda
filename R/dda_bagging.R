@@ -107,8 +107,11 @@ dda_bagging <- function(
     if (has_covariates) {
       cov_formula_y <- as.formula(paste(y_name, "~", paste(cov_names, collapse = " + ")))
       cov_formula_x <- as.formula(paste(x_name, "~", paste(cov_names, collapse = " + ")))
-
+      # To consider: run competing models to create using lm
+      #tar <-
+      #alt <-
       tryCatch({
+
         ry <- as.vector(scale(resid(lm(cov_formula_y, data = datboot))))
         rx <- as.vector(scale(resid(lm(cov_formula_x, data = datboot))))
       }, error = function(e) {
