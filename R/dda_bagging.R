@@ -65,7 +65,7 @@ dda_bagging <- function(
   y_name <- var_names[1]
   x_name <- var_names[2]
 
-  # --- Extract Formula Properly (Avoid Dummy Var issues) ---
+  # --- Extract Formula (to avoid Dummy Var issues) ---
   original_formula <- NULL
   if (!is.null(call_info$formula)) {
     if (inherits(call_info$formula, "formula")) {
@@ -73,6 +73,8 @@ dda_bagging <- function(
     } else if (inherits(call_info$formula, "lm")) {
       original_formula <- formula(call_info$formula)
     } else if (!is.null(call_info$all_args$formula)) {
+
+
       if (inherits(call_info$all_args$formula, "formula")) {
         original_formula <- call_info$all_args$formula
       } else if (inherits(call_info$all_args$formula, "lm")) {
@@ -117,10 +119,10 @@ dda_bagging <- function(
       rx <- as.vector(scale(datboot[[x_name]]))
     }
 
-    # 3. Sanitize boot_args object (Crucial Fix)
+    # 3. boot_args obj
     boot_args <- call_info$all_args
     if (length(boot_args) > 0 && names(boot_args)[1] == "") {
-      boot_args[[1]] <- NULL # Purge the original lm object
+      boot_args[[1]] <- NULL # remove the original lm object
     }
 
     boot_args$formula <- as.formula(paste(y_name, "~", x_name))
@@ -290,7 +292,7 @@ dda_bagging <- function(
     agg$anscombe.alternative.z <- mean(z_alt_kurt, na.rm=TRUE)
     agg$anscombe.alternative.p.value <- harmonic_p(sapply(valid_res, function(x) get_numeric(x$anscombe$alternative$p.value)))
 
-    # Joint moments - Use Dynamic Matrix Indexing
+    # Joint moments - Dynamic Matrix Indexing
     for(k in c("skewdiff", "kurtdiff", "cor12diff", "cor13diff", "RHS3", "RCC", "RHS4")) {
       if (is.null(valid_res[[1]][[k]])) next
       mat <- do.call(rbind, lapply(valid_res, function(x) as.numeric(x[[k]])))
