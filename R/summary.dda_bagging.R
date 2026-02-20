@@ -1,3 +1,5 @@
+
+# ! Digit rounding to 3 places as default (digits = 3), with options to change
 # Helper: Largest Remainder Method for rounding proportions to sum exactly to 1
 round_preserve_sum <- function(x, digits = 2) {
   if (sum(x, na.rm = TRUE) == 0) return(x)
@@ -211,7 +213,8 @@ print_bagging_decisions <- function(object, show = NULL, moment = NULL, type = "
 #' @param ... Additional arguments
 #' @export
 #' @method summary dda_bagging_indep
-summary.dda_bagging_indep <- function(object, show = NULL, ...) {
+summary.dda_bagging_indep <- function(object, show = NULL,
+                                      digits = 3, ...) {
   print_bagging_decisions(object, show = show, type = "indep")
   invisible(object)
 }
@@ -224,7 +227,8 @@ summary.dda_bagging_indep <- function(object, show = NULL, ...) {
 #' @param ... Additional arguments
 #' @export
 #' @method summary dda_bagging_vardist
-summary.dda_bagging_vardist <- function(object, show = NULL, moment = NULL, ...) {
+summary.dda_bagging_vardist <- function(object, show = NULL,
+                                        moment = NULL, digits = 3, ...) {
   print_bagging_decisions(object, show = show, moment = moment, type = "vardist")
   invisible(object)
 }
@@ -237,7 +241,8 @@ summary.dda_bagging_vardist <- function(object, show = NULL, moment = NULL, ...)
 #' @param ... Additional arguments
 #' @export
 #' @method summary dda_bagging_resdist
-summary.dda_bagging_resdist <- function(object, show = NULL, moment = NULL, ...) {
+summary.dda_bagging_resdist <- function(object, show = NULL, moment = NULL,
+                                        digits = 3, ...) {
   print_bagging_decisions(object, show = show, moment = moment, type = "resdist")
   invisible(object)
 }
