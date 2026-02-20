@@ -1,3 +1,23 @@
+# Helper: Largest Remainder Method for rounding proportions to sum exactly to 1
+round_preserve_sum <- function(x, digits = 2) {
+  if (sum(x, na.rm = TRUE) == 0) return(x)
+
+  multiplier <- 10^digits
+  scaled <- x * multiplier
+  rounded <- floor(scaled)
+  remainder <- scaled - rounded
+
+  diff <- round(multiplier - sum(rounded))
+
+  if (diff > 0 && diff <= length(x)) {
+    # Add 1 to the elements with the largest decimal remainders
+    idx <- order(remainder, decreasing = TRUE)[1:diff]
+    rounded[idx] <- rounded[idx] + 1
+  }
+
+  return(rounded / multiplier)
+}
+
 # Internal helper to print decision summary
 #' @noRd
 print_bagging_decisions <- function(object, show = NULL, moment = NULL, type = "generic") {
@@ -59,17 +79,21 @@ print_bagging_decisions <- function(object, show = NULL, moment = NULL, type = "
   all_keys <- names(decisions)
   keys_to_show <- c()
 
-  # --- Logic for 'show' and 'moment' ---
+  # --- Logic for 'show' (including "all" option) and 'moment' ---
   if (!is.null(show)) {
-    expanded_show <- c()
-    for (s in show) {
-      if (s %in% names(alias_map)) {
-        expanded_show <- c(expanded_show, alias_map[[s]])
-      } else {
-        expanded_show <- c(expanded_show, s)
+    if ("all" %in% tolower(show)) {
+      keys_to_show <- all_keys
+    } else {
+      expanded_show <- c()
+      for (s in show) {
+        if (s %in% names(alias_map)) {
+          expanded_show <- c(expanded_show, alias_map[[s]])
+        } else {
+          expanded_show <- c(expanded_show, s)
+        }
       }
+      keys_to_show <- intersect(expanded_show, all_keys)
     }
-    keys_to_show <- intersect(expanded_show, all_keys)
   }
 
   moment_keys <- c()
@@ -105,26 +129,32 @@ print_bagging_decisions <- function(object, show = NULL, moment = NULL, type = "
     display_title <- if (!is.null(label_map[[dname]])) label_map[[dname]] else dname
     cat(display_title, "\n")
 
-    # Extract values
+    # Extract exact values
     t_val <- if ("Target" %in% names(prop)) prop["Target"] else 0
     a_val <- if ("Alternative" %in% names(prop)) prop["Alternative"] else 0
     u_val <- if ("Undecided" %in% names(prop)) prop["Undecided"] else 0
 
-    # CORRECTED COLUMN ORDERING
-    # For INDEP: Target, Alternative, Confounding (Confounding replaces Undecided)
-    # For VARDIST/RESDIST: Target, Alternative, Undecided
+    # Apply Largest Remainder Method rounding
+    vals <- c(t_val, a_val, u_val)
+    vals_rounded <- round_preserve_sum(vals, digits = 2)
+
+    t_val_rd <- vals_rounded[1]
+    a_val_rd <- vals_rounded[2]
+    u_val_rd <- vals_rounded[3]
+
+    # Output formatting
     if (type == "indep") {
       df_print <- data.frame(
-        Target      = sprintf("%.2f", t_val),
-        Alternative = sprintf("%.2f", a_val),
-        Confounding = sprintf("%.2f", u_val),
+        Target      = sprintf("%.2f", t_val_rd),
+        Alternative = sprintf("%.2f", a_val_rd),
+        Confounding = sprintf("%.2f", u_val_rd),
         check.names = FALSE
       )
     } else {
       df_print <- data.frame(
-        Target      = sprintf("%.2f", t_val),
-        Alternative = sprintf("%.2f", a_val),
-        Undecided   = sprintf("%.2f", u_val),
+        Target      = sprintf("%.2f", t_val_rd),
+        Alternative = sprintf("%.2f", a_val_rd),
+        Undecided   = sprintf("%.2f", u_val_rd),
         check.names = FALSE
       )
     }
@@ -155,14 +185,10 @@ print_bagging_decisions <- function(object, show = NULL, moment = NULL, type = "
   cat("---\n")
 
   if (type == "indep") {
-    # For indep: varnames[2] is predictor (x), varnames[1] is outcome (y)
-    # Target is x->y
     cat(paste("Note: Target is", varnames[2], "->", varnames[1]), "\n")
     cat(paste("      Alternative is", varnames[1], "->", varnames[2]), "\n")
     cat(paste("      Difference statistics > 0 suggest", varnames[2], "->", varnames[1]), "\n")
   } else if (type == "resdist") {
-    # For resdist: varnames[2] is predictor (x), varnames[1] is outcome (y)
-    # Target is x->y
     cat(paste("Note: Target is", varnames[2], "->", varnames[1]), "\n")
     cat(paste("      Alternative is", varnames[1], "->", varnames[2]), "\n")
 
@@ -174,8 +200,6 @@ print_bagging_decisions <- function(object, show = NULL, moment = NULL, type = "
                 "      co-skewness and co-kurtosis differences > 0 suggest", varnames[2], "->", varnames[1]), "\n")
     }
   } else if (type == "vardist") {
-    # For vardist: varnames[2] is predictor (x), varnames[1] is outcome (y)
-    # Target is x->y
     cat(paste("Note: (Cor^2[i,j] - Cor^2[j,i]) > 0 suggests the model", varnames[2], "->", varnames[1]), "\n")
   }
 }
@@ -183,7 +207,7 @@ print_bagging_decisions <- function(object, show = NULL, moment = NULL, type = "
 #' Summary for dda_bagging Output (INDEP)
 #'
 #' @param object Output from dda_bagging() for dda.indep objects
-#' @param show Character vector of stats to show (e.g. c("hsic", "dcor", "bp"))
+#' @param show Character vector of stats to show (e.g. c("hsic", "dcor", "bp", "all"))
 #' @param ... Additional arguments
 #' @export
 #' @method summary dda_bagging_indep
@@ -195,7 +219,7 @@ summary.dda_bagging_indep <- function(object, show = NULL, ...) {
 #' Summary for dda_bagging Output (VARDIST)
 #'
 #' @param object Output from dda_bagging() for dda.vardist objects
-#' @param show Character vector of stats to show (e.g. c("skew", "cokurt"))
+#' @param show Character vector of stats to show (e.g. c("skew", "cokurt", "all"))
 #' @param moment Numeric vector for moments to include (3, 4)
 #' @param ... Additional arguments
 #' @export
@@ -208,7 +232,7 @@ summary.dda_bagging_vardist <- function(object, show = NULL, moment = NULL, ...)
 #' Summary for dda_bagging Output (RESDIST)
 #'
 #' @param object Output from dda_bagging() for dda.resdist objects
-#' @param show Character vector of stats to show
+#' @param show Character vector of stats to show (e.g. c("all"))
 #' @param moment Numeric vector for moments to include (3, 4)
 #' @param ... Additional arguments
 #' @export
