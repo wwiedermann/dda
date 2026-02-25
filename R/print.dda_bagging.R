@@ -1,5 +1,4 @@
 #' Print for dda_bagging Output (INDEP)
-#' (20 Feb 2026) MISSING: dcor print out in omnibus dda
 #'
 #' @param object Output from dda_bagging() for dda.indep objects (class: dda_bagging_indep)
 #' @param digits Number of digits for rounding (default: 4)
@@ -18,8 +17,8 @@ print.dda_bagging_indep <- function(object, digits = 4, alpha = 0.05) {
   }
 
   cat("\n")
-  cat("DIRECTION DEPENDENCE ANALYSIS: Independence Properties (Bagged)", "\n")
-  cat("Number of Bootstrap Aggregated Results:", object$n_valid_iterations, "\n", "\n")
+  cat("BOOTSTRAP AGGREGATED DDA: Independence Properties", "\n")
+  cat("Number of Bootstrap Samples:", object$n_valid_iterations, "\n", "\n")
 
   # Helper to check if a value should be printed (not null, not na, not nan)
   should_print <- function(val) {
@@ -204,8 +203,8 @@ print.dda_bagging_resdist_classic <- function(object, digits = 4) {
   stats <- object$aggregated_stats
   varnames <- if (!is.null(stats$var.names)) stats$var.names else c("target", "alternative")
 
-  cat("\nDIRECTION DEPENDENCE ANALYSIS: Residual Distributions (Bagged)\n")
-  cat("Number of Bootstrap Aggregated Results:", object$n_valid_iterations, "\n", "\n")
+  cat("\nBOOTSTRAP AGGREGATED DDA: Residual Distributions\n")
+  cat("Number of Bootstrap Samples:", object$n_valid_iterations, "\n", "\n")
 
   cat("Skewness and kurtosis tests:\n")
 
@@ -262,8 +261,8 @@ print.dda_bagging_vardist_classic <- function(object, digits = 4) {
   stats <- object$aggregated_stats
   varnames <- if (!is.null(stats$var.names)) stats$var.names else c("Outcome", "Predictor")
 
-  cat("\nDIRECTION DEPENDENCE ANALYSIS: Variable Distributions (Bagged)\n")
-  cat("Number of Bootstrap Aggregated Results:", object$n_valid_iterations, "\n", "\n")
+  cat("\nBOOTSTRAP AGGREGATED DDA: Variable Distributions\n")
+  cat("Number of Bootstrap Samples:", object$n_valid_iterations, "\n", "\n")
 
   cat("Skewness and kurtosis tests:\n")
 
@@ -306,7 +305,7 @@ print.dda_bagging_vardist_classic <- function(object, digits = 4) {
 
   cat(paste0("\n", conf_lev, " ", boot_type, " bootstrap CIs for Likelihood Ratio approximations:\n"))
   LRtests <- rbind(stats$RHS, stats$Rtanh, stats$RCC)
-  rownames(LRtests) <- c("Hyvarinen-Smith (co-skewness)", "Hyvarinen-Smith (tanh)", "Chen-Chan (co-kurtosis)")
+  rownames(LRtests) <- c("Hyvarinen-Smith (co-skewness)", "Hyvarinen-Smith (co-kurtosis)", "Chen-Chan (co-kurtosis)")
   colnames(LRtests) <- c("estimate", "lower", "upper")
   print.default(format(LRtests, digits = max(3L, getOption("digits") - 3L)), print.gap = 2L, quote = FALSE)
 

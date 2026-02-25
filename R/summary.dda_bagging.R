@@ -1,7 +1,5 @@
-
-# ! Digit rounding to 3 places as default (digits = 3), with options to change
 # Helper: Largest Remainder Method for rounding proportions to sum exactly to 1
-round_preserve_sum <- function(x, digits = 2) {
+round_preserve_sum <- function(x, digits = 3) {
   if (sum(x, na.rm = TRUE) == 0) return(x)
 
   multiplier <- 10^digits
@@ -22,7 +20,7 @@ round_preserve_sum <- function(x, digits = 2) {
 
 # Internal helper to print decision summary
 #' @noRd
-print_bagging_decisions <- function(object, show = NULL, moment = NULL, type = "generic") {
+print_bagging_decisions <- function(object, show = NULL, moment = NULL, type = "generic", digits = 3) {
 
   # --- Header ---
   header_type <- switch(type,
@@ -32,8 +30,8 @@ print_bagging_decisions <- function(object, show = NULL, moment = NULL, type = "
                         "Generic")
 
   cat("\n")
-  cat(paste0("DIRECTION DEPENDENCE ANALYSIS SUMMARY: ", header_type, " (Bagged)"), "\n")
-  cat(paste0("Number of Bootstrap Aggregated Results: ", object$n_valid_iterations), "\n\n")
+  cat(paste0("BOOTSTRAP AGGREGATED DDA: ", header_type), "\n")
+  cat(paste0("Number of Bootstrap Samples: ", object$n_valid_iterations), "\n\n")
 
   decisions <- object$decision_percentages
   if (length(decisions) == 0) {
@@ -57,6 +55,7 @@ print_bagging_decisions <- function(object, show = NULL, moment = NULL, type = "
   keys_m3 <- c("dec_agost", "dec_skewdiff", "dec_cor12diff", "dec_RHS", "dec_RHS3")
   keys_m4 <- c("dec_anscom", "dec_kurtdiff", "dec_cor13diff", "dec_RCC", "dec_RHS4", "dec_Rtanh")
 
+  # Updated labels to match Docx track changes
   label_map <- list(
     "hsic"          = "HSIC",
     "dcor"          = "dCor",
@@ -64,17 +63,17 @@ print_bagging_decisions <- function(object, show = NULL, moment = NULL, type = "
     "diff_dcor"     = "dCor Difference",
     "diff_mi"       = "MI Difference",
     "dec_bp"        = "Breusch-Pagan",
-    "dec_nl.min"    = "Non-linear Correlation (minimum)",
+    "dec_nl.min"    = "Non-linear Correlation",
     "dec_agost"     = "Separate D'Agostino Tests",
     "dec_anscom"    = "Separate Anscombe-Glynn Tests",
     "dec_skewdiff"  = "Skewness Difference",
     "dec_kurtdiff"  = "Kurtosis Difference",
     "dec_cor12diff" = "Co-Skewness Difference",
     "dec_cor13diff" = "Co-Kurtosis Difference",
-    "dec_RHS"       = "Hyvarinen-Smith (Co-Skewness)",
-    "dec_RHS3"      = "Hyvarinen-Smith (Co-Skewness)",
-    "dec_RHS4"      = "Hyvarinen-Smith (Co-Kurtosis)",
-    "dec_RCC"       = "Chen-Chan (Co-Kurtosis)",
+    "dec_RHS"       = "Hyvarinen-Smith Co-Skewness Difference",
+    "dec_RHS3"      = "Hyvarinen-Smith Co-Skewness Difference",
+    "dec_RHS4"      = "Hyvarinen-Smith Co-Kurtosis Difference",
+    "dec_RCC"       = "Chen-Chan Co-Kurtosis Difference",
     "dec_Rtanh"     = "Rtanh"
   )
 
@@ -122,6 +121,9 @@ print_bagging_decisions <- function(object, show = NULL, moment = NULL, type = "
     return()
   }
 
+  # Format string for dynamic decimal places
+  fmt <- paste0("%.", digits, "f")
+
   # --- Print Decision Tables ---
   for (dname in keys_to_show) {
     prop <- decisions[[dname]]
@@ -136,9 +138,9 @@ print_bagging_decisions <- function(object, show = NULL, moment = NULL, type = "
     a_val <- if ("Alternative" %in% names(prop)) prop["Alternative"] else 0
     u_val <- if ("Undecided" %in% names(prop)) prop["Undecided"] else 0
 
-    # Apply Largest Remainder Method rounding
+    # Apply Largest Remainder Method rounding dynamically based on user digits
     vals <- c(t_val, a_val, u_val)
-    vals_rounded <- round_preserve_sum(vals, digits = 2)
+    vals_rounded <- round_preserve_sum(vals, digits = digits)
 
     t_val_rd <- vals_rounded[1]
     a_val_rd <- vals_rounded[2]
@@ -147,16 +149,16 @@ print_bagging_decisions <- function(object, show = NULL, moment = NULL, type = "
     # Output formatting
     if (type == "indep") {
       df_print <- data.frame(
-        Target      = sprintf("%.2f", t_val_rd),
-        Alternative = sprintf("%.2f", a_val_rd),
-        Confounding = sprintf("%.2f", u_val_rd),
+        Target      = sprintf(fmt, t_val_rd),
+        Alternative = sprintf(fmt, a_val_rd),
+        Confounding = sprintf(fmt, u_val_rd),
         check.names = FALSE
       )
     } else {
       df_print <- data.frame(
-        Target      = sprintf("%.2f", t_val_rd),
-        Alternative = sprintf("%.2f", a_val_rd),
-        Undecided   = sprintf("%.2f", u_val_rd),
+        Target      = sprintf(fmt, t_val_rd),
+        Alternative = sprintf(fmt, a_val_rd),
+        Undecided   = sprintf(fmt, u_val_rd),
         check.names = FALSE
       )
     }
@@ -189,15 +191,12 @@ print_bagging_decisions <- function(object, show = NULL, moment = NULL, type = "
   if (type == "indep") {
     cat(paste("Note: Target is", varnames[2], "->", varnames[1]), "\n")
     cat(paste("      Alternative is", varnames[1], "->", varnames[2]), "\n")
-    cat(paste("      Difference statistics > 0 suggest", varnames[2], "->", varnames[1]), "\n")
   } else if (type == "resdist") {
     cat(paste("Note: Target is", varnames[2], "->", varnames[1]), "\n")
     cat(paste("      Alternative is", varnames[1], "->", varnames[2]), "\n")
 
     probtrans <- if(!is.null(stats$probtrans)) stats$probtrans else FALSE
-    if(isFALSE(probtrans)){
-      cat(paste("      Difference statistics > 0 suggest the model", varnames[2], "->", varnames[1]), "\n")
-    } else {
+    if(isTRUE(probtrans)){
       cat(paste("      Under prob.trans = TRUE, skewness and kurtosis differences < 0 and", "\n",
                 "      co-skewness and co-kurtosis differences > 0 suggest", varnames[2], "->", varnames[1]), "\n")
     }
@@ -210,12 +209,12 @@ print_bagging_decisions <- function(object, show = NULL, moment = NULL, type = "
 #'
 #' @param object Output from dda_bagging() for dda.indep objects
 #' @param show Character vector of stats to show (e.g. c("hsic", "dcor", "bp", "all"))
+#' @param digits Number of decimal places to print for proportions (default: 3)
 #' @param ... Additional arguments
 #' @export
 #' @method summary dda_bagging_indep
-summary.dda_bagging_indep <- function(object, show = NULL,
-                                      digits = 3, ...) {
-  print_bagging_decisions(object, show = show, type = "indep")
+summary.dda_bagging_indep <- function(object, show = NULL, digits = 3, ...) {
+  print_bagging_decisions(object, show = show, type = "indep", digits = digits)
   invisible(object)
 }
 
@@ -224,12 +223,12 @@ summary.dda_bagging_indep <- function(object, show = NULL,
 #' @param object Output from dda_bagging() for dda.vardist objects
 #' @param show Character vector of stats to show (e.g. c("skew", "cokurt", "all"))
 #' @param moment Numeric vector for moments to include (3, 4)
+#' @param digits Number of decimal places to print for proportions (default: 3)
 #' @param ... Additional arguments
 #' @export
 #' @method summary dda_bagging_vardist
-summary.dda_bagging_vardist <- function(object, show = NULL,
-                                        moment = NULL, digits = 3, ...) {
-  print_bagging_decisions(object, show = show, moment = moment, type = "vardist")
+summary.dda_bagging_vardist <- function(object, show = NULL, moment = NULL, digits = 3, ...) {
+  print_bagging_decisions(object, show = show, moment = moment, type = "vardist", digits = digits)
   invisible(object)
 }
 
@@ -238,11 +237,11 @@ summary.dda_bagging_vardist <- function(object, show = NULL,
 #' @param object Output from dda_bagging() for dda.resdist objects
 #' @param show Character vector of stats to show (e.g. c("all"))
 #' @param moment Numeric vector for moments to include (3, 4)
+#' @param digits Number of decimal places to print for proportions (default: 3)
 #' @param ... Additional arguments
 #' @export
 #' @method summary dda_bagging_resdist
-summary.dda_bagging_resdist <- function(object, show = NULL, moment = NULL,
-                                        digits = 3, ...) {
-  print_bagging_decisions(object, show = show, moment = moment, type = "resdist")
+summary.dda_bagging_resdist <- function(object, show = NULL, moment = NULL, digits = 3, ...) {
+  print_bagging_decisions(object, show = show, moment = moment, type = "resdist", digits = digits)
   invisible(object)
 }
