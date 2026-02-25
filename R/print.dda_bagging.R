@@ -1,16 +1,5 @@
-# Helper function to print OLS summaries
-#' @noRd
-print_ols_summary <- function(stats, digits) {
-  if (!is.null(stats$ols_target)) {
-    cat("OLS Summary: Target Model (Aggregated Bootstrap CIs)\n")
-    print.default(format(stats$ols_target, digits = digits), print.gap = 2L, quote = FALSE)
-    cat("\nOLS Summary: Alternative Model (Aggregated Bootstrap CIs)\n")
-    print.default(format(stats$ols_alternative, digits = digits), print.gap = 2L, quote = FALSE)
-    cat("\n-----------------------------------------------------\n\n")
-  }
-}
-
 #' Print for dda_bagging Output (INDEP)
+#' (20 Feb 2026) MISSING: dcor print out in omnibus dda
 #'
 #' @param object Output from dda_bagging() for dda.indep objects (class: dda_bagging_indep)
 #' @param digits Number of digits for rounding (default: 4)
@@ -31,9 +20,6 @@ print.dda_bagging_indep <- function(object, digits = 4, alpha = 0.05) {
   cat("\n")
   cat("DIRECTION DEPENDENCE ANALYSIS: Independence Properties (Bagged)", "\n")
   cat("Number of Bootstrap Aggregated Results:", object$n_valid_iterations, "\n", "\n")
-
-  # --- OLS Summary ---
-  print_ols_summary(stats, digits)
 
   # Helper to check if a value should be printed (not null, not na, not nan)
   should_print <- function(val) {
@@ -171,15 +157,16 @@ print.dda_bagging_indep <- function(object, digits = 4, alpha = 0.05) {
   # Difference Statistics CIs
   if (!is.null(stats$diff_matrix)) {
     # Extract bootstrap settings from the bagged object or defaults
-    boot_type <- "Percentile"
+    boot_type <- "Percentile" # Default based on typical usage in dda
     if (!is.null(object$bagged_results[[1]]$boot.args)) {
+      # Try to guess type if available in first result
       type_arg <- object$bagged_results[[1]]$boot.args[1]
       if (!is.null(type_arg)) {
         if(type_arg == "bca") boot_type <- "BCa"
         if(type_arg == "perc") boot_type <- "Percentile"
       }
     }
-    conf_lev <- "95%"
+    conf_lev <- "95%" # Default
     if (!is.null(object$bagged_results[[1]]$boot.args)) {
       lev <- as.numeric(object$bagged_results[[1]]$boot.args[2])
       if(!is.na(lev)) conf_lev <- paste0(lev*100, "%")
@@ -187,6 +174,7 @@ print.dda_bagging_indep <- function(object, digits = 4, alpha = 0.05) {
 
     cat(paste0(conf_lev, " ", boot_type, " Bootstrap CIs for Difference Statistics (", object$n_valid_iterations, " samples):"), "\n")
 
+    # stats$diff_matrix should be 3x3 (HSIC, dCor, MI) x (est, lower, upper)
     print.default(format(stats$diff_matrix, digits = max(3L, getOption("digits") - 3L)), print.gap = 2L, quote = FALSE)
     cat("\n")
   }
@@ -201,14 +189,23 @@ print.dda_bagging_indep <- function(object, digits = 4, alpha = 0.05) {
 #' @export
 #' @method print dda_bagging_resdist
 print.dda_bagging_resdist <- function(object, digits = 4) {
+  print.dda_bagging_resdist_classic(object, digits)
+}
+
+#' Print for dda_bagging Output (VARDIST)
+#' @export
+#' @method print dda_bagging_vardist
+print.dda_bagging_vardist <- function(object, digits = 4) {
+  print.dda_bagging_vardist_classic(object, digits)
+}
+
+# Classic print helpers (renamed from previous versions to avoid conflicts if any)
+print.dda_bagging_resdist_classic <- function(object, digits = 4) {
   stats <- object$aggregated_stats
   varnames <- if (!is.null(stats$var.names)) stats$var.names else c("target", "alternative")
 
   cat("\nDIRECTION DEPENDENCE ANALYSIS: Residual Distributions (Bagged)\n")
   cat("Number of Bootstrap Aggregated Results:", object$n_valid_iterations, "\n", "\n")
-
-  # --- OLS Summary ---
-  print_ols_summary(stats, digits)
 
   cat("Skewness and kurtosis tests:\n")
 
@@ -241,6 +238,7 @@ print.dda_bagging_resdist <- function(object, digits = 4) {
 
   citests <- rbind(stats$skewdiff, stats$kurtdiff)
   rownames(citests) <- c("Skewness", "Kurtosis")
+  # Adjust col names if length is 5 (diff, z, p, lower, upper) or 3 (diff, lower, upper)
   if (ncol(citests) == 5) colnames(citests) <- c("diff", "z-value", "Pr(>|z|)", "lower", "upper")
   if (ncol(citests) == 3) colnames(citests) <- c("diff", "lower", "upper")
   print.default(format(citests, digits = max(3L, getOption("digits") - 3L)), print.gap = 2L, quote = FALSE)
@@ -251,32 +249,21 @@ print.dda_bagging_resdist <- function(object, digits = 4) {
   colnames(joint_mat) <- c("estimate", "lower", "upper")
   print.default(format(joint_mat, digits = max(3L, getOption("digits") - 3L)), print.gap = 2L, quote = FALSE)
 
-  cat("\n---\n")
-  probtrans <- if(!is.null(stats$probtrans)) stats$probtrans else FALSE
+  cat("\nNumber of resamples:", object$n_valid_iterations, "\n")
+  cat("---\n")
   cat(paste("Note: Target is", varnames[2], "->", varnames[1], "\n"))
   cat(paste("      Alternative is", varnames[1], "->", varnames[2], "\n"))
-  if(isFALSE(probtrans)){
-    cat(paste("      Difference statistics > 0 suggest the model", varnames[2], "->", varnames[1], "\n"))
-  } else {
-    cat(paste("      Under prob.trans = TRUE, skewness and kurtosis differences < 0 and\n",
-              "      co-skewness and co-kurtosis differences > 0 suggest", varnames[2], "->", varnames[1], "\n"))
-  }
+  cat("      Difference statistics > 0 suggest the model", varnames[2], "->", varnames[1], "\n")
 
   invisible(object)
 }
 
-#' Print for dda_bagging Output (VARDIST)
-#' @export
-#' @method print dda_bagging_vardist
-print.dda_bagging_vardist <- function(object, digits = 4) {
+print.dda_bagging_vardist_classic <- function(object, digits = 4) {
   stats <- object$aggregated_stats
   varnames <- if (!is.null(stats$var.names)) stats$var.names else c("Outcome", "Predictor")
 
   cat("\nDIRECTION DEPENDENCE ANALYSIS: Variable Distributions (Bagged)\n")
   cat("Number of Bootstrap Aggregated Results:", object$n_valid_iterations, "\n", "\n")
-
-  # --- OLS Summary ---
-  print_ols_summary(stats, digits)
 
   cat("Skewness and kurtosis tests:\n")
 
@@ -323,6 +310,7 @@ print.dda_bagging_vardist <- function(object, digits = 4) {
   colnames(LRtests) <- c("estimate", "lower", "upper")
   print.default(format(LRtests, digits = max(3L, getOption("digits") - 3L)), print.gap = 2L, quote = FALSE)
 
+  cat("\nNumber of resamples:", object$n_valid_iterations, "\n")
   cat("---\n")
   cat(paste("Note: (Cor^2[i,j] - Cor^2[j,i]) > 0 suggests the model", varnames[2], "->", varnames[1], "\n"))
 
