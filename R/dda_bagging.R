@@ -6,6 +6,8 @@
 #' @param save_file Optional file path to save results
 #' @param alpha Significance level for decisions (default: 0.05)
 #' @param data Raw data frame with ALL variables (outcome, predictor, covariates)
+#' @param agg_stat Method for aggregating test statistics and coefficients. Options: "mean", "median", "trimmed", "winsorized", "midhinge", "tukey". P-values always use harmonic mean.
+#' @param trim_prob Proportion of observations to be trimmed or Winsorized from each end (default: 0.20, per Rand Wilcox's standard recommendation).
 #' @return A list containing bootstrap and aggregated results
 #' @export
 dda_bagging <- function(
@@ -14,8 +16,41 @@ dda_bagging <- function(
     progress = TRUE,
     save_file = NULL,
     alpha = 0.05,
-    data = NULL
+    data = NULL,
+    agg_stat = c("mean", "median", "trimmed", "winsorized", "midhinge", "tukey"),
+    trim_prob = 0.20
 ) {
+
+  agg_stat <- match.arg(agg_stat)
+
+  # --- Helper: Robust Aggregation for Statistics ---
+  agg_helper <- function(x) {
+    x <- as.numeric(x)
+    x <- x[!is.na(x)]
+    if (length(x) == 0) return(NA_real_)
+
+    switch(agg_stat,
+           "mean" = mean(x),
+           "median" = median(x),
+           "trimmed" = mean(x, trim = trim_prob),
+           "winsorized" = {
+             # Replace extremes with the boundary quantiles
+             q_low <- quantile(x, probs = trim_prob, na.rm = TRUE, names = FALSE)
+             q_high <- quantile(x, probs = 1 - trim_prob, na.rm = TRUE, names = FALSE)
+             x[x < q_low] <- q_low
+             x[x > q_high] <- q_high
+             mean(x)
+           },
+           "midhinge" = {
+             q <- quantile(x, probs = c(0.25, 0.75), names = FALSE)
+             mean(q)
+           },
+           "tukey" = {
+             q <- quantile(x, probs = c(0.25, 0.5, 0.75), names = FALSE)
+             (q[1] + 2*q[2] + q[3]) / 4
+           }
+    )
+  }
 
   # --- Helper: Safe Extraction ---
   get_numeric <- function(x) {
@@ -182,7 +217,7 @@ dda_bagging <- function(
     lb <- alpha / 2
     ub <- 1 - (alpha / 2)
     out_mat <- cbind(
-      estimate = colMeans(mat, na.rm = TRUE),
+      estimate = apply(mat, 2, agg_helper),
       apply(mat, 2, quantile, probs = lb, na.rm = TRUE),
       apply(mat, 2, quantile, probs = ub, na.rm = TRUE)
     )
@@ -195,7 +230,7 @@ dda_bagging <- function(
     lb <- alpha / 2
     ub <- 1 - (alpha / 2)
     out_mat <- cbind(
-      estimate = colMeans(mat, na.rm = TRUE),
+      estimate = apply(mat, 2, agg_helper),
       apply(mat, 2, quantile, probs = lb, na.rm = TRUE),
       apply(mat, 2, quantile, probs = ub, na.rm = TRUE)
     )
@@ -209,8 +244,8 @@ dda_bagging <- function(
   if (obj_type == "dda.indep") {
     agg$var.names <- var_names
 
-    agg$hsic_yx_stat <- mean(sapply(valid_res, function(x) get_numeric(x$hsic.yx$statistic)), na.rm=TRUE)
-    agg$hsic_xy_stat <- mean(sapply(valid_res, function(x) get_numeric(x$hsic.xy$statistic)), na.rm=TRUE)
+    agg$hsic_yx_stat <- agg_helper(sapply(valid_res, function(x) get_numeric(x$hsic.yx$statistic)))
+    agg$hsic_xy_stat <- agg_helper(sapply(valid_res, function(x) get_numeric(x$hsic.xy$statistic)))
     agg$hsic_yx_pval <- harmonic_p(sapply(valid_res, function(x) get_numeric(x$hsic.yx$p.value)))
     agg$hsic_xy_pval <- harmonic_p(sapply(valid_res, function(x) get_numeric(x$hsic.xy$p.value)))
 
@@ -220,8 +255,8 @@ dda_bagging <- function(
                                    ifelse(h_p_xy > alpha & h_p_yx <= alpha, "Alternative", "Undecided")))
 
     if (!is.null(valid_res[[1]]$dcor.yx)) {
-      agg$dcor_yx_stat <- mean(sapply(valid_res, function(x) get_numeric(x$dcor.yx$statistic)), na.rm=TRUE)
-      agg$dcor_xy_stat <- mean(sapply(valid_res, function(x) get_numeric(x$dcor.xy$statistic)), na.rm=TRUE)
+      agg$dcor_yx_stat <- agg_helper(sapply(valid_res, function(x) get_numeric(x$dcor.yx$statistic)))
+      agg$dcor_xy_stat <- agg_helper(sapply(valid_res, function(x) get_numeric(x$dcor.xy$statistic)))
       agg$dcor_yx_pval <- harmonic_p(sapply(valid_res, function(x) get_numeric(x$dcor.yx$p.value)))
       agg$dcor_xy_pval <- harmonic_p(sapply(valid_res, function(x) get_numeric(x$dcor.xy$p.value)))
 
@@ -249,10 +284,10 @@ dda_bagging <- function(
       rbp_xy_p <- sapply(valid_res, function(x) get_numeric(x$breusch_pagan[[4]]$p.value))
 
       agg$breusch_pagan <- list(
-        list(statistic = mean(bp_yx_stat, na.rm=TRUE), parameter = mean(bp_yx_df, na.rm=TRUE), p.value = harmonic_p(bp_yx_p)),
-        list(statistic = mean(rbp_yx_stat, na.rm=TRUE), parameter = mean(rbp_yx_df, na.rm=TRUE), p.value = harmonic_p(rbp_yx_p)),
-        list(statistic = mean(bp_xy_stat, na.rm=TRUE), parameter = mean(bp_xy_df, na.rm=TRUE), p.value = harmonic_p(bp_xy_p)),
-        list(statistic = mean(rbp_xy_stat, na.rm=TRUE), parameter = mean(rbp_xy_df, na.rm=TRUE), p.value = harmonic_p(rbp_xy_p))
+        list(statistic = agg_helper(bp_yx_stat), parameter = mean(bp_yx_df, na.rm=TRUE), p.value = harmonic_p(bp_yx_p)),
+        list(statistic = agg_helper(rbp_yx_stat), parameter = mean(rbp_yx_df, na.rm=TRUE), p.value = harmonic_p(rbp_yx_p)),
+        list(statistic = agg_helper(bp_xy_stat), parameter = mean(bp_xy_df, na.rm=TRUE), p.value = harmonic_p(bp_xy_p)),
+        list(statistic = agg_helper(rbp_xy_stat), parameter = mean(rbp_xy_df, na.rm=TRUE), p.value = harmonic_p(rbp_xy_p))
       )
       decs$dec_bp <- calc_props(ifelse(rbp_yx_p > alpha & rbp_xy_p <= alpha, "Target",
                                        ifelse(rbp_yx_p <= alpha & rbp_xy_p > alpha, "Alternative", "Undecided")))
@@ -267,16 +302,16 @@ dda_bagging <- function(
       nlcor_xy_t3 <- do.call(rbind, lapply(valid_res, function(x) as.numeric(x$nlcor.xy$t3)))
 
       agg$nlcor.yx <- list(
-        t1 = c(mean(nlcor_yx_t1[,1], na.rm=TRUE), mean(nlcor_yx_t1[,2], na.rm=TRUE), mean(nlcor_yx_t1[,3], na.rm=TRUE), harmonic_p(nlcor_yx_t1[,4])),
-        t2 = c(mean(nlcor_yx_t2[,1], na.rm=TRUE), mean(nlcor_yx_t2[,2], na.rm=TRUE), mean(nlcor_yx_t2[,3], na.rm=TRUE), harmonic_p(nlcor_yx_t2[,4])),
-        t3 = c(mean(nlcor_yx_t3[,1], na.rm=TRUE), mean(nlcor_yx_t3[,2], na.rm=TRUE), mean(nlcor_yx_t3[,3], na.rm=TRUE), harmonic_p(nlcor_yx_t3[,4])),
+        t1 = c(agg_helper(nlcor_yx_t1[,1]), agg_helper(nlcor_yx_t1[,2]), mean(nlcor_yx_t1[,3], na.rm=TRUE), harmonic_p(nlcor_yx_t1[,4])),
+        t2 = c(agg_helper(nlcor_yx_t2[,1]), agg_helper(nlcor_yx_t2[,2]), mean(nlcor_yx_t2[,3], na.rm=TRUE), harmonic_p(nlcor_yx_t2[,4])),
+        t3 = c(agg_helper(nlcor_yx_t3[,1]), agg_helper(nlcor_yx_t3[,2]), mean(nlcor_yx_t3[,3], na.rm=TRUE), harmonic_p(nlcor_yx_t3[,4])),
         func = valid_res[[1]]$nlcor.yx$func
       )
 
       agg$nlcor.xy <- list(
-        t1 = c(mean(nlcor_xy_t1[,1], na.rm=TRUE), mean(nlcor_xy_t1[,2], na.rm=TRUE), mean(nlcor_xy_t1[,3], na.rm=TRUE), harmonic_p(nlcor_xy_t1[,4])),
-        t2 = c(mean(nlcor_xy_t2[,1], na.rm=TRUE), mean(nlcor_xy_t2[,2], na.rm=TRUE), mean(nlcor_xy_t2[,3], na.rm=TRUE), harmonic_p(nlcor_xy_t2[,4])),
-        t3 = c(mean(nlcor_xy_t3[,1], na.rm=TRUE), mean(nlcor_xy_t3[,2], na.rm=TRUE), mean(nlcor_xy_t3[,3], na.rm=TRUE), harmonic_p(nlcor_xy_t3[,4])),
+        t1 = c(agg_helper(nlcor_xy_t1[,1]), agg_helper(nlcor_xy_t1[,2]), mean(nlcor_xy_t1[,3], na.rm=TRUE), harmonic_p(nlcor_xy_t1[,4])),
+        t2 = c(agg_helper(nlcor_xy_t2[,1]), agg_helper(nlcor_xy_t2[,2]), mean(nlcor_xy_t2[,3], na.rm=TRUE), harmonic_p(nlcor_xy_t2[,4])),
+        t3 = c(agg_helper(nlcor_xy_t3[,1]), agg_helper(nlcor_xy_t3[,2]), mean(nlcor_xy_t3[,3], na.rm=TRUE), harmonic_p(nlcor_xy_t3[,4])),
         func = valid_res[[1]]$nlcor.xy$func
       )
 
@@ -288,7 +323,7 @@ dda_bagging <- function(
 
     if (!is.null(valid_res[[1]]$out.diff)) {
       diff_arr <- simplify2array(lapply(valid_res, function(x) as.matrix(x$out.diff)))
-      agg$diff_matrix <- apply(diff_arr, c(1,2), mean, na.rm=TRUE)
+      agg$diff_matrix <- apply(diff_arr, c(1,2), agg_helper)
 
       calc_diff <- function(row) {
         nc <- ncol(valid_res[[1]]$out.diff)
@@ -322,27 +357,27 @@ dda_bagging <- function(
     decs$dec_anscom <- calc_props(ifelse(abs(z_alt_kurt) >= crit & abs(z_tar_kurt) < crit, "Target",
                                          ifelse(abs(z_tar_kurt) >= crit & abs(z_alt_kurt) < crit, "Alternative", "Undecided")))
 
-    agg$agostino.target.statistic <- mean(sapply(valid_res, function(x) get_numeric(x$agostino$target$statistic[1])), na.rm=TRUE)
-    agg$agostino.target.z <- mean(z_tar, na.rm=TRUE)
+    agg$agostino.target.statistic <- agg_helper(sapply(valid_res, function(x) get_numeric(x$agostino$target$statistic[1])))
+    agg$agostino.target.z <- agg_helper(z_tar)
     agg$agostino.target.p.value <- harmonic_p(sapply(valid_res, function(x) get_numeric(x$agostino$target$p.value)))
 
-    agg$agostino.alternative.statistic <- mean(sapply(valid_res, function(x) get_numeric(x$agostino$alternative$statistic[1])), na.rm=TRUE)
-    agg$agostino.alternative.z <- mean(z_alt, na.rm=TRUE)
+    agg$agostino.alternative.statistic <- agg_helper(sapply(valid_res, function(x) get_numeric(x$agostino$alternative$statistic[1])))
+    agg$agostino.alternative.z <- agg_helper(z_alt)
     agg$agostino.alternative.p.value <- harmonic_p(sapply(valid_res, function(x) get_numeric(x$agostino$alternative$p.value)))
 
-    agg$anscombe.target.statistic <- mean(sapply(valid_res, function(x) get_numeric(x$anscombe$target$statistic[1])), na.rm=TRUE)
-    agg$anscombe.target.z <- mean(z_tar_kurt, na.rm=TRUE)
+    agg$anscombe.target.statistic <- agg_helper(sapply(valid_res, function(x) get_numeric(x$anscombe$target$statistic[1])))
+    agg$anscombe.target.z <- agg_helper(z_tar_kurt)
     agg$anscombe.target.p.value <- harmonic_p(sapply(valid_res, function(x) get_numeric(x$anscombe$target$p.value)))
 
-    agg$anscombe.alternative.statistic <- mean(sapply(valid_res, function(x) get_numeric(x$anscombe$alternative$statistic[1])), na.rm=TRUE)
-    agg$anscombe.alternative.z <- mean(z_alt_kurt, na.rm=TRUE)
+    agg$anscombe.alternative.statistic <- agg_helper(sapply(valid_res, function(x) get_numeric(x$anscombe$alternative$statistic[1])))
+    agg$anscombe.alternative.z <- agg_helper(z_alt_kurt)
     agg$anscombe.alternative.p.value <- harmonic_p(sapply(valid_res, function(x) get_numeric(x$anscombe$alternative$p.value)))
 
     # Joint moments - Dynamic Matrix Indexing
     for(k in c("skewdiff", "kurtdiff", "cor12diff", "cor13diff", "RHS3", "RCC", "RHS4")) {
       if (is.null(valid_res[[1]][[k]])) next
       mat <- do.call(rbind, lapply(valid_res, function(x) as.numeric(x[[k]])))
-      agg[[k]] <- colMeans(mat, na.rm=TRUE)
+      agg[[k]] <- apply(mat, 2, agg_helper)
 
       nc <- ncol(mat)
       low_idx <- nc - 1
@@ -376,27 +411,27 @@ dda_bagging <- function(
     decs$dec_anscom <- calc_props(ifelse(abs(z_pre_kurt) >= crit & abs(z_out_kurt) < crit, "Target",
                                          ifelse(abs(z_pre_kurt) < crit & abs(z_out_kurt) >= crit, "Alternative", "Undecided")))
 
-    agg$agostino.predictor.statistic.skew <- mean(sapply(valid_res, function(x) get_numeric(x$agostino$predictor$statistic[1])), na.rm=TRUE)
-    agg$agostino.predictor.statistic.z <- mean(z_pre, na.rm=TRUE)
+    agg$agostino.predictor.statistic.skew <- agg_helper(sapply(valid_res, function(x) get_numeric(x$agostino$predictor$statistic[1])))
+    agg$agostino.predictor.statistic.z <- agg_helper(z_pre)
     agg$agostino.predictor.p.value <- harmonic_p(sapply(valid_res, function(x) get_numeric(x$agostino$predictor$p.value)))
 
-    agg$agostino.outcome.statistic.skew <- mean(sapply(valid_res, function(x) get_numeric(x$agostino$outcome$statistic[1])), na.rm=TRUE)
-    agg$agostino.outcome.statistic.z <- mean(z_out, na.rm=TRUE)
+    agg$agostino.outcome.statistic.skew <- agg_helper(sapply(valid_res, function(x) get_numeric(x$agostino$outcome$statistic[1])))
+    agg$agostino.outcome.statistic.z <- agg_helper(z_out)
     agg$agostino.outcome.p.value <- harmonic_p(sapply(valid_res, function(x) get_numeric(x$agostino$outcome$p.value)))
 
-    agg$anscombe.predictor.statistic.kurt <- mean(sapply(valid_res, function(x) get_numeric(x$anscombe$predictor$statistic[1])), na.rm=TRUE)
-    agg$anscombe.predictor.statistic.z <- mean(z_pre_kurt, na.rm=TRUE)
+    agg$anscombe.predictor.statistic.kurt <- agg_helper(sapply(valid_res, function(x) get_numeric(x$anscombe$predictor$statistic[1])))
+    agg$anscombe.predictor.statistic.z <- agg_helper(z_pre_kurt)
     agg$anscombe.predictor.p.value <- harmonic_p(sapply(valid_res, function(x) get_numeric(x$anscombe$predictor$p.value)))
 
-    agg$anscombe.outcome.statistic.kurt <- mean(sapply(valid_res, function(x) get_numeric(x$anscombe$outcome$statistic[1])), na.rm=TRUE)
-    agg$anscombe.outcome.statistic.z <- mean(z_out_kurt, na.rm=TRUE)
+    agg$anscombe.outcome.statistic.kurt <- agg_helper(sapply(valid_res, function(x) get_numeric(x$anscombe$outcome$statistic[1])))
+    agg$anscombe.outcome.statistic.z <- agg_helper(z_out_kurt)
     agg$anscombe.outcome.p.value <- harmonic_p(sapply(valid_res, function(x) get_numeric(x$anscombe$outcome$p.value)))
 
     # Joint moments - Use Dynamic Matrix Indexing
     for(k in c("skewdiff", "kurtdiff", "cor12diff", "cor13diff", "RHS", "RCC", "Rtanh")) {
       if (is.null(valid_res[[1]][[k]])) next
       mat <- do.call(rbind, lapply(valid_res, function(x) as.numeric(x[[k]])))
-      agg[[k]] <- colMeans(mat, na.rm=TRUE)
+      agg[[k]] <- apply(mat, 2, agg_helper)
 
       nc <- ncol(mat)
       low_idx <- nc - 1
