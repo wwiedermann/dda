@@ -7,7 +7,7 @@
 #' @param alpha Significance level for decisions (default: 0.05)
 #' @param data Raw data frame with ALL variables (outcome, predictor, covariates)
 #' @param agg_stat Method for aggregating test statistics and coefficients. Options: "mean", "median", "trimmed", "winsorized", "midhinge", "tukey". P-values always use harmonic mean.
-#' @param trim_prob Proportion of observations to be trimmed or Winsorized from each end (default: 0.20, per Rand Wilcox's standard recommendation).
+#' @param trim_prob Proportion of observations to be trimmed or Winsorized from each end (default: 0.20).
 #' @return A list containing bootstrap and aggregated results
 #' @export
 dda_bagging <- function(
@@ -34,7 +34,6 @@ dda_bagging <- function(
            "median" = median(x),
            "trimmed" = mean(x, trim = trim_prob),
            "winsorized" = {
-             # Replace extremes with the boundary quantiles
              q_low <- quantile(x, probs = trim_prob, na.rm = TRUE, names = FALSE)
              q_high <- quantile(x, probs = 1 - trim_prob, na.rm = TRUE, names = FALSE)
              x[x < q_low] <- q_low
@@ -64,7 +63,7 @@ dda_bagging <- function(
   harmonic_p <- function(pvec) {
     pvec <- as.numeric(pvec)
     pvec <- pvec[!is.na(pvec)]
-    pvec[pvec <= 0] <- 1e-300 # Prevent harmonic mean crash on exact 0
+    pvec[pvec <= 0] <- 1e-300
     if (length(pvec) == 0) return(NA_real_)
     if (!requireNamespace("harmonicmeanp", quietly = TRUE)) return(mean(pvec))
     harmonicmeanp::p.hmp(pvec, L = length(pvec))
@@ -100,7 +99,7 @@ dda_bagging <- function(
   y_name <- var_names[1]
   x_name <- var_names[2]
 
-  # --- Extract Formula (to avoid Dummy Var issues) ---
+  # --- Extract Formula ---
   original_formula <- NULL
   if (!is.null(call_info$formula)) {
     if (inherits(call_info$formula, "formula")) {
@@ -118,9 +117,7 @@ dda_bagging <- function(
     }
   }
 
-  if (is.null(original_formula)) {
-    stop("Could not extract formula from DDA result.")
-  }
+  if (is.null(original_formula)) stop("Could not extract formula from DDA result.")
 
   all_vars <- all.vars(original_formula)
   cov_names <- setdiff(all_vars, c(y_name, x_name))
@@ -144,19 +141,17 @@ dda_bagging <- function(
   if (progress) pb <- txtProgressBar(min = 0, max = iter, style = 3)
 
   for(i in 1:iter) {
-
-    # 1. Resample Data
     boot_indices <- sample(1:nobs, nobs, replace = TRUE)
     datboot <- original_data[boot_indices, ]
 
-    # 2. Fit Standard OLS Models for Aggregation
+    # Fit Standard OLS Models for Aggregation
     lm_tar <- tryCatch(lm(full_formula_tar, data = datboot), error = function(e) NULL)
     lm_alt <- tryCatch(lm(full_formula_alt, data = datboot), error = function(e) NULL)
 
     if (!is.null(lm_tar)) ols_tar_coefs[[i]] <- coef(lm_tar)
     if (!is.null(lm_alt)) ols_alt_coefs[[i]] <- coef(lm_alt)
 
-    # 3. Residualize Variables for DDA
+    # Residualize Variables for DDA
     if (has_covariates) {
       cov_formula_y <- as.formula(paste(y_name, "~", paste(cov_names, collapse = " + ")))
       cov_formula_x <- as.formula(paste(x_name, "~", paste(cov_names, collapse = " + ")))
@@ -171,10 +166,9 @@ dda_bagging <- function(
       rx <- as.vector(scale(datboot[[x_name]]))
     }
 
-    # 4. boot_args obj
     boot_args <- call_info$all_args
     if (length(boot_args) > 0 && names(boot_args)[1] == "") {
-      boot_args[[1]] <- NULL # remove the original lm object
+      boot_args[[1]] <- NULL
     }
 
     boot_args$formula <- as.formula(paste(y_name, "~", x_name))
@@ -184,18 +178,13 @@ dda_bagging <- function(
     names(boot_processed) <- c(x_name, y_name)
     boot_args$data <- boot_processed
 
-    # 5. Call DDA Module
     bagged_results[[i]] <- tryCatch(
       do.call(dda_func, boot_args),
-      error = function(e) {
-        warning(paste("Bootstrap iteration", i, "failed:", e$message))
-        return(NA)
-      }
+      error = function(e) { return(NA) }
     )
 
     if (progress) setTxtProgressBar(pb, i)
   }
-
   if (progress) close(pb)
 
   # --- Filter Valid Results ---
@@ -203,9 +192,7 @@ dda_bagging <- function(
   valid_res <- bagged_results[is_valid]
   n_valid <- length(valid_res)
 
-  if (n_valid == 0) {
-    stop("No valid bootstrap iterations. Check your data and DDA function arguments.")
-  }
+  if (n_valid == 0) stop("No valid bootstrap iterations. Check your data.")
 
   agg <- list()
   decs <- list()
@@ -254,14 +241,18 @@ dda_bagging <- function(
     decs$hsic <- calc_props(ifelse(h_p_yx > alpha & h_p_xy <= alpha, "Target",
                                    ifelse(h_p_xy > alpha & h_p_yx <= alpha, "Alternative", "Undecided")))
 
-    if (!is.null(valid_res[[1]]$dcor.yx)) {
-      agg$dcor_yx_stat <- agg_helper(sapply(valid_res, function(x) get_numeric(x$dcor.yx$statistic)))
-      agg$dcor_xy_stat <- agg_helper(sapply(valid_res, function(x) get_numeric(x$dcor.xy$statistic)))
-      agg$dcor_yx_pval <- harmonic_p(sapply(valid_res, function(x) get_numeric(x$dcor.yx$p.value)))
-      agg$dcor_xy_pval <- harmonic_p(sapply(valid_res, function(x) get_numeric(x$dcor.xy$p.value)))
+    # FIXED: Check for both possible list structures created by dda.indep concatenation
+    if (!is.null(valid_res[[1]]$distance_cor.dcor_yx) || !is.null(valid_res[[1]]$dcor.yx)) {
+      dcor_name_yx <- if(!is.null(valid_res[[1]]$distance_cor.dcor_yx)) "distance_cor.dcor_yx" else "dcor.yx"
+      dcor_name_xy <- if(!is.null(valid_res[[1]]$distance_cor.dcor_xy)) "distance_cor.dcor_xy" else "dcor.xy"
 
-      d_p_yx <- sapply(valid_res, function(x) get_numeric(x$dcor.yx$p.value))
-      d_p_xy <- sapply(valid_res, function(x) get_numeric(x$dcor.xy$p.value))
+      agg$dcor_yx_stat <- agg_helper(sapply(valid_res, function(x) get_numeric(x[[dcor_name_yx]]$statistic)))
+      agg$dcor_xy_stat <- agg_helper(sapply(valid_res, function(x) get_numeric(x[[dcor_name_xy]]$statistic)))
+      agg$dcor_yx_pval <- harmonic_p(sapply(valid_res, function(x) get_numeric(x[[dcor_name_yx]]$p.value)))
+      agg$dcor_xy_pval <- harmonic_p(sapply(valid_res, function(x) get_numeric(x[[dcor_name_xy]]$p.value)))
+
+      d_p_yx <- sapply(valid_res, function(x) get_numeric(x[[dcor_name_yx]]$p.value))
+      d_p_xy <- sapply(valid_res, function(x) get_numeric(x[[dcor_name_xy]]$p.value))
       decs$dcor <- calc_props(ifelse(d_p_yx > alpha & d_p_xy <= alpha, "Target",
                                      ifelse(d_p_xy > alpha & d_p_yx <= alpha, "Alternative", "Undecided")))
     }
@@ -336,7 +327,7 @@ dda_bagging <- function(
       }
       decs$diff_hsic <- calc_diff(1)
       decs$diff_dcor <- calc_diff(2)
-      decs$diff_mi <- calc_diff(3)
+      if (nrow(valid_res[[1]]$out.diff) >= 3) decs$diff_mi <- calc_diff(3)
     }
   }
 
