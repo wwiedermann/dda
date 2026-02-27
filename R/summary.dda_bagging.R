@@ -238,6 +238,7 @@ summary.dda_bagging_vardist <- function(object, show = NULL, moment = NULL, digi
 #' @param show Character vector of stats to show (e.g. c("all"))
 #' @param moment Numeric vector for moments to include (3, 4)
 #' @param digits Number of decimal places to print for proportions (default: 3)
+#' @param agg_stat Method for aggregating test statistics and coefficients. Options: "mean", "median", "trimmed", "winsorized", "midhinge", "tukey". P-values always use harmonic mean.
 #' @param ... Additional arguments
 #' @export
 #' @method summary dda_bagging_resdist

@@ -3,6 +3,7 @@
 #' @param object Output from dda_bagging() for dda.indep objects (class: dda_bagging_indep)
 #' @param digits Number of digits for rounding (default: 4)
 #' @param alpha Significance level for decisions (default: 0.05)
+#' @param agg_stat Method for aggregating test statistics and coefficients. Options: "mean", "median", "trimmed", "winsorized", "midhinge", "tukey". P-values always use harmonic mean.
 #' @export
 #' @method print dda_bagging_indep
 print.dda_bagging_indep <- function(object, digits = 4, alpha = 0.05) {

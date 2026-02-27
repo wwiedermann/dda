@@ -1,5 +1,7 @@
 #' Bootstrap Aggregated DDA Analysis
 #'
+#' To Do: Add in object storage list of all the runs + specified options for
+#'
 #' @param dda_result Output from any DDA function (dda.indep, dda.vardist, dda.resdist)
 #' @param iter Number of bootstrap iterations (default: 100)
 #' @param progress Whether to show progress bar (default: TRUE)
@@ -18,7 +20,7 @@ dda_bagging <- function(
     alpha = 0.05,
     data = NULL,
     agg_stat = c("mean", "median", "trimmed", "winsorized", "midhinge", "tukey"),
-    trim_prob = 0.20
+    trim_prob = 0.20 # add perc options for winsorized
 ) {
 
   agg_stat <- match.arg(agg_stat)
