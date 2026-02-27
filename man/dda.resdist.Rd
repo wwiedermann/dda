@@ -40,8 +40,6 @@ skewness and kurtosis difference tests.}
 
 \item{conf.level}{Confidence level for bootstrap confidence intervals.}
 
-\item{robust}{A logical value indicating whether Siegel non-parametric estimators should be used for residual extraction. If \code{robust = TRUE} Seigel estimation is used, otherwise ordinary least squares estimation is used.}
-
 \item{x}{An object of class \code{dda.resdist} when using \code{print}.}
 
 \item{...}{Additional arguments to be passed to the method.}
