@@ -1,18 +1,21 @@
 #' Print for dda_bagging Output (INDEP)
 #'
-#' @param object Output from dda_bagging() for dda.indep objects (class: dda_bagging_indep)
+#' @param x Output from dda_bagging() for dda.indep objects (class: dda_bagging_indep)
+#' @param agg_stat Method for aggregating test statistics. Options: "mean", "median", "trimmed", "winsorized", "midhinge", "tukey". If NULL, uses the method established in dda_bagging().
+#' @param trim_prob Proportion of observations to be trimmed or Winsorized from each end (default: 0.20).
 #' @param digits Number of digits for rounding (default: 4)
 #' @param alpha Significance level for decisions (default: 0.05)
-#' @param agg_stat Method for aggregating test statistics and coefficients. Options: "mean", "median", "trimmed", "winsorized", "midhinge", "tukey". P-values always use harmonic mean.
+#' @param ... Additional arguments passed to print
 #' @export
 #' @method print dda_bagging_indep
-
-# Possible workflow: The list of runs + aggregation is stored within the
-
-print.dda_bagging_indep <- function(object,
+print.dda_bagging_indep <- function(x,
                                     agg_stat = NULL,
+                                    trim_prob = 0.20,
                                     digits = 4,
-                                    alpha = 0.05) {
+                                    alpha = 0.05,
+                                    ...) {
+  # Rename internal variable to match standard 'x' for print generics while preserving your logic
+  object <- reaggregate_bagging(x, agg_stat, trim_prob)
   stats <- object$aggregated_stats
 
   # Try to find variable names (default y, x if missing)
@@ -55,10 +58,10 @@ print.dda_bagging_indep <- function(object,
   if (!is.null(stats$breusch_pagan) && length(stats$breusch_pagan) >= 2) {
     cat("Homoscedasticity Tests:\n")
     cat(paste0("Standard Breusch-Pagan test: BP = ", signif(as.numeric(stats$breusch_pagan[[1]]$statistic), digits),
-               ", df = ", as.numeric(stats$breusch_pagan[[1]]$parameter),
+               ", df = ", signif(as.numeric(stats$breusch_pagan[[1]]$parameter), digits),
                ", p-value = ", signif(as.numeric(stats$breusch_pagan[[1]]$p.value), digits)), "\n")
     cat(paste0("Robust Breusch-Pagan test:   BP = ", signif(as.numeric(stats$breusch_pagan[[2]]$statistic), digits),
-               ", df = ", as.numeric(stats$breusch_pagan[[2]]$parameter),
+               ", df = ", signif(as.numeric(stats$breusch_pagan[[2]]$parameter), digits),
                ", p-value = ", signif(as.numeric(stats$breusch_pagan[[2]]$p.value), digits)), "\n")
     cat("\n")
   }
@@ -115,10 +118,10 @@ print.dda_bagging_indep <- function(object,
   if (!is.null(stats$breusch_pagan) && length(stats$breusch_pagan) >= 4) {
     cat("Homoscedasticity Tests:\n")
     cat(paste0("Standard Breusch-Pagan test: BP = ", signif(as.numeric(stats$breusch_pagan[[3]]$statistic), digits),
-               ", df = ", as.numeric(stats$breusch_pagan[[3]]$parameter),
+               ", df = ", signif(as.numeric(stats$breusch_pagan[[3]]$parameter), digits),
                ", p-value = ", signif(as.numeric(stats$breusch_pagan[[3]]$p.value), digits)), "\n")
     cat(paste0("Robust Breusch-Pagan test:   BP = ", signif(as.numeric(stats$breusch_pagan[[4]]$statistic), digits),
-               ", df = ", as.numeric(stats$breusch_pagan[[4]]$parameter),
+               ", df = ", signif(as.numeric(stats$breusch_pagan[[4]]$parameter), digits),
                ", p-value = ", signif(as.numeric(stats$breusch_pagan[[4]]$p.value), digits)), "\n")
     cat("\n")
   }
@@ -185,9 +188,16 @@ print.dda_bagging_indep <- function(object,
 }
 
 #' Print for dda_bagging Output (RESDIST)
+#'
+#' @param x Output from dda_bagging() for dda.resdist objects
+#' @param agg_stat Method for aggregating test statistics. If NULL, uses the method established in dda_bagging().
+#' @param trim_prob Proportion of observations to be trimmed or Winsorized from each end (default: 0.20).
+#' @param digits Number of digits for rounding (default: 4)
+#' @param ... Additional arguments passed to print
 #' @export
 #' @method print dda_bagging_resdist
-print.dda_bagging_resdist <- function(object, digits = 4) {
+print.dda_bagging_resdist <- function(x, agg_stat = NULL, trim_prob = 0.20, digits = 4, ...) {
+  object <- reaggregate_bagging(x, agg_stat, trim_prob)
   stats <- object$aggregated_stats
   varnames <- if (!is.null(stats$var.names)) stats$var.names else c("target", "alternative")
 
@@ -250,9 +260,16 @@ print.dda_bagging_resdist <- function(object, digits = 4) {
 }
 
 #' Print for dda_bagging Output (VARDIST)
+#'
+#' @param x Output from dda_bagging() for dda.vardist objects
+#' @param agg_stat Method for aggregating test statistics. If NULL, uses the method established in dda_bagging().
+#' @param trim_prob Proportion of observations to be trimmed or Winsorized from each end (default: 0.20).
+#' @param digits Number of digits for rounding (default: 4)
+#' @param ... Additional arguments passed to print
 #' @export
 #' @method print dda_bagging_vardist
-print.dda_bagging_vardist <- function(object, digits = 4) {
+print.dda_bagging_vardist <- function(x, agg_stat = NULL, trim_prob = 0.20, digits = 4, ...) {
+  object <- reaggregate_bagging(x, agg_stat, trim_prob)
   stats <- object$aggregated_stats
   varnames <- if (!is.null(stats$var.names)) stats$var.names else c("Outcome", "Predictor")
 
@@ -313,14 +330,17 @@ print.dda_bagging_vardist <- function(object, digits = 4) {
 #' Print OLS Summary from Bagged DDA
 #'
 #' @param object Output from dda_bagging()
+#' @param agg_stat Method for aggregating test statistics. If NULL, uses the method established in dda_bagging().
+#' @param trim_prob Proportion of observations to be trimmed or Winsorized from each end (default: 0.20).
 #' @param digits Number of digits for rounding (default: 4)
 #' @export
-print_ols_summary <- function(object, digits = 4) {
+print_ols_summary <- function(object, agg_stat = NULL, trim_prob = 0.20, digits = 4) {
 
   if (!inherits(object, "dda_bagging")) {
     stop("Object must be a bagged DDA result.")
   }
 
+  object <- reaggregate_bagging(object, agg_stat, trim_prob)
   stats <- object$aggregated_stats
 
   if (is.null(stats$ols_target)) {
