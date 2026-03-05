@@ -6,7 +6,13 @@
 #' @param agg_stat Method for aggregating test statistics and coefficients. Options: "mean", "median", "trimmed", "winsorized", "midhinge", "tukey". P-values always use harmonic mean.
 #' @export
 #' @method print dda_bagging_indep
-print.dda_bagging_indep <- function(object, digits = 4, alpha = 0.05) {
+
+# Possible workflow: The list of runs + aggregation is stored within the
+
+print.dda_bagging_indep <- function(object,
+                                    agg_stat = NULL,
+                                    digits = 4,
+                                    alpha = 0.05) {
   stats <- object$aggregated_stats
 
   # Try to find variable names (default y, x if missing)
