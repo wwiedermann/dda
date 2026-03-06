@@ -245,7 +245,7 @@ print_bagging_decisions <- function(object, show = NULL, moment = NULL, type = "
 
     # Extract exact values
     t_val <- if ("Target" %in% names(prop)) prop["Target"] else 0
-    should_print    a_val <- if ("Alternative" %in% names(prop)) prop["Alternative"] else 0
+    a_val <- if ("Alternative" %in% names(prop)) prop["Alternative"] else 0
     u_val <- if ("Undecided" %in% names(prop)) prop["Undecided"] else 0
 
     # Apply Largest Remainder Method rounding dynamically based on user digits
@@ -359,13 +359,7 @@ summary.dda_bagging_vardist <- function(object, show = NULL, moment = NULL, agg_
 #' @param ... Additional arguments
 #' @export
 #' @method summary dda_bagging_resdist
-summary.dda_bagging_resdist <- function(object,
-                                        show = NULL,
-                                        moment = NULL,
-                                        agg_stat = NULL,
-                                        trim_prob = 0.20,
-                                        digits = 3, ...) {
-
+summary.dda_bagging_resdist <- function(object, show = NULL, moment = NULL, agg_stat = NULL, trim_prob = 0.20, digits = 3, ...) {
   object <- reaggregate_bagging(object, agg_stat, trim_prob)
   print_bagging_decisions(object, show = show, moment = moment, type = "resdist", digits = digits)
   invisible(object)
