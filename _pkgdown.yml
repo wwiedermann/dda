@@ -1,6 +1,4 @@
-url: https://github.com/wwiedermann/dda
+url: ~
 template:
   bootstrap: 5
-  bootswatch: cyborg
-  theme: arrow-dark
 

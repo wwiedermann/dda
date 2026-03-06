@@ -6,6 +6,8 @@
 #' @param digits Number of digits for rounding (default: 4)
 #' @param ... Additional arguments passed to print
 #' @export
+#'
+#summary_mod #summary.mod
 print_ols_summary <- function(object, agg_stat = NULL, trim_prob = 0.20, digits = 4, ...) {
 
   if (!inherits(object, "dda_bagging")) {
