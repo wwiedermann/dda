@@ -245,7 +245,7 @@ print_bagging_decisions <- function(object, show = NULL, moment = NULL, type = "
 
     # Extract exact values
     t_val <- if ("Target" %in% names(prop)) prop["Target"] else 0
-    a_val <- if ("Alternative" %in% names(prop)) prop["Alternative"] else 0
+    should_print    a_val <- if ("Alternative" %in% names(prop)) prop["Alternative"] else 0
     u_val <- if ("Undecided" %in% names(prop)) prop["Undecided"] else 0
 
     # Apply Largest Remainder Method rounding dynamically based on user digits
