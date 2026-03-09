@@ -4,7 +4,18 @@
 \alias{print.dda_bagging_resdist}
 \title{Print for dda_bagging Output (RESDIST)}
 \usage{
-\method{print}{dda_bagging_resdist}(object, digits = 4)
+\method{print}{dda_bagging_resdist}(x, agg_stat = NULL, trim_prob = 0.2, digits = 4, ...)
+}
+\arguments{
+\item{x}{Output from dda_bagging() for dda.resdist objects}
+
+\item{agg_stat}{Method for aggregating test statistics. If NULL, uses the method established in dda_bagging().}
+
+\item{trim_prob}{Proportion of observations to be trimmed or Winsorized from each end (default: 0.20).}
+
+\item{digits}{Number of digits for rounding (default: 4)}
+
+\item{...}{Additional arguments passed to print}
 }
 \description{
 Print for dda_bagging Output (RESDIST)

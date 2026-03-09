@@ -36,5 +36,5 @@ dda_bagging(
 A list containing bootstrap and aggregated results
 }
 \description{
-Bootstrap Aggregated DDA Analysis
+To Do: Add in object storage list of all the runs + specified options for
 }

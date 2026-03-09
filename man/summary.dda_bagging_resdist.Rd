@@ -4,7 +4,15 @@
 \alias{summary.dda_bagging_resdist}
 \title{Summary for dda_bagging Output (RESDIST)}
 \usage{
-\method{summary}{dda_bagging_resdist}(object, show = NULL, moment = NULL, digits = 3, ...)
+\method{summary}{dda_bagging_resdist}(
+  object,
+  show = NULL,
+  moment = NULL,
+  agg_stat = NULL,
+  trim_prob = 0.2,
+  digits = 3,
+  ...
+)
 }
 \arguments{
 \item{object}{Output from dda_bagging() for dda.resdist objects}
@@ -12,6 +20,10 @@
 \item{show}{Character vector of stats to show (e.g. c("all"))}
 
 \item{moment}{Numeric vector for moments to include (3, 4)}
+
+\item{agg_stat}{Method for aggregating test statistics. Options: "mean", "median", "trimmed", "winsorized", "midhinge", "tukey". If NULL, uses the aggregation method established in dda_bagging().}
+
+\item{trim_prob}{Proportion of observations to be trimmed or Winsorized from each end (default: 0.20).}
 
 \item{digits}{Number of decimal places to print for proportions (default: 3)}
 
