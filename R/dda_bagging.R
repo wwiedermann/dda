@@ -20,7 +20,8 @@ dda_bagging <- function(
     alpha = 0.05,
     data = NULL,
     agg_stat = c("mean", "median", "trimmed", "winsorized", "midhinge", "tukey"),
-    trim_prob = 0.20 # add perc options for winsorized
+    trim_prob = 0.10 # To do: Change to trim
+    # win = #add perc options for winsorized
 ) {
 
   agg_stat <- match.arg(agg_stat)
@@ -35,7 +36,7 @@ dda_bagging <- function(
            "mean" = mean(x),
            "median" = median(x),
            "trimmed" = mean(x, trim = trim_prob),
-           "winsorized" = {
+           "winsorized" = { #USE a diff argument for winsor
              q_low <- quantile(x, probs = trim_prob, na.rm = TRUE, names = FALSE)
              q_high <- quantile(x, probs = 1 - trim_prob, na.rm = TRUE, names = FALSE)
              x[x < q_low] <- q_low
