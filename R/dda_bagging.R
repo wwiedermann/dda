@@ -1,7 +1,5 @@
 #' Bootstrap Aggregated DDA Analysis
 #'
-#' To Do: Add in object storage list of all the runs + specified options for
-#'
 #' @param dda_result Output from any DDA function (dda.indep, dda.vardist, dda.resdist)
 #' @param iter Number of bootstrap iterations (default: 100)
 #' @param progress Whether to show progress bar (default: TRUE)
@@ -9,7 +7,8 @@
 #' @param alpha Significance level for decisions (default: 0.05)
 #' @param data Raw data frame with ALL variables (outcome, predictor, covariates)
 #' @param agg_stat Method for aggregating test statistics and coefficients. Options: "mean", "median", "trimmed", "winsorized", "midhinge", "tukey". P-values always use harmonic mean.
-#' @param trim_prob Proportion of observations to be trimmed or Winsorized from each end (default: 0.20).
+#' @param trim_prob Proportion of observations to be trimmed from each end (default: 0.10).
+#' @param win_prob Proportion of observations to be Winsorized from each end (default: 0.10).
 #' @return A list containing bootstrap and aggregated results
 #' @export
 dda_bagging <- function(
@@ -20,8 +19,8 @@ dda_bagging <- function(
     alpha = 0.05,
     data = NULL,
     agg_stat = c("mean", "median", "trimmed", "winsorized", "midhinge", "tukey"),
-    trim_prob = 0.10 # To do: Change to trim
-    # win = #add perc options for winsorized
+    trim_prob = 0.10,
+    win_prob = 0.10
 ) {
 
   agg_stat <- match.arg(agg_stat)
@@ -36,9 +35,9 @@ dda_bagging <- function(
            "mean" = mean(x),
            "median" = median(x),
            "trimmed" = mean(x, trim = trim_prob),
-           "winsorized" = { #USE a diff argument for winsor
-             q_low <- quantile(x, probs = trim_prob, na.rm = TRUE, names = FALSE)
-             q_high <- quantile(x, probs = 1 - trim_prob, na.rm = TRUE, names = FALSE)
+           "winsorized" = {
+             q_low <- quantile(x, probs = win_prob, na.rm = TRUE, names = FALSE)
+             q_high <- quantile(x, probs = 1 - win_prob, na.rm = TRUE, names = FALSE)
              x[x < q_low] <- q_low
              x[x > q_high] <- q_high
              mean(x)
@@ -138,8 +137,13 @@ dda_bagging <- function(
 
   # --- Bootstrap Execution Loop ---
   bagged_results <- vector("list", iter)
+
   ols_tar_coefs <- vector("list", iter)
   ols_alt_coefs <- vector("list", iter)
+  ols_tar_rsq <- vector("list", iter)
+  ols_alt_rsq <- vector("list", iter)
+  ols_tar_pvals <- vector("list", iter)
+  ols_alt_pvals <- vector("list", iter)
 
   if (progress) pb <- txtProgressBar(min = 0, max = iter, style = 3)
 
@@ -151,8 +155,19 @@ dda_bagging <- function(
     lm_tar <- tryCatch(lm(full_formula_tar, data = datboot), error = function(e) NULL)
     lm_alt <- tryCatch(lm(full_formula_alt, data = datboot), error = function(e) NULL)
 
-    if (!is.null(lm_tar)) ols_tar_coefs[[i]] <- coef(lm_tar)
-    if (!is.null(lm_alt)) ols_alt_coefs[[i]] <- coef(lm_alt)
+    if (!is.null(lm_tar)) {
+      lm_tar_sum <- summary(lm_tar)
+      ols_tar_coefs[[i]] <- coef(lm_tar)
+      ols_tar_rsq[[i]] <- c(lm_tar_sum$r.squared, lm_tar_sum$adj.r.squared)
+      ols_tar_pvals[[i]] <- lm_tar_sum$coefficients[, 4]
+    }
+
+    if (!is.null(lm_alt)) {
+      lm_alt_sum <- summary(lm_alt)
+      ols_alt_coefs[[i]] <- coef(lm_alt)
+      ols_alt_rsq[[i]] <- c(lm_alt_sum$r.squared, lm_alt_sum$adj.r.squared)
+      ols_alt_pvals[[i]] <- lm_alt_sum$coefficients[, 4]
+    }
 
     # Residualize Variables for DDA
     if (has_covariates) {
@@ -203,30 +218,43 @@ dda_bagging <- function(
   decs <- list()
   crit <- qnorm(1 - alpha/2)
 
-  # --- Save & Aggregate OLS Results (confint style) ---
+  # --- Save & Aggregate OLS Results ---
   raw_stats$ols_tar_coefs <- tryCatch(do.call(rbind, ols_tar_coefs[is_valid]), error = function(e) NULL)
   raw_stats$ols_alt_coefs <- tryCatch(do.call(rbind, ols_alt_coefs[is_valid]), error = function(e) NULL)
+  raw_stats$ols_tar_rsq <- tryCatch(do.call(rbind, ols_tar_rsq[is_valid]), error = function(e) NULL)
+  raw_stats$ols_alt_rsq <- tryCatch(do.call(rbind, ols_alt_rsq[is_valid]), error = function(e) NULL)
+  raw_stats$ols_tar_pvals <- tryCatch(do.call(rbind, ols_tar_pvals[is_valid]), error = function(e) NULL)
+  raw_stats$ols_alt_pvals <- tryCatch(do.call(rbind, ols_alt_pvals[is_valid]), error = function(e) NULL)
 
   if (!is.null(raw_stats$ols_tar_coefs)) {
     lb <- alpha / 2
     ub <- 1 - (alpha / 2)
+
+    # Calculate proportion of significant p-values
+    prop_sig_tar <- apply(raw_stats$ols_tar_pvals, 2, function(x) mean(x < alpha, na.rm = TRUE))
+
     agg$ols_target <- cbind(
       estimate = apply(raw_stats$ols_tar_coefs, 2, agg_helper),
       apply(raw_stats$ols_tar_coefs, 2, quantile, probs = lb, na.rm = TRUE),
-      apply(raw_stats$ols_tar_coefs, 2, quantile, probs = ub, na.rm = TRUE)
+      apply(raw_stats$ols_tar_coefs, 2, quantile, probs = ub, na.rm = TRUE),
+      prop_sig_tar
     )
-    colnames(agg$ols_target) <- c("estimate", paste0(lb * 100, " %"), paste0(ub * 100, " %"))
+    colnames(agg$ols_target) <- c("estimate", paste0(lb * 100, " %"), paste0(ub * 100, " %"), paste0("Prop(p<", alpha, ")"))
   }
 
   if (!is.null(raw_stats$ols_alt_coefs)) {
     lb <- alpha / 2
     ub <- 1 - (alpha / 2)
+
+    prop_sig_alt <- apply(raw_stats$ols_alt_pvals, 2, function(x) mean(x < alpha, na.rm = TRUE))
+
     agg$ols_alternative <- cbind(
       estimate = apply(raw_stats$ols_alt_coefs, 2, agg_helper),
       apply(raw_stats$ols_alt_coefs, 2, quantile, probs = lb, na.rm = TRUE),
-      apply(raw_stats$ols_alt_coefs, 2, quantile, probs = ub, na.rm = TRUE)
+      apply(raw_stats$ols_alt_coefs, 2, quantile, probs = ub, na.rm = TRUE),
+      prop_sig_alt
     )
-    colnames(agg$ols_alternative) <- c("estimate", paste0(lb * 100, " %"), paste0(ub * 100, " %"))
+    colnames(agg$ols_alternative) <- c("estimate", paste0(lb * 100, " %"), paste0(ub * 100, " %"), paste0("Prop(p<", alpha, ")"))
   }
 
   ## ============================================================================
