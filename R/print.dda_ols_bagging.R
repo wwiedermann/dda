@@ -2,20 +2,24 @@
 #'
 #' @param object Output from dda_bagging()
 #' @param agg_stat Method for aggregating test statistics. If NULL, uses the method established in dda_bagging().
-#' @param trim_prob Proportion of observations to be trimmed or Winsorized from each end (default: 0.20).
-#' @param digits Number of digits for rounding (default: 4)
+#' @param trim_prob Proportion of observations to be trimmed (default: 0.10).
+#' @param win_prob Proportion of observations to be Winsorized (default: 0.10).
+#' @param digits Number of digits for rounding
 #' @param ... Additional arguments passed to print
 #' @export
-#'
-#summary_mod #summary.mod
-print_ols_summary <- function(object, agg_stat = NULL, trim_prob = 0.20, digits = 4, ...) {
+print_ols_summary <- function(object,
+                              agg_stat = NULL,
+                              trim_prob = 0.10,
+                              win_prob = 0.10,
+                              digits = 4,
+                              ...) {
 
   if (!inherits(object, "dda_bagging")) {
     stop("Object must be a bagged DDA result.")
   }
 
-  # Ensure dynamic re-aggregation of coefficients occurs
-  object <- reaggregate_bagging(object, agg_stat, trim_prob)
+  # Ensure dynamic re-aggregation of coefficients occurs with split trim/win probs
+  object <- reaggregate_bagging(object, agg_stat, trim_prob, win_prob)
   stats <- object$aggregated_stats
   raw <- object$raw_stats
 
@@ -26,6 +30,7 @@ print_ols_summary <- function(object, agg_stat = NULL, trim_prob = 0.20, digits 
 
   # Local helper for R-squared aggregation
   current_agg <- if (!is.null(agg_stat)) agg_stat else object$agg_stat_used
+
   agg_helper <- function(x) {
     x <- as.numeric(x)
     x <- x[!is.na(x)]
@@ -35,8 +40,8 @@ print_ols_summary <- function(object, agg_stat = NULL, trim_prob = 0.20, digits 
            "median" = median(x),
            "trimmed" = mean(x, trim = trim_prob),
            "winsorized" = {
-             q_low <- quantile(x, probs = trim_prob, na.rm = TRUE, names = FALSE)
-             q_high <- quantile(x, probs = 1 - trim_prob, na.rm = TRUE, names = FALSE)
+             q_low <- quantile(x, probs = win_prob, na.rm = TRUE, names = FALSE)
+             q_high <- quantile(x, probs = 1 - win_prob, na.rm = TRUE, names = FALSE)
              x[x < q_low] <- q_low
              x[x > q_high] <- q_high
              mean(x)
@@ -51,6 +56,9 @@ print_ols_summary <- function(object, agg_stat = NULL, trim_prob = 0.20, digits 
            }
     )
   }
+
+  # Print Aggregation Method
+  cat("\nAggregation method:", current_agg, "\n\n")
 
   # --- Target Model Print ---
   cat("OLS Summary: Target Model\n")
