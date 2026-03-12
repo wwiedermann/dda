@@ -1,21 +1,135 @@
+# Internal helper to dynamically re-aggregate statistics from raw vectors
+#' @noRd
+reaggregate_bagging <- function(object, agg_stat = NULL, trim_prob = 0.10, win_prob = 0.10) {
+  if (is.null(agg_stat)) return(object)
+
+  agg_stat <- match.arg(agg_stat, c("mean", "median", "trimmed", "winsorized", "midhinge", "tukey"))
+  if (agg_stat == object$agg_stat_used) return(object)
+
+  agg_helper <- function(x) {
+    x <- as.numeric(x)
+    x <- x[!is.na(x)]
+    if (length(x) == 0) return(NA_real_)
+
+    switch(agg_stat,
+           "mean" = mean(x),
+           "median" = median(x),
+           "trimmed" = mean(x, trim = trim_prob),
+           "winsorized" = {
+             q_low <- quantile(x, probs = win_prob, na.rm = TRUE, names = FALSE)
+             q_high <- quantile(x, probs = 1 - win_prob, na.rm = TRUE, names = FALSE)
+             x[x < q_low] <- q_low
+             x[x > q_high] <- q_high
+             mean(x)
+           },
+           "midhinge" = {
+             q <- quantile(x, probs = c(0.25, 0.75), names = FALSE)
+             mean(q)
+           },
+           "tukey" = {
+             q <- quantile(x, probs = c(0.25, 0.5, 0.75), names = FALSE)
+             (q[1] + 2*q[2] + q[3]) / 4
+           }
+    )
+  }
+
+  raw <- object$raw_stats
+  agg <- object$aggregated_stats
+  obj_type <- class(object)[1]
+
+  # Re-aggregate OLS
+  if (!is.null(raw$ols_tar_coefs)) agg$ols_target[,"estimate"] <- apply(raw$ols_tar_coefs, 2, agg_helper)
+  if (!is.null(raw$ols_alt_coefs)) agg$ols_alternative[,"estimate"] <- apply(raw$ols_alt_coefs, 2, agg_helper)
+
+  # Re-aggregate specific DDA statistics (p-values are deliberately ignored)
+  if (obj_type == "dda_bagging_indep") {
+    agg$hsic_yx_stat <- agg_helper(raw$hsic_yx_stat)
+    agg$hsic_xy_stat <- agg_helper(raw$hsic_xy_stat)
+
+    if (!is.null(raw$dcor_yx_stat)) {
+      agg$dcor_yx_stat <- agg_helper(raw$dcor_yx_stat)
+      agg$dcor_xy_stat <- agg_helper(raw$dcor_xy_stat)
+    }
+    if (!is.null(raw$bp_yx_stat)) {
+      agg$breusch_pagan[[1]]$statistic <- agg_helper(raw$bp_yx_stat)
+      agg$breusch_pagan[[1]]$parameter <- agg_helper(raw$bp_yx_df)
+      agg$breusch_pagan[[2]]$statistic <- agg_helper(raw$rbp_yx_stat)
+      agg$breusch_pagan[[2]]$parameter <- agg_helper(raw$rbp_yx_df)
+      agg$breusch_pagan[[3]]$statistic <- agg_helper(raw$bp_xy_stat)
+      agg$breusch_pagan[[3]]$parameter <- agg_helper(raw$bp_xy_df)
+      agg$breusch_pagan[[4]]$statistic <- agg_helper(raw$rbp_xy_stat)
+      agg$breusch_pagan[[4]]$parameter <- agg_helper(raw$rbp_xy_df)
+    }
+    if (!is.null(raw$nlcor_yx_t1)) {
+      agg$nlcor.yx$t1[1:3] <- c(agg_helper(raw$nlcor_yx_t1[,1]), agg_helper(raw$nlcor_yx_t1[,2]), agg_helper(raw$nlcor_yx_t1[,3]))
+      agg$nlcor.yx$t2[1:3] <- c(agg_helper(raw$nlcor_yx_t2[,1]), agg_helper(raw$nlcor_yx_t2[,2]), agg_helper(raw$nlcor_yx_t2[,3]))
+      agg$nlcor.yx$t3[1:3] <- c(agg_helper(raw$nlcor_yx_t3[,1]), agg_helper(raw$nlcor_yx_t3[,2]), agg_helper(raw$nlcor_yx_t3[,3]))
+
+      agg$nlcor.xy$t1[1:3] <- c(agg_helper(raw$nlcor_xy_t1[,1]), agg_helper(raw$nlcor_xy_t1[,2]), agg_helper(raw$nlcor_xy_t1[,3]))
+      agg$nlcor.xy$t2[1:3] <- c(agg_helper(raw$nlcor_xy_t2[,1]), agg_helper(raw$nlcor_xy_t2[,2]), agg_helper(raw$nlcor_xy_t2[,3]))
+      agg$nlcor.xy$t3[1:3] <- c(agg_helper(raw$nlcor_xy_t3[,1]), agg_helper(raw$nlcor_xy_t3[,2]), agg_helper(raw$nlcor_xy_t3[,3]))
+    }
+    if (!is.null(raw$diff_arr)) {
+      agg$diff_matrix <- apply(raw$diff_arr, c(1,2), agg_helper)
+    }
+
+  } else if (obj_type == "dda_bagging_resdist") {
+    agg$agostino.target.statistic <- agg_helper(raw$agost_tar_stat)
+    agg$agostino.target.z <- agg_helper(raw$agost_tar_z)
+    agg$agostino.alternative.statistic <- agg_helper(raw$agost_alt_stat)
+    agg$agostino.alternative.z <- agg_helper(raw$agost_alt_z)
+    agg$anscombe.target.statistic <- agg_helper(raw$anscom_tar_stat)
+    agg$anscombe.target.z <- agg_helper(raw$anscom_tar_z)
+    agg$anscombe.alternative.statistic <- agg_helper(raw$anscom_alt_stat)
+    agg$anscombe.alternative.z <- agg_helper(raw$anscom_alt_z)
+
+    for(k in c("skewdiff", "kurtdiff", "cor12diff", "cor13diff", "RHS3", "RCC", "RHS4")) {
+      if (!is.null(raw[[k]])) agg[[k]] <- apply(raw[[k]], 2, agg_helper)
+    }
+
+  } else if (obj_type == "dda_bagging_vardist") {
+    agg$agostino.predictor.statistic.skew <- agg_helper(raw$agost_pre_stat)
+    agg$agostino.predictor.statistic.z <- agg_helper(raw$agost_pre_z)
+    agg$agostino.outcome.statistic.skew <- agg_helper(raw$agost_out_stat)
+    agg$agostino.outcome.statistic.z <- agg_helper(raw$agost_out_z)
+    agg$anscombe.predictor.statistic.kurt <- agg_helper(raw$anscom_pre_stat)
+    agg$anscombe.predictor.statistic.z <- agg_helper(raw$anscom_pre_z)
+    agg$anscombe.outcome.statistic.kurt <- agg_helper(raw$anscom_out_stat)
+    agg$anscombe.outcome.statistic.z <- agg_helper(raw$anscom_out_z)
+
+    for(k in c("skewdiff", "kurtdiff", "cor12diff", "cor13diff", "RHS", "RCC", "Rtanh")) {
+      if (!is.null(raw[[k]])) agg[[k]] <- apply(raw[[k]], 2, agg_helper)
+    }
+  }
+
+  object$aggregated_stats <- agg
+  object$agg_stat_used <- agg_stat
+  return(object)
+}
+
 #' Print for dda_bagging Output (INDEP)
 #'
 #' @param x Output from dda_bagging() for dda.indep objects (class: dda_bagging_indep)
-#' @param agg_stat Method for aggregating test statistics. Options: "mean", "median", "trimmed", "winsorized", "midhinge", "tukey". If NULL, uses the method established in dda_bagging().
-#' @param trim_prob Proportion of observations to be trimmed or Winsorized from each end (default: 0.20).
-#' @param digits Number of digits for rounding (default: 4)
+#' @param agg_stat Method for aggregating test statistics.
+#'                 Options: "mean", "median", "trimmed", "winsorized",
+#'                 "midhinge", "tukey". If NULL, uses the method established
+#'                 in dda_bagging().
+#' @param trim_prob Proportion of observations to be trimmed (default: 0.10).
+#' @param win_prob Proportion of observations to be Winsorized (default: 0.10).
+#' @param digits Number of digits for rounding
 #' @param alpha Significance level for decisions (default: 0.05)
 #' @param ... Additional arguments passed to print
 #' @export
 #' @method print dda_bagging_indep
 print.dda_bagging_indep <- function(x,
                                     agg_stat = NULL,
-                                    trim_prob = 0.20,
+                                    trim_prob = 0.10,
+                                    win_prob = 0.10,
                                     digits = 4,
                                     alpha = 0.05,
                                     ...) {
   # Rename internal variable to match standard 'x' for print generics while preserving your logic
-  object <- reaggregate_bagging(x, agg_stat, trim_prob)
+  object <- reaggregate_bagging(x, agg_stat, trim_prob, win_prob)
   stats <- object$aggregated_stats
 
   # Try to find variable names (default y, x if missing)
@@ -27,7 +141,8 @@ print.dda_bagging_indep <- function(x,
   }
 
   cat("\nBOOTSTRAP AGGREGATED DDA: Independence Properties\n")
-  cat("Number of Bootstrap Samples:", object$n_valid_iterations, "\n\n")
+  cat("Number of Bootstrap Samples:", object$n_valid_iterations, "\n")
+  cat("Aggregation method:", object$agg_stat_used, "\n\n")
 
   # Helper to check if a value should be printed (not null, not na, not nan)
   should_print <- function(val) {
@@ -190,19 +305,24 @@ print.dda_bagging_indep <- function(x,
 #' Print for dda_bagging Output (RESDIST)
 #'
 #' @param x Output from dda_bagging() for dda.resdist objects
-#' @param agg_stat Method for aggregating test statistics. If NULL, uses the method established in dda_bagging().
-#' @param trim_prob Proportion of observations to be trimmed or Winsorized from each end (default: 0.20).
-#' @param digits Number of digits for rounding (default: 4)
+#' @param agg_stat Method for aggregating test statistics.
+#'                 Options: "mean", "median", "trimmed", "winsorized",
+#'                 "midhinge", "tukey". If NULL, uses the method established
+#'                 in dda_bagging().
+#' @param trim_prob Proportion of observations to be trimmed (default: 0.10).
+#' @param win_prob Proportion of observations to be Winsorized (default: 0.10).
+#' @param digits Number of digits for rounding
 #' @param ... Additional arguments passed to print
 #' @export
 #' @method print dda_bagging_resdist
-print.dda_bagging_resdist <- function(x, agg_stat = NULL, trim_prob = 0.20, digits = 4, ...) {
-  object <- reaggregate_bagging(x, agg_stat, trim_prob)
+print.dda_bagging_resdist <- function(x, agg_stat = NULL, trim_prob = 0.10, win_prob = 0.10, digits = 4, ...) {
+  object <- reaggregate_bagging(x, agg_stat, trim_prob, win_prob)
   stats <- object$aggregated_stats
   varnames <- if (!is.null(stats$var.names)) stats$var.names else c("target", "alternative")
 
   cat("\nBOOTSTRAP AGGREGATED DDA: Residual Distributions\n")
-  cat("Number of Bootstrap Samples:", object$n_valid_iterations, "\n\n")
+  cat("Number of Bootstrap Samples:", object$n_valid_iterations, "\n")
+  cat("Aggregation method:", object$agg_stat_used, "\n\n")
 
   cat("Skewness and kurtosis tests:\n")
 
@@ -262,19 +382,24 @@ print.dda_bagging_resdist <- function(x, agg_stat = NULL, trim_prob = 0.20, digi
 #' Print for dda_bagging Output (VARDIST)
 #'
 #' @param x Output from dda_bagging() for dda.vardist objects
-#' @param agg_stat Method for aggregating test statistics. If NULL, uses the method established in dda_bagging().
-#' @param trim_prob Proportion of observations to be trimmed or Winsorized from each end (default: 0.20).
-#' @param digits Number of digits for rounding (default: 4)
+#' @param agg_stat Method for aggregating test statistics.
+#'                 Options: "mean", "median", "trimmed", "winsorized",
+#'                 "midhinge", "tukey". If NULL, uses the method established
+#'                 in dda_bagging().
+#' @param trim_prob Proportion of observations to be trimmed (default: 0.10).
+#' @param win_prob Proportion of observations to be Winsorized (default: 0.10).
+#' @param digits Number of digits for rounding
 #' @param ... Additional arguments passed to print
 #' @export
 #' @method print dda_bagging_vardist
-print.dda_bagging_vardist <- function(x, agg_stat = NULL, trim_prob = 0.20, digits = 4, ...) {
-  object <- reaggregate_bagging(x, agg_stat, trim_prob)
+print.dda_bagging_vardist <- function(x, agg_stat = NULL, trim_prob = 0.10, win_prob = 0.10, digits = 4, ...) {
+  object <- reaggregate_bagging(x, agg_stat, trim_prob, win_prob)
   stats <- object$aggregated_stats
   varnames <- if (!is.null(stats$var.names)) stats$var.names else c("Outcome", "Predictor")
 
   cat("\nBOOTSTRAP AGGREGATED DDA: Variable Distributions\n")
-  cat("Number of Bootstrap Samples:", object$n_valid_iterations, "\n\n")
+  cat("Number of Bootstrap Samples:", object$n_valid_iterations, "\n")
+  cat("Aggregation method:", object$agg_stat_used, "\n\n")
 
   cat("Skewness and kurtosis tests:\n")
 
@@ -330,29 +455,79 @@ print.dda_bagging_vardist <- function(x, agg_stat = NULL, trim_prob = 0.20, digi
 #' Print OLS Summary from Bagged DDA
 #'
 #' @param object Output from dda_bagging()
-#' @param agg_stat Method for aggregating test statistics. If NULL, uses the method established in dda_bagging().
-#' @param trim_prob Proportion of observations to be trimmed or Winsorized from each end (default: 0.20).
-#' @param digits Number of digits for rounding (default: 4)
+#' @param agg_stat Method for aggregating test statistics.
+#'                 Options: "mean", "median", "trimmed", "winsorized",
+#'                 "midhinge", "tukey". If NULL, uses the method established
+#'                 in dda_bagging().
+#' @param trim_prob Proportion of observations to be trimmed (default: 0.10).
+#' @param win_prob Proportion of observations to be Winsorized (default: 0.10).
+#' @param digits Number of digits for rounding
+#' @param ... Additional arguments passed to print
 #' @export
-print_ols_summary <- function(object, agg_stat = NULL, trim_prob = 0.20, digits = 4) {
+print_ols_summary <- function(object, agg_stat = NULL, trim_prob = 0.10, win_prob = 0.10, digits = 4, ...) {
 
   if (!inherits(object, "dda_bagging")) {
     stop("Object must be a bagged DDA result.")
   }
 
-  object <- reaggregate_bagging(object, agg_stat, trim_prob)
+  object <- reaggregate_bagging(object, agg_stat, trim_prob, win_prob)
   stats <- object$aggregated_stats
+  raw <- object$raw_stats
 
   if (is.null(stats$ols_target)) {
     cat("No OLS summary available in this object.\n")
     return(invisible(NULL))
   }
 
+  # Local helper for R-squared aggregation
+  current_agg <- if (!is.null(agg_stat)) agg_stat else object$agg_stat_used
+  agg_helper <- function(x) {
+    x <- as.numeric(x)
+    x <- x[!is.na(x)]
+    if (length(x) == 0) return(NA_real_)
+    switch(current_agg,
+           "mean" = mean(x),
+           "median" = median(x),
+           "trimmed" = mean(x, trim = trim_prob),
+           "winsorized" = {
+             q_low <- quantile(x, probs = win_prob, na.rm = TRUE, names = FALSE)
+             q_high <- quantile(x, probs = 1 - win_prob, na.rm = TRUE, names = FALSE)
+             x[x < q_low] <- q_low
+             x[x > q_high] <- q_high
+             mean(x)
+           },
+           "midhinge" = {
+             q <- quantile(x, probs = c(0.25, 0.75), names = FALSE)
+             mean(q)
+           },
+           "tukey" = {
+             q <- quantile(x, probs = c(0.25, 0.5, 0.75), names = FALSE)
+             (q[1] + 2*q[2] + q[3]) / 4
+           }
+    )
+  }
+
+  cat("\nAggregation method:", current_agg, "\n\n")
+
   cat("OLS Summary: Target Model\n")
   print.default(format(stats$ols_target, digits = digits), print.gap = 2L, quote = FALSE)
 
-  cat("\nOLS Summary: Alternative Model\n")
+  if (!is.null(raw$ols_tar_rsq)) {
+    r2 <- agg_helper(raw$ols_tar_rsq[, 1])
+    adj_r2 <- agg_helper(raw$ols_tar_rsq[, 2])
+    cat(sprintf("\nR-squared: %.*f, Adjusted R-squared: %.*f\n", digits, r2, digits, adj_r2))
+  }
+
+  cat("\n---\n\n")
+
+  cat("OLS Summary: Alternative Model\n")
   print.default(format(stats$ols_alternative, digits = digits), print.gap = 2L, quote = FALSE)
+
+  if (!is.null(raw$ols_alt_rsq)) {
+    r2_alt <- agg_helper(raw$ols_alt_rsq[, 1])
+    adj_r2_alt <- agg_helper(raw$ols_alt_rsq[, 2])
+    cat(sprintf("\nR-squared: %.*f, Adjusted R-squared: %.*f\n", digits, r2_alt, digits, adj_r2_alt))
+  }
 
   invisible(object)
 }

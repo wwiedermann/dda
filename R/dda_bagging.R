@@ -61,7 +61,7 @@ dda_bagging <- function(
     return(NA_real_)
   }
 
-  # --- Helper: Harmonic Mean P-values (Wilson 2019) ---
+  # --- Helper: Harmonic Mean P-values ---
   harmonic_p <- function(pvec) {
     pvec <- as.numeric(pvec)
     pvec <- pvec[!is.na(pvec)]
