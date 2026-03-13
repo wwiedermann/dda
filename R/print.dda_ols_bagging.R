@@ -62,7 +62,8 @@ print_ols_summary <- function(object,
 
   # --- Target Model Print ---
   cat("OLS Summary: Target Model\n")
-  print.default(format(stats$ols_target, digits = digits), print.gap = 2L, quote = FALSE)
+  # Fixed: Use round() for explicit decimal places instead of format()
+  print.default(round(stats$ols_target, digits = digits), print.gap = 2L, quote = FALSE)
 
   if (!is.null(raw$ols_tar_rsq)) {
     r2 <- agg_helper(raw$ols_tar_rsq[, 1])
@@ -74,7 +75,8 @@ print_ols_summary <- function(object,
 
   # --- Alternative Model Print ---
   cat("OLS Summary: Alternative Model\n")
-  print.default(format(stats$ols_alternative, digits = digits), print.gap = 2L, quote = FALSE)
+  # Fixed: Use round() for explicit decimal places instead of format()
+  print.default(round(stats$ols_alternative, digits = digits), print.gap = 2L, quote = FALSE)
 
   if (!is.null(raw$ols_alt_rsq)) {
     r2_alt <- agg_helper(raw$ols_alt_rsq[, 1])
