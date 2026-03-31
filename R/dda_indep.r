@@ -76,7 +76,7 @@ dda.indep <- function(
       err.yx <- dat[,4] # errors of target model
 
       diff.hsic <- dHSIC::dhsic.test(err.xy, ry, method = "gamma")$statistic - dHSIC::dhsic.test(err.yx, rx, method = "gamma")$statistic
-      diff.dcor <- energy::dcor.test(err.xy, ry)$statistic - energy::dcor.test(err.yx, rx)$statistic
+      diff.dcor <- dccpp::dcor(err.xy, ry) - dccpp::dcor(err.yx, rx)
       diff.mi <- (max.entropy(ry) + max.entropy(err.xy)) - (max.entropy(rx) + max.entropy(err.yx))
       c(diff.hsic, diff.dcor, diff.mi)
     }
