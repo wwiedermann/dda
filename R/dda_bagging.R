@@ -239,7 +239,7 @@ dda_bagging <- function(
       apply(raw_stats$ols_tar_coefs, 2, quantile, probs = ub, na.rm = TRUE),
       prop_sig_tar
     )
-    colnames(agg$ols_target) <- c("estimate", paste0(lb * 100, " %"), paste0(ub * 100, " %"), paste0("Prop(p<", alpha, ")"))
+    colnames(agg$ols_target) <- c("estimate", paste0(lb * 100, " %"), paste0(ub * 100, " %"), paste0("Prop (p<", alpha, ")"))
   }
 
   if (!is.null(raw_stats$ols_alt_coefs)) {
