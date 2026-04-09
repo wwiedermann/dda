@@ -192,41 +192,42 @@ print_bagging_decisions <- function(object, show = NULL, moment = NULL, type = "
   cat(paste("      Alternative is", varnames[1], "->", varnames[2]), "\n")
 }
 
-#' Summary for dda_bagging Output (INDEP)
+#' @title Summary Methods for Bagged DDA Objects
 #'
-#' @param object Output from dda_bagging() for dda.indep objects
-#' @param show Character vector of stats to show (e.g. c("hsic", "dcor", "bp", "all"))
-#' @param digits Number of decimal places to print for proportions (default: 2)
-#' @param ... Additional arguments
+#' @description \code{summary} returns the proportion of decisions supporting the target model,
+#' alternative model, or remaining undecided (or confounding) across bootstrap iterations for
+#' bagged Direction Dependence Analysis (DDA) objects.
+#'
+#' @param object An object of class \code{dda_bagging_indep}, \code{dda_bagging_vardist},
+#'   or \code{dda_bagging_resdist}.
+#' @param show Character vector specifying which statistics to display decision proportions for
+#'   (e.g., \code{"hsic"}, \code{"dcor"}, \code{"skew"}, \code{"kurt"}, \code{"all"}). If \code{NULL},
+#'   shows default statistics based on the object type.
+#' @param moment Numeric vector indicating which moments to include in the summary
+#'   (e.g., \code{c(3, 4)}). Applicable only to \code{dda_bagging_vardist} and \code{dda_bagging_resdist}.
+#' @param digits Integer. Number of decimal places to print for proportions (default: 2).
+#' @param ... Additional arguments passed to \code{summary}.
+#'
+#' @return Invisibly returns the original object.
+#'
 #' @export
+#' @rdname summary.dda_bagging
 #' @method summary dda_bagging_indep
 summary.dda_bagging_indep <- function(object, show = NULL, digits = 2, ...) {
   print_bagging_decisions(object, show = show, type = "indep", digits = digits)
   invisible(object)
 }
 
-#' Summary for dda_bagging Output (VARDIST)
-#'
-#' @param object Output from dda_bagging() for dda.vardist objects
-#' @param show Character vector of stats to show (e.g. c("skew", "cokurt", "all"))
-#' @param moment Numeric vector for moments to include (3, 4)
-#' @param digits Number of decimal places to print for proportions (default: 2)
-#' @param ... Additional arguments
 #' @export
+#' @rdname summary.dda_bagging
 #' @method summary dda_bagging_vardist
 summary.dda_bagging_vardist <- function(object, show = NULL, moment = NULL, digits = 2, ...) {
   print_bagging_decisions(object, show = show, moment = moment, type = "vardist", digits = digits)
   invisible(object)
 }
 
-#' Summary for dda_bagging Output (RESDIST)
-#'
-#' @param object Output from dda_bagging() for dda.resdist objects
-#' @param show Character vector of stats to show (e.g. c("all"))
-#' @param moment Numeric vector for moments to include (3, 4)
-#' @param digits Number of decimal places to print for proportions (default: 2)
-#' @param ... Additional arguments
 #' @export
+#' @rdname summary.dda_bagging
 #' @method summary dda_bagging_resdist
 summary.dda_bagging_resdist <- function(object, show = NULL, moment = NULL, digits = 2, ...) {
   print_bagging_decisions(object, show = show, moment = moment, type = "resdist", digits = digits)
