@@ -1,16 +1,77 @@
-#' Bootstrap Aggregated DDA Analysis
+#' @title Bootstrap Aggregated Direction Dependence Analysis
 #'
-#' @param dda_result Output from any DDA function (dda.indep, dda.vardist, dda.resdist)
-#' @param iter Number of bootstrap iterations (default: 100)
-#' @param progress Whether to show progress bar (default: TRUE)
-#' @param save_file Optional file path to save results
-#' @param alpha Significance level for decisions (default: 0.05)
-#' @param data Raw data frame with ALL variables (outcome, predictor, covariates)
-#' @param agg_stat Method for aggregating test statistics and coefficients. Options: "mean", "median", "trimmed", "winsorized", "midhinge", "tukey". P-values always use harmonic mean.
-#' @param trim_prob Proportion of observations to be trimmed from each end (default: 0.10).
-#' @param win_prob Proportion of observations to be Winsorized from each end (default: 0.10).
-#' @return A list containing bootstrap and aggregated results
+#' @description \code{dda.bagging} performs bootstrap aggregation on an
+#' existing Direction Dependence Analysis (DDA) object to test the stability
+#' and robustness of direction dependence decisions.
+#'
+#' @details \code{dda.bagging} uses a fitted DDA output object (obtained from
+#' \code{dda.indep}, \code{dda.vardist}, or \code{dda.resdist}) and performs
+#' bootstrap aggregation of DDA test statistics. The function computes DDA
+#' statistics across \code{B} bootstrap samples and aggregates the results to
+#' evaluate the stability and robustness of DDA model selection. p-values
+#' obtained from significance tests are aggregated using the harmonic mean
+#' p-value approach (Wilson, 2019).
+#'
+#' @param dda.result An output object from any base DDA function (e.g.,
+#'   \code{dda.indep}, \code{dda.vardist}, or \code{dda.resdist}).
+#' @param B Number of bootstrap samples (default: 100).
+#' @param progress Logical. Whether to display a progress bar during
+#'   resampling (default: \code{TRUE}).
+#' @param save.file Character. Optional file path to save the resulting
+#'   object as an R binary file (\code{.rds}) using \code{saveRDS()}
+#'   (e.g., \code{"results.rds"}).
+#' @param alpha Numeric. Significance level used for causal model selection
+#'   (default: 0.05).
+#' @param data A \code{data.frame} containing ALL raw variables used in the
+#'   original DDA model (outcome, predictor, and any covariates).
+#' @param agg.stat Character. Specifies the method used for aggregating test
+#'   statistics and coefficients across bootstrap samples. Must be one of the
+#'   following specifications \code{c("mean", "median", "trimmed",
+#'   "winsorized", "midhinge", "tukey")}.
+#' @param trim.prob Numeric. Proportion of observations to be trimmed on each
+#'   side of the sampling distribution when \code{agg.stat = "trimmed"}
+#'   (default: 0.10).
+#' @param win.prob Numeric. Proportion of observations to be winsorized on
+#'   each side of the sampling distribution when
+#'   \code{agg.stat = "winsorized"} (default: 0.10).
+#'
+#' @return An object of class \code{dda.bagging} (with subclasses
+#'   \code{dda_bagging_indep}, \code{dda_bagging_vardist}, or
+#'   \code{dda_bagging_resdist}), which contains aggregated and raw results
+#'   from tests matching the initial DDA function (\code{dda.indep},
+#'   \code{dda.vardist}, or \code{dda.resdist}).
+#'
+#' @references Wiedermann, W., & von Eye, A. (2025). \emph{Direction
+#'   Dependence Analysis: Foundations and Statistical Methods}. Cambridge, UK:
+#'   Cambridge University Press.
+#'
+#'   Wilson, D. J. (2019). The harmonic mean p-value for combining dependent
+#'   tests. \emph{Proceedings of the National Academy of Sciences},
+#'   \emph{116}(4), 1195-1200.
+#'
+#' @examples
+#' \dontrun{
+#' # Example using a hypothetical dataset 'my_data'
+#'
+#' # 1. Fit a base DDA independence model
+#' base_model <- dda.indep(y ~ x, data = my_data)
+#'
+#' # 2. Perform bootstrap aggregation on the base model
+#' bagged <- dda.bagging(
+#'   dda.result = base_model,
+#'   data = my_data,
+#'   B = 200,
+#'   agg.stat = "trimmed",
+#'   trim.prob = 0.05
+#' )
+#'
+#' # 3. View the aggregated results and decision summaries
+#' print(bagged)
+#' summary(bagged, show = c("hsic", "dcor", "bp"))
+#' }
+#'
 #' @export
+
 dda_bagging <- function(
     dda_result,
     iter = 100,

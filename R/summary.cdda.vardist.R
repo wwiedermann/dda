@@ -1,24 +1,37 @@
 #' @title Summary of \code{cdda.vardist} Class Objects
-#' @description \code{summary} returns test statistics from the \code{cdda.vardist} class object.
+#'
+#' @description \code{summary} returns test statistics from the
+#' \code{cdda.vardist} class object.
+#'
 #' @name summary.cdda.vardist
 #'
-#' @param object        An object of class \code{cdda.vardist} when using \code{summary}.
-#' @param skew          A logical value indicating whether skewness differences and separate D'Agostino skewness tests should be returned when using \code{summary}, default is \code{TRUE}.
-#' @param coskew        A logical value indicating whether co-skewness differences should be returned when using \code{summary}, default is \code{FALSE}.
-#' @param kurt          A logical value indicating whether excess kurtosis differences and Anscombe-Glynn kurtosis tests should be returned when using \code{summary}, default is \code{TRUE}.
-#' @param cokurt        A logical value indicating whether co-kurtosis differences should be returned when using \code{summary}, default is \code{FALSE}.
-#' @param ...           Additional arguments to be passed to the function.
+#' @param object An object of class \code{cdda.vardist} when using
+#'   \code{summary}.
+#' @param skew A logical value indicating whether skewness differences and
+#'   separate D'Agostino skewness tests should be returned when using
+#'   \code{summary}, default is \code{TRUE}.
+#' @param coskew A logical value indicating whether co-skewness differences
+#'   should be returned when using \code{summary}, default is \code{FALSE}.
+#' @param kurt A logical value indicating whether excess kurtosis differences
+#'   and Anscombe-Glynn kurtosis tests should be returned when using
+#'   \code{summary}, default is \code{TRUE}.
+#' @param cokurt A logical value indicating whether co-kurtosis differences
+#'   should be returned when using \code{summary}, default is \code{FALSE}.
+#' @param ... Additional arguments to be passed to the function.
 #'
-#' @examples summary(result, skew = FALSE, kurt = FALSE, coskew = TRUE)
+#' @examples
+#' summary(result, skew = FALSE, kurt = FALSE, coskew = TRUE)
 #'
 #' @export
 #' @rdname cdda.vardist
 #' @method summary cdda.vardist
+
+
 summary.cdda.vardist <- function(object,
-                                 skew = TRUE, 
-                                 coskew = FALSE, 
-                                 kurt = TRUE, 
-                                 cokurt = FALSE, 
+                                 skew = TRUE,
+                                 coskew = FALSE,
+                                 kurt = TRUE,
+                                 cokurt = FALSE,
                                  ...
                                  ){
   cdda.output <- object

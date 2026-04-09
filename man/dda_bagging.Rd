@@ -2,7 +2,7 @@
 % Please edit documentation in R/dda_bagging.R
 \name{dda_bagging}
 \alias{dda_bagging}
-\title{Bootstrap Aggregated DDA Analysis}
+\title{Bootstrap Aggregated Direction Dependence Analysis (DDA)}
 \usage{
 dda_bagging(
   dda_result,
@@ -12,29 +12,80 @@ dda_bagging(
   alpha = 0.05,
   data = NULL,
   agg_stat = c("mean", "median", "trimmed", "winsorized", "midhinge", "tukey"),
-  trim_prob = 0.2
+  trim_prob = 0.1,
+  win_prob = 0.1
 )
 }
 \arguments{
-\item{dda_result}{Output from any DDA function (dda.indep, dda.vardist, dda.resdist)}
+\item{dda_result}{An output object from any base DDA function (e.g., \code{dda.indep},
+\code{dda.vardist}, or \code{dda.resdist}).}
 
-\item{iter}{Number of bootstrap iterations (default: 100)}
+\item{iter}{Integer. Number of bootstrap iterations to perform (default: 100).}
 
-\item{progress}{Whether to show progress bar (default: TRUE)}
+\item{progress}{Logical. Whether to display a progress bar during resampling (default: \code{TRUE}).}
 
-\item{save_file}{Optional file path to save results}
+\item{save_file}{Character. Optional file path to save the resulting object to disk (e.g., \code{"results.rds"}).}
 
-\item{alpha}{Significance level for decisions (default: 0.05)}
+\item{alpha}{Numeric. Significance level used for making directional decisions (default: 0.05).}
 
-\item{data}{Raw data frame with ALL variables (outcome, predictor, covariates)}
+\item{data}{A \code{data.frame} containing ALL raw variables used in the original
+DDA model (outcome, predictor, and any covariates).}
 
-\item{agg_stat}{Method for aggregating test statistics and coefficients. Options: "mean", "median", "trimmed", "winsorized", "midhinge", "tukey". P-values always use harmonic mean.}
+\item{agg_stat}{Character. Method for aggregating test statistics and coefficients across
+bootstrap samples. Options include \code{"mean"}, \code{"median"}, \code{"trimmed"},
+\code{"winsorized"}, \code{"midhinge"}, or \code{"tukey"}.}
 
-\item{trim_prob}{Proportion of observations to be trimmed or Winsorized from each end (default: 0.20).}
+\item{trim_prob}{Numeric. Proportion of observations to be trimmed from each end
+when \code{agg_stat = "trimmed"} (default: 0.10).}
+
+\item{win_prob}{Numeric. Proportion of observations to be Winsorized from each end
+when \code{agg_stat = "winsorized"} (default: 0.10).}
 }
 \value{
-A list containing bootstrap and aggregated results
+An object of class \code{dda_bagging} (with subclasses \code{dda_bagging_indep},
+  \code{dda_bagging_vardist}, or \code{dda_bagging_resdist}), which is a list containing:
+  \item{bagged_results}{A list of the raw DDA outputs for each successful bootstrap iteration.}
+  \item{aggregated_stats}{A list of the aggregated test statistics, coefficients, and harmonic mean p-values.}
+  \item{decision_percentages}{A list summarizing the proportion of bootstrap samples supporting each causal direction.}
+  \item{raw_stats}{A list of matrices containing the unaggregated statistics across all iterations.}
+  \item{n_valid_iterations}{Integer indicating the number of bootstrap samples that were successfully processed.}
+  \item{agg_stat_used}{Character indicating the aggregation method that was applied.}
 }
 \description{
-To Do: Add in object storage list of all the runs + specified options for
+\code{dda_bagging} performs bootstrap aggregation (bagging) on an existing
+Direction Dependence Analysis (DDA) model object to improve the stability and robustness
+of direction dependence inferences.
+}
+\details{
+This function builds upon the core DDA framework by taking an already fitted
+DDA model object (created via \code{dda.indep}, \code{dda.vardist}, or \code{dda.resdist})
+and performing bootstrap resampling. It recalculates the DDA statistics across \code{iter}
+bootstrap samples and aggregates the results to provide a more robust assessment of causal
+directionality. P-values are always aggregated using the harmonic mean to appropriately
+control the false positive rate across resamples.
+}
+\examples{
+\dontrun{
+# Example using a hypothetical dataset 'my_data'
+
+# 1. Fit a base DDA independence model
+base_model <- dda.indep(y ~ x, data = my_data)
+
+# 2. Perform bootstrap aggregation (bagging) on the base model
+bagged_model <- dda_bagging(
+  dda_result = base_model,
+  data = my_data,
+  iter = 200,
+  agg_stat = "trimmed",
+  trim_prob = 0.05
+)
+
+# 3. View the aggregated results and decision summaries
+print(bagged_model)
+summary(bagged_model, show = c("hsic", "dcor", "bp"))
+}
+
+}
+\references{
+Wiedermann, W., & von Eye, A. (2025). \emph{Direction Dependence Analysis: Foundations and Statistical Methods}. Cambridge, UK: Cambridge University Press.
 }

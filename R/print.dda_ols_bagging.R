@@ -1,12 +1,28 @@
-#' Print OLS Summary from Bagged DDA
+#' @title Print OLS Model Summary for Bootstrap Aggregated DDA
 #'
-#' @param object Output from dda_bagging()
-#' @param agg_stat Method for aggregating test statistics. If NULL, uses the method established in dda_bagging().
-#' @param trim_prob Proportion of observations to be trimmed (default: 0.10).
-#' @param win_prob Proportion of observations to be Winsorized (default: 0.10).
-#' @param digits Number of digits for rounding
-#' @param ... Additional arguments passed to print
+#' @description \code{print_ols_summary} prints aggregated ordinary least
+#' squares (OLS) regression summaries from a bootstrap aggregated DDA object.
+#' Regression coefficients and standard errors are aggregated across bootstrap
+#' samples using the method specified in \code{dda.bagging()} or overridden
+#' via \code{agg.stat}.
+#'
+#' @param object Output from \code{dda.bagging()}.
+#' @param agg.stat Character. Specifies the method used for aggregating test
+#'   statistics and coefficients across bootstrap samples. Must be one of the
+#'   following specifications \code{c("mean", "median", "trimmed",
+#'   "winsorized", "midhinge", "tukey")}. If \code{NULL}, the function
+#'   uses the method applied with \code{dda.bagging()}.
+#' @param trim.prob Numeric. Proportion of observations to be trimmed on each
+#'   side of the sampling distribution when \code{agg.stat = "trimmed"}
+#'   (default: 0.10).
+#' @param win.prob Numeric. Proportion of observations to be winsorized on
+#'   each side of the sampling distribution when
+#'   \code{agg.stat = "winsorized"} (default: 0.10).
+#' @param digits Integer. Number of digits used for rounding.
+#' @param ... Additional arguments passed to \code{print}.
+#'
 #' @export
+
 print_ols_summary <- function(object,
                               agg_stat = NULL,
                               trim_prob = 0.10,
