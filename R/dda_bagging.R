@@ -51,7 +51,7 @@
 #'
 #' @examples
 #' \dontrun{
-#' # Example using a hypothetical dataset 'my_data'
+#'
 #'
 #' # 1. Fit a base DDA independence model
 #' base_model <- dda.indep(y ~ x, data = my_data)

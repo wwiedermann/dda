@@ -5,8 +5,6 @@
 #' \code{print} returns DDA test statistics associated with \code{dda.resdist}
 #' objects.
 #'
-#' @name dda.resdist
-#'
 #' @param formula Symbolic formula of the target model to be tested or an
 #'   \code{lm} object.
 #' @param pred Variable name of the predictor which serves as the outcome in
@@ -392,7 +390,6 @@ dda.resdist <- function(formula,
   return(output)
 }
 
-#' @name print.dda.resdist
 #' @title Print Method for \code{dda.resdist} Objects
 #'
 #' @description \code{print} returns DDA test statistics associated with
@@ -401,8 +398,12 @@ dda.resdist <- function(formula,
 #' @param x An object of class \code{dda.resdist} when using \code{print}.
 #' @param ... Additional arguments to be passed to the method.
 #'
+#' @return Invisibly returns the original object.
+#'
 #' @examples
+#' \dontrun{
 #' print(result)
+#' }
 #'
 #' @export
 #' @rdname dda.resdist

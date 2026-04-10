@@ -62,15 +62,22 @@ pick-a-point approach is used for the selected numeric values.}
 
 \item{ylim}{A numeric vector of length 2 indicating the y-axis limits. If \code{NULL}, the function will set the limits automatically.}
 
-\item{object}{An object of class \code{cdda.vardist} when using \code{summary}.}
+\item{object}{An object of class \code{cdda.vardist} when using
+\code{summary}.}
 
-\item{skew}{A logical value indicating whether skewness differences and separate D'Agostino skewness tests should be returned when using \code{summary}, default is \code{TRUE}.}
+\item{skew}{A logical value indicating whether skewness differences and
+separate D'Agostino skewness tests should be returned when using
+\code{summary}, default is \code{TRUE}.}
 
-\item{coskew}{A logical value indicating whether co-skewness differences should be returned when using \code{summary}, default is \code{FALSE}.}
+\item{coskew}{A logical value indicating whether co-skewness differences
+should be returned when using \code{summary}, default is \code{FALSE}.}
 
-\item{kurt}{A logical value indicating whether excess kurtosis differences and Anscombe-Glynn kurtosis tests should be returned when using \code{summary}, default is \code{TRUE}.}
+\item{kurt}{A logical value indicating whether excess kurtosis differences
+and Anscombe-Glynn kurtosis tests should be returned when using
+\code{summary}, default is \code{TRUE}.}
 
-\item{cokurt}{A logical value indicating whether co-kurtosis differences should be returned when using \code{summary}, default is \code{FALSE}.}
+\item{cokurt}{A logical value indicating whether co-kurtosis differences
+should be returned when using \code{summary}, default is \code{FALSE}.}
 }
 \value{
 An object of class \code{cdda.vardist} containing the results of  
@@ -86,7 +93,8 @@ An object of class \code{cdda.vardist} containing the results of
 
 \code{plot} returns graphs for results of \code{cdda.vardist}.
 
-\code{summary} returns test statistics from the \code{cdda.vardist} class object.
+\code{summary} returns test statistics from the
+\code{cdda.vardist} class object.
 }
 \examples{
 set.seed(321)

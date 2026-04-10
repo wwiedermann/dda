@@ -2,6 +2,7 @@
 % Please edit documentation in R/dda-package.R
 \docType{package}
 \name{dda-package}
+\alias{dda}
 \alias{dda-package}
 \title{dda: Direction Dependence Analysis}
 \description{
