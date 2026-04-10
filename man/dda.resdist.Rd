@@ -54,8 +54,6 @@ estimation is used.}
 \value{
 An object of class \code{dda.resdist} containing the results of
   direction dependence tests of error distributions.
-
-Invisibly returns the original object.
 }
 \description{
 \code{dda.resdist} evaluates patterns of asymmetry of error
@@ -73,8 +71,6 @@ d <- data.frame(x, y)
 
 result <- dda.resdist(y ~ x, pred = "x", data = d,
   B = 50, conf.level = 0.90, prob.trans = TRUE)
-
-print(result)
 
 \dontrun{
 print(result)

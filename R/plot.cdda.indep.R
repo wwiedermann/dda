@@ -4,7 +4,6 @@
 #'
 #' @name plot.cdda.indep
 #'
-#' @param x An object of class \code{cdda.indep} when using \code{plot}.
 #' @param stat A character indicating the CDDA statistic to be plotted with
 #'   the options \code{c("hsic.diff", "dcor.diff", "mi.diff")}.
 #' @param ylim A numeric vector of length 2 indicating the y-axis limits.

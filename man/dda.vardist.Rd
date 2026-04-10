@@ -68,8 +68,6 @@ result <- dda.vardist(y ~ x, pred = "x", data = d, B = 50)
 
 print(result)
 
-print(result)
-
 }
 \references{
 Wiedermann, W., & von Eye, A. (2025). \emph{Direction

@@ -1,11 +1,11 @@
 #' @title Conditional Directional Dependence Analysis: Variable Distributions
-#' @description \code{cdda.vardist} evaluates variable distributions of competing 
+#' @description \code{cdda.vardist} evaluates variable distributions of competing
 #'              conditional models (\code{y ~ x * m} vs.\code{x ~ y * m} with \code{m}
 #'              being a continuous or categorical moderator).
 #' @name cdda.vardist
 #'
-#' @param formula     Symbolic formula of the model to be tested or a \code{lm} object
-#' @param pred        A character indicating the variable name of the predictor 
+#' @param formula     Symbolic formula of the model to be tested or an \code{lm} object
+#' @param pred        A character indicating the variable name of the predictor
 #'                    which serves as the outcome in the alternative model.
 #' @param mod         A character indicating the variable name of the moderator.
 #' @param modval      Characters or a numeric sequence specifying the moderator
@@ -24,7 +24,7 @@
 #' @param B           Number of bootstrap samples.
 #' @param boot.type   A character indicating the type of bootstrap confidence intervals. Must be one of the two values \code{c("perc", "bca")}. \code{boot.type = "bca"} is the default.
 #'
-#' @returns An object of class \code{cdda.vardist} containing the results of  
+#' @returns An object of class \code{cdda.vardist} containing the results of
 #'          conditional direction dependence tests of variable distributions.
 #'
 #' @examples
@@ -322,7 +322,7 @@ cdda.vardist <- function(formula,
 #' @name print.cdda.vardist
 #' @title       Print Method for \code{cdda.vardist} Objects
 #' @description \code{print} returns the output of standard linear model coefficients
-#'              for competing target and alternative models.
+#'              for causally competing target and alternative models.
 #' @param x     An object of class \code{cdda.vardist} when using \code{print} or \code{plot}.
 #' @param ...   Additional arguments to be passed to the function.
 #'

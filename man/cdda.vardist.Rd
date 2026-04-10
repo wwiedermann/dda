@@ -26,9 +26,9 @@ cdda.vardist(
 \method{summary}{cdda.vardist}(object, skew = TRUE, coskew = FALSE, kurt = TRUE, cokurt = FALSE, ...)
 }
 \arguments{
-\item{formula}{Symbolic formula of the model to be tested or a \code{lm} object}
+\item{formula}{Symbolic formula of the model to be tested or an \code{lm} object}
 
-\item{pred}{A character indicating the variable name of the predictor 
+\item{pred}{A character indicating the variable name of the predictor
 which serves as the outcome in the alternative model.}
 
 \item{mod}{A character indicating the variable name of the moderator.}
@@ -80,18 +80,18 @@ and Anscombe-Glynn kurtosis tests should be returned when using
 should be returned when using \code{summary}, default is \code{FALSE}.}
 }
 \value{
-An object of class \code{cdda.vardist} containing the results of  
+An object of class \code{cdda.vardist} containing the results of
          conditional direction dependence tests of variable distributions.
 }
 \description{
-\code{cdda.vardist} evaluates variable distributions of competing 
+\code{cdda.vardist} evaluates variable distributions of competing
              conditional models (\code{y ~ x * m} vs.\code{x ~ y * m} with \code{m}
              being a continuous or categorical moderator).
 
 \code{print} returns the output of standard linear model coefficients
-             for competing target and alternative models.
+             for causally competing target and alternative models.
 
-\code{plot} returns graphs for results of \code{cdda.vardist}.
+\code{plot} returns graphs of \code{cdda.vardist} results.
 
 \code{summary} returns test statistics from the
 \code{cdda.vardist} class object.
