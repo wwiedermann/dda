@@ -374,9 +374,6 @@ dda.indep <- function(
 
 #' @title Print Method for \code{dda.indep} Objects
 #'
-#' @description \code{print} returns DDA test statistics associated with
-#'   \code{dda.indep} objects.
-#'
 #' @param x An object of class \code{dda.indep} when using \code{print}.
 #' @param ... Additional arguments to be passed to the function.
 #'

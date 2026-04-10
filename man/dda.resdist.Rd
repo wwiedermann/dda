@@ -62,9 +62,6 @@ Invisibly returns the original object.
 distributions of causally competing models (\code{y ~ x} vs. \code{x ~ y}).
 \code{print} returns DDA test statistics associated with \code{dda.resdist}
 objects.
-
-\code{print} returns DDA test statistics associated with
-  \code{dda.resdist} objects.
 }
 \examples{
 set.seed(123)

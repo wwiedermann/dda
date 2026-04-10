@@ -222,9 +222,6 @@ dda.vardist <- function(formula,
 
 #' @title Print Method for \code{dda.vardist} Objects
 #'
-#' @description \code{print} returns DDA test statistics associated with
-#'   \code{dda.vardist} objects.
-#'
 #' @param x An object of class \code{dda.vardist} when using \code{print}.
 #' @param ... Additional arguments to be passed to the function.
 #'

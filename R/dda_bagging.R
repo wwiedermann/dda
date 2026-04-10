@@ -72,16 +72,16 @@
 #'
 #' @export
 
-dda_bagging <- function(
+dda.bagging <- function(
     dda_result,
     iter = 100,
     progress = TRUE,
-    save_file = NULL,
+    save.file = NULL,
     alpha = 0.05,
     data = NULL,
-    agg_stat = c("mean", "median", "trimmed", "winsorized", "midhinge", "tukey"),
-    trim_prob = 0.10,
-    win_prob = 0.10
+    agg.stat = c("mean", "median", "trimmed", "winsorized", "midhinge", "tukey"),
+    trim.prob = 0.10,
+    win.prob = 0.10
 ) {
 
   agg_stat <- match.arg(agg_stat)

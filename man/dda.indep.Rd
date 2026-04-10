@@ -85,9 +85,6 @@ An object of class \code{dda.indep} containing the results of DDA
 independence of causally competing models (\code{y ~ x} vs. \code{x ~ y}).
 \code{print} returns DDA test statistics associated with \code{dda.indep}
 objects.
-
-\code{print} returns DDA test statistics associated with
-  \code{dda.indep} objects.
 }
 \examples{
 set.seed(123)
