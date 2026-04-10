@@ -99,8 +99,6 @@ result <- dda.indep(y ~ x, pred = "x", data = d, parallelize = TRUE,
 
 print(result)
 
-print(result)
-
 }
 \references{
 Wiedermann, W., & von Eye, A. (2025). \emph{Direction

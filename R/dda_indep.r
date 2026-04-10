@@ -61,8 +61,6 @@
 #' result <- dda.indep(y ~ x, pred = "x", data = d, parallelize = TRUE,
 #'   cores = 2, nlfun = 2, B = 50, hetero = TRUE, diff = TRUE)
 #'
-#' print(result)
-#'
 #' @export
 #' @rdname dda.indep
 

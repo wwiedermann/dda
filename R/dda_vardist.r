@@ -43,8 +43,6 @@
 #'
 #' result <- dda.vardist(y ~ x, pred = "x", data = d, B = 50)
 #'
-#' print(result)
-#'
 #' @export
 #' @rdname dda.vardist
 dda.vardist <- function(formula,

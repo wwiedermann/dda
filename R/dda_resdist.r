@@ -45,8 +45,6 @@
 #' result <- dda.resdist(y ~ x, pred = "x", data = d,
 #'   B = 50, conf.level = 0.90, prob.trans = TRUE)
 #'
-#' print(result)
-#'
 #' @export
 #' @rdname dda.resdist
 dda.resdist <- function(formula,
@@ -394,8 +392,6 @@ dda.resdist <- function(formula,
 #'
 #' @param x An object of class \code{dda.resdist} when using \code{print}.
 #' @param ... Additional arguments to be passed to the method.
-#'
-#' @return Invisibly returns the original object.
 #'
 #' @examples
 #' \dontrun{

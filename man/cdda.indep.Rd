@@ -52,7 +52,7 @@ cdda.indep(
 
 \item{modval}{Characters or a numeric sequence specifying the moderator
 values used in post-hoc probing. Possible characters include
-\code{c("mean", "median", "JN")}.\code{modval = "mean"}
+\code{c("mean", "median", "JN")}. \code{modval = "mean"}
 tests the interaction effect at the moderator values
 \code{M – 1SD}, \code{M}, and \code{M + 1SD};
 \code{modval = "median"} uses \code{Q1}, \code{Md},
@@ -70,13 +70,18 @@ tests should be returned when using \code{summary}, default is
 
 \item{diff}{A logical value indicating whether differences in HSIC, dCor, and MI values should be computed. Bootstrap confidence intervals are computed using B bootstrap samples.}
 
-\item{nlfun}{Determines handling of non-linear correlation tests depending on the function used:
+\item{nlfun}{Determines handling of non-linear correlation tests
+depending on the function used:
 \itemize{
-  \item \strong{For \code{cdda.indep}:} Either a numeric value or a function of .Primitive type used for non-linear correlation tests. When numeric, the value is used in a power transformation.
-  \item \strong{For \code{summary}:} A logical value indicating whether non-linear correlation tests should be returned in the output. Default is \code{FALSE}.
+  \item \strong{For} \code{cdda.indep}: Either a numeric value or
+    a function of .Primitive type used for non-linear correlation
+    tests. When numeric, the value is used in a power transformation.
+  \item \strong{For} \code{summary}: A logical value indicating
+    whether non-linear correlation tests should be returned in the
+    output. Default is \code{FALSE}.
 }}
 
-\item{hsic.method}{A character indicating the inference method for the Hilbert-Schmidt Independence Criterion. Must be one of the four specifications \code{c("gamma", "eigenvalue", "boot", "permutation")}.\code{hsic.method = "gamma"} is the default.}
+\item{hsic.method}{A character indicating the inference method for the Hilbert-Schmidt Independence Criterion. Must be one of the four specifications \code{c("gamma", "eigenvalue", "boot", "permutation")}. \code{hsic.method = "gamma"} is the default.}
 
 \item{B}{Number of permutations for separate dCor tests and number of resamples when \code{hsic.method = c("boot", "permutation")} or \code{diff = TRUE}.}
 
@@ -88,11 +93,11 @@ tests should be returned when using \code{summary}, default is
 
 \item{cores}{A numeric value indicating the number of cores. Only used if \code{parallelize = TRUE}.}
 
-\item{robust}{A logical value indicating whether Siegel (1982) repeated median estimators should be used for residual extraction. If \code{robust = TRUE} repeated median estimation is used, otherwise ordinary least squares estimation is used.}
+\item{robust}{A logical value indicating whether Siegel's (1982) repeated median estimator should be used for model estimation. If \code{robust = TRUE} repeated median estimation is applied for the causally competing models, otherwise ordinary least squares (OLS) estimation is used.}
 
 \item{...}{Additional arguments to be passed to the function.}
 
-\item{x}{An object of class \code{cdda.indep} when using \code{plot}.}
+\item{x}{An object of class \code{cdda.indep} when using \code{print} or \code{plot}.}
 
 \item{stat}{A character indicating the CDDA statistic to be plotted with
 the options \code{c("hsic.diff", "dcor.diff", "mi.diff")}.}
@@ -123,8 +128,8 @@ difference statistics should be returned when using \code{summary},
 default is \code{FALSE}.}
 }
 \value{
-An object of class \code{dda.indep} containing the results of
-         independence tests of Conditional Direction Dependence Analysis.
+A list of class \code{cdda.indep} containing the results of
+  CDDA independence tests for pre-specified moderator values.
 
 An object of class \code{cdda.indep} with competing model coefficients.
 }
@@ -133,7 +138,7 @@ An object of class \code{cdda.indep} with competing model coefficients.
              conditional models (\code{y ~ x * m} vs. \code{x ~ y * m}
              with \code{m} being a continuous or categorical moderator).
 
-\code{print} returns the output of standard linear model coefficients for competing target and alternative models.
+\code{print} returns the output of standard linear model coefficients for causally competing target and alternative models.
 
 \code{plot} returns graphs of \code{cdda.indep} results.
 
