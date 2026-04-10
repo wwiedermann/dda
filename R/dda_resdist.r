@@ -392,9 +392,6 @@ dda.resdist <- function(formula,
 
 #' @title Print Method for \code{dda.resdist} Objects
 #'
-#' @description \code{print} returns DDA test statistics associated with
-#'   \code{dda.resdist} objects.
-#'
 #' @param x An object of class \code{dda.resdist} when using \code{print}.
 #' @param ... Additional arguments to be passed to the method.
 #'

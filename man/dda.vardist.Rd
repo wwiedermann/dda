@@ -55,9 +55,6 @@ variable distributions for causally competing models
 (\code{y ~ x} vs. \code{x ~ y}).
 \code{print} returns DDA test statistics associated with
 \code{dda.vardist} objects.
-
-\code{print} returns DDA test statistics associated with
-  \code{dda.vardist} objects.
 }
 \examples{
 set.seed(123)
