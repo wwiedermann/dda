@@ -201,7 +201,7 @@ print_bagging_decisions <- function(object, show = NULL, moment = NULL, type = "
 #' @param object An object of class \code{dda_bagging_indep}, \code{dda_bagging_vardist},
 #'   or \code{dda_bagging_resdist}.
 #' @param show Character vector specifying which statistics to display decision proportions for
-#'   (e.g., \code{"hsic"}, \code{"dcor"}, \code{"skew"}, \code{"kurt"}, \code{"all"}). If \code{NULL},
+#'   \code{c("all", "bp",  "dcor", "kurt", "cokurt", "mi", "nlcor", "skew", "coskew")}. If \code{NULL},
 #'   shows default statistics based on the object type.
 #' @param moment Numeric vector indicating which moments to include in the summary
 #'   (e.g., \code{c(3, 4)}). Applicable only to \code{dda_bagging_vardist} and \code{dda_bagging_resdist}.

@@ -33,7 +33,7 @@
 #' @param conf.level  Confidence level for bootstrap confidence intervals.
 #' @param parallelize A logical value indicating whether bootstrapping is performed on multiple cores. Only used if \code{diff = TRUE}.
 #' @param cores       A numeric value indicating the number of cores. Only used if \code{parallelize = TRUE}.
-#' @param robust       A logical value indicating whether Siegel (1982) repeated median estimators should be used for residual extraction. If \code{robust = TRUE} repeated median estimation is used, otherwise ordinary least squares estimation is used.
+#' @param robust      A logical value indicating whether Siegel (1982) repeated median estimators should be used for residual extraction. If \code{robust = TRUE} repeated median estimation is used, otherwise ordinary least squares estimation is used.
 #'
 #' @returns An object of class \code{dda.indep} containing the results of
 #'          independence tests of Conditional Direction Dependence Analysis.

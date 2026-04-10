@@ -136,6 +136,29 @@ reaggregate_bagging <- function(object, agg_stat = NULL, trim_prob = 0.10, win_p
 #'
 #' @return Returns a summary of the bootstrap aggregated DDA object.
 #'
+#' @examples
+#' \donttest{
+#' set.seed(123)
+#' n <- 500
+#' x <- rchisq(n, df = 4) - 4
+#' e <- rchisq(n, df = 3) - 3
+#' y <- 0.5 * x + e
+#' d <- data.frame(x, y)
+#'
+#' base_model <- dda.indep(y ~ x, pred = "x", data = d, B = 50,
+#'                          hetero = TRUE, nlfun = 2, diff = TRUE)
+#' bagged <- dda_bagging(base_model, data = d, iter = 10,
+#'                        agg_stat = "mean", progress = FALSE)
+#'
+#' # Default print
+#' print(bagged)
+#'
+#' # Override aggregation method at print time
+#' print(bagged, agg_stat = "trimmed", trim_prob = 0.05)
+#'
+#' # Print aggregated OLS summaries
+#' print_ols_summary(bagged)
+#' }
 #' @export
 #' @rdname print.dda_bagging
 #' @method print dda_bagging_indep
@@ -323,6 +346,20 @@ print.dda_bagging_indep <- function(x,
 
 #' @export
 #' @rdname print.dda_bagging
+#' @examples
+#' \donttest{
+#' set.seed(123)
+#' n <- 500
+#' x <- rchisq(n, df = 4) - 4
+#' e <- rchisq(n, df = 3) - 3
+#' y <- 0.5 * x + e
+#' d <- data.frame(x, y)
+#'
+#' base_rd <- dda.resdist(y ~ x, pred = "x", data = d, B = 50)
+#' bagged_rd <- dda_bagging(base_rd, data = d, iter = 10, progress = FALSE)
+#' print(bagged_rd)
+#' print(bagged_rd, agg_stat = "median")
+#' }
 #' @method print dda_bagging_resdist
 print.dda_bagging_resdist <- function(x, agg_stat = NULL, trim_prob = 0.10, win_prob = 0.10, digits = 4, ...) {
   object <- reaggregate_bagging(x, agg_stat, trim_prob, win_prob)
@@ -390,6 +427,20 @@ print.dda_bagging_resdist <- function(x, agg_stat = NULL, trim_prob = 0.10, win_
 
 #' @export
 #' @rdname print.dda_bagging
+#' @examples
+#' \donttest{
+#' set.seed(123)
+#' n <- 500
+#' x <- rchisq(n, df = 4) - 4
+#' e <- rchisq(n, df = 3) - 3
+#' y <- 0.5 * x + e
+#' d <- data.frame(x, y)
+#'
+#' base_vd <- dda.vardist(y ~ x, pred = "x", data = d, B = 50)
+#' bagged_vd <- dda_bagging(base_vd, data = d, iter = 10, progress = FALSE)
+#' print(bagged_vd)
+#' print(bagged_vd, agg_stat = "winsorized", win_prob = 0.10)
+#' }
 #' @method print dda_bagging_vardist
 print.dda_bagging_vardist <- function(x, agg_stat = NULL, trim_prob = 0.10, win_prob = 0.10, digits = 4, ...) {
   object <- reaggregate_bagging(x, agg_stat, trim_prob, win_prob)

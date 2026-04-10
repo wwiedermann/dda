@@ -5,7 +5,7 @@
 \alias{print.dda_bagging_resdist}
 \alias{print.dda_bagging_vardist}
 \alias{print_ols_summary}
-\title{Print Methods for Bagged DDA Objects}
+\title{Print Methods for Bootstrap Aggregated DDA Objects}
 \usage{
 \method{print}{dda_bagging_indep}(
   x,
@@ -31,33 +31,88 @@ print_ols_summary(
 )
 }
 \arguments{
-\item{x}{An object of class \code{dda_bagging_indep}, \code{dda_bagging_resdist}, or
-\code{dda_bagging_vardist}.}
+\item{x}{An object of class \code{dda_bagging_indep},
+\code{dda_bagging_resdist}, or \code{dda_bagging_vardist}.}
 
-\item{agg_stat}{Character. Method for aggregating test statistics.
-Options: \code{"mean"}, \code{"median"}, \code{"trimmed"}, \code{"winsorized"},
-\code{"midhinge"}, or \code{"tukey"}. If \code{NULL}, uses the method established
-in \code{dda_bagging()}.}
+\item{digits}{Integer. Number of digits used for rounding (default: 4).}
 
-\item{trim_prob}{Numeric. Proportion of observations to be trimmed (default: 0.10).}
-
-\item{win_prob}{Numeric. Proportion of observations to be Winsorized (default: 0.10).}
-
-\item{digits}{Integer. Number of digits for rounding (default: 4).}
-
-\item{alpha}{Numeric. Significance level for decisions (default: 0.05). Mainly applicable
-to \code{dda_bagging_indep} objects.}
+\item{alpha}{Numeric. Significance level used for causal model selection
+(default: 0.05).}
 
 \item{...}{Additional arguments passed to \code{print}.}
 
-\item{object}{Output from \code{dda_bagging()} (used specifically in \code{print_ols_summary}).}
+\item{agg.stat}{Character. Specifies the method used for aggregating test
+statistics and coefficients across bootstrap samples. Must be one of the
+following specifications \code{c("mean", "median", "trimmed",
+"winsorized", "midhinge", "tukey")}. If \code{NULL}, the method
+established in \code{dda.bagging()} is used.}
+
+\item{trim.prob}{Numeric. Proportion of observations to be trimmed on each
+side of the sampling distribution when \code{agg.stat = "trimmed"}
+(default: 0.10).}
+
+\item{win.prob}{Numeric. Proportion of observations to be winsorized on
+each side of the sampling distribution when
+\code{agg.stat = "winsorized"} (default: 0.10).}
 }
 \value{
-Invisibly returns the re-aggregated object.
+Returns a summary of the bootstrap aggregated DDA object.
 }
 \description{
-\code{print} returns aggregated test statistics and summaries associated with
-bagged Direction Dependence Analysis (DDA) objects. It supports independence properties
-(\code{dda_bagging_indep}), residual distributions (\code{dda_bagging_resdist}), variable
-distributions (\code{dda_bagging_vardist}), and OLS summaries (\code{print_ols_summary}).
+\code{print} returns aggregated test statistics of bootstrap
+aggregated Direction Dependence Analysis (DDA) objects. The function
+supports independence properties (obtained from \code{dda.indep}),
+residual distributions (obtained from \code{dda.resdist}), variable
+distributions (obtained from \code{dda.vardist}), and OLS summaries
+(\code{print_ols_summary}).
+}
+\examples{
+\donttest{
+set.seed(123)
+n <- 500
+x <- rchisq(n, df = 4) - 4
+e <- rchisq(n, df = 3) - 3
+y <- 0.5 * x + e
+d <- data.frame(x, y)
+
+base_model <- dda.indep(y ~ x, pred = "x", data = d, B = 50,
+                         hetero = TRUE, nlfun = 2, diff = TRUE)
+bagged <- dda_bagging(base_model, data = d, iter = 10,
+                       agg_stat = "mean", progress = FALSE)
+
+# Default print
+print(bagged)
+
+# Override aggregation method at print time
+print(bagged, agg_stat = "trimmed", trim_prob = 0.05)
+
+# Print aggregated OLS summaries
+print_ols_summary(bagged)
+}
+\donttest{
+set.seed(123)
+n <- 500
+x <- rchisq(n, df = 4) - 4
+e <- rchisq(n, df = 3) - 3
+y <- 0.5 * x + e
+d <- data.frame(x, y)
+
+base_rd <- dda.resdist(y ~ x, pred = "x", data = d, B = 50)
+bagged_rd <- dda_bagging(base_rd, data = d, iter = 10, progress = FALSE)
+print(bagged_rd)
+print(bagged_rd, agg_stat = "median")
+}
+\donttest{
+set.seed(123)
+n <- 500
+x <- rchisq(n, df = 4) - 4
+e <- rchisq(n, df = 3) - 3
+y <- 0.5 * x + e
+d <- data.frame(x, y)
+
+base_vd <- dda.vardist(y ~ x, pred = "x", data = d, B = 50)
+bagged_vd <- dda_bagging(base_vd, data = d, iter = 10, progress = FALSE)
+print(bagged_vd)
+print(bagged_vd, agg_stat = "winsorized", win_prob = 0.10)
+}
 }

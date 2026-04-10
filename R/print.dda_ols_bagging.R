@@ -1,6 +1,6 @@
 #' @title Print OLS Model Summary for Bootstrap Aggregated DDA
 #'
-#' @description \code{print_ols_summary} prints aggregated ordinary least
+#' @description \code{ols_summary} prints aggregated ordinary least
 #' squares (OLS) regression summaries from a bootstrap aggregated DDA object.
 #' Regression coefficients and standard errors are aggregated across bootstrap
 #' samples using the method specified in \code{dda.bagging()} or overridden
@@ -21,9 +21,27 @@
 #' @param digits Integer. Number of digits used for rounding.
 #' @param ... Additional arguments passed to \code{print}.
 #'
+#' @examples
+#' \donttest{
+#' set.seed(123)
+#' n <- 500
+#' x <- rchisq(n, df = 4) - 4
+#' e <- rchisq(n, df = 3) - 3
+#' y <- 0.5 * x + e
+#' d <- data.frame(x, y)
+#'
+#' base_model <- dda.indep(y ~ x, pred = "x", data = d, B = 50)
+#' bagged <- dda_bagging(base_model, data = d, iter = 10, progress = FALSE)
+#'
+#' # Print aggregated OLS coefficients for target and alternative models
+#' summary_ols(bagged)
+#'
+#' # Override aggregation method
+#' summary_ols(bagged, agg_stat = "median")
+#' }
 #' @export
 
-print_ols_summary <- function(object,
+summary_ols <- function(object,
                               agg_stat = NULL,
                               trim_prob = 0.10,
                               win_prob = 0.10,

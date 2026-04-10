@@ -6,8 +6,6 @@
 #' \code{print} returns DDA test statistics associated with
 #' \code{dda.vardist} objects.
 #'
-#' @name dda.vardist
-#'
 #' @param formula Symbolic formula of the model to be tested or a
 #'   \code{lm} object.
 #' @param pred Variable name of the predictor which serves as the outcome in
