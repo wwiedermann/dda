@@ -10,7 +10,7 @@
 #' @param mod         A character indicating the variable name of the moderator.
 #' @param modval      Characters or a numeric sequence specifying the moderator
 #'                    values used in post-hoc probing. Possible characters include
-#'                    \code{c("mean", "median", "JN")}.\code{modval = "mean"}
+#'                    \code{c("mean", "median", "JN")}. \code{modval = "mean"}
 #'                    tests the interaction effect at the moderator values
 #'                    \code{M – 1SD}, \code{M}, and \code{M + 1SD};
 #'                    \code{modval = "median"} uses \code{Q1}, \code{Md},
@@ -22,21 +22,26 @@
 #' @param data        A required data frame containing the variables in the model.
 #' @param hetero      A logical value indicating whether separate homoscedasticity tests (i.e., standard and robust Breusch-Pagan tests) should be computed.
 #' @param diff        A logical value indicating whether differences in HSIC, dCor, and MI values should be computed. Bootstrap confidence intervals are computed using B bootstrap samples.
-#' @param nlfun Determines handling of non-linear correlation tests depending on the function used:
-#' \itemize{
-#'   \item \strong{For \code{cdda.indep}:} Either a numeric value or a function of .Primitive type used for non-linear correlation tests. When numeric, the value is used in a power transformation.
-#'   \item \strong{For \code{summary}:} A logical value indicating whether non-linear correlation tests should be returned in the output. Default is \code{FALSE}.
-#' }
-#' @param hsic.method A character indicating the inference method for the Hilbert-Schmidt Independence Criterion. Must be one of the four specifications \code{c("gamma", "eigenvalue", "boot", "permutation")}.\code{hsic.method = "gamma"} is the default.
+#' @param nlfun Determines handling of non-linear correlation tests
+#'   depending on the function used:
+#'   \itemize{
+#'     \item \strong{For} \code{cdda.indep}: Either a numeric value or
+#'       a function of .Primitive type used for non-linear correlation
+#'       tests. When numeric, the value is used in a power transformation.
+#'     \item \strong{For} \code{summary}: A logical value indicating
+#'       whether non-linear correlation tests should be returned in the
+#'       output. Default is \code{FALSE}.
+#'   }
+#' @param hsic.method A character indicating the inference method for the Hilbert-Schmidt Independence Criterion. Must be one of the four specifications \code{c("gamma", "eigenvalue", "boot", "permutation")}. \code{hsic.method = "gamma"} is the default.
 #' @param B           Number of permutations for separate dCor tests and number of resamples when \code{hsic.method = c("boot", "permutation")} or \code{diff = TRUE}.
 #' @param boot.type   A character indicating the type of bootstrap confidence intervals. Must be one of the two specifications \code{c("perc", "bca")}. \code{boot.type = "perc"} is the default.
 #' @param conf.level  Confidence level for bootstrap confidence intervals.
 #' @param parallelize A logical value indicating whether bootstrapping is performed on multiple cores. Only used if \code{diff = TRUE}.
 #' @param cores       A numeric value indicating the number of cores. Only used if \code{parallelize = TRUE}.
-#' @param robust       A logical value indicating whether Siegel (1982) repeated median estimators should be used for residual extraction. If \code{robust = TRUE} repeated median estimation is used, otherwise ordinary least squares estimation is used.
+#' @param robust      A logical value indicating whether Siegel's (1982) repeated median estimator should be used for model estimation. If \code{robust = TRUE} repeated median estimation is applied for the causally competing models, otherwise ordinary least squares (OLS) estimation is used.
 #'
-#' @returns An object of class \code{dda.indep} containing the results of
-#'          independence tests of Conditional Direction Dependence Analysis.
+#' @return A list of class \code{cdda.indep} containing the results of
+#'   CDDA independence tests for pre-specified moderator values.
 #'
 #' @examples
 #' set.seed(321)
@@ -378,7 +383,7 @@ cdda.indep <- function(
 }
 
 #' @title Print Method for \code{cdda.indep} Objects.
-#' @description \code{print} returns the output of standard linear model coefficients for competing target and alternative models.
+#' @description \code{print} returns the output of standard linear model coefficients for causally competing target and alternative models.
 #' @param x     An object of class \code{cdda.indep} when using \code{print} or \code{plot}.
 #' @param ...   Additional arguments to be passed to the function.
 #'

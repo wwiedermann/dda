@@ -1,26 +1,56 @@
 #' @title Direction Dependence Analysis: Independence Properties
-#' @description \code{dda.indep} evaluates asymmetries of predictor-error independence of
-#'              causally competing models (\code{y ~ x} vs. \code{x ~ y}).
-#' @param formula      Symbolic formula of the model to be tested or a \code{lm} object.
-#' @param pred         A character indicating the variable name of the predictor which serves as the outcome in the alternative model.
-#' @param data         An optional data frame containing the variables in the model (by default variables are taken from the environment which \code{dda.indep} is called from).
-#' @param nlfun        Either a numeric value or a function of .Primitive type used for non-linear correlation tests. When \code{nlfun} is numeric the value is used in a power transformation.
-#' @param hetero       A logical value indicating whether separate homoscedasticity tests (i.e., standard and robust Breusch-Pagan tests) should be computed.
-#' @param hsic.method  A character indicating the inference method for the Hilbert-Schmidt Independence Criterion (HSIC). Must be one of the four specifications \code{c("gamma", "eigenvalue", "bootstrap", "permutation")}. \code{hsic.method = "gamma"}is the default.
-#' @param diff         A logical value indicating whether differences in HSIC, Distance Correlation (dCor), and MI values should be computed. Bootstrap confidence intervals are computed using B bootstrap samples.
-#' @param B            Number of permutations for separate dCor tests and number of resamples if \code{hsic.method = c("bootstrap", "permutation")} or \code{diff = TRUE}.
-#' @param boot.type    A vector of character strings representing the type of bootstrap confidence intervals. Must be one of the two specifications \code{c("perc", "bca")}.\code{boot.type = "perc"} is the default.
-#' @param conf.level   Confidence level for bootstrap confidence intervals.
-#' @param parallelize  A logical value indicating whether bootstrapping is performed on multiple cores. Only used if \code{diff = TRUE}.
-#' @param cores        A numeric value indicating the number of cores. Only used if \code{parallelize = TRUE}.
-#' @param robust       A logical value indicating whether Siegel non-parametric estimators should be used for residual extraction. If \code{robust = TRUE} Seigel estimation is used, otherwise ordinary least squares estimation is used.
 #'
-#' @returns
-#' An object of class \code{dda.indep} containing the results of DDA independence tests.
-#' @references Wiedermann, W., & von Eye, A. (2025). \emph{Direction Dependence Analysis: Foundations and Statistical Methods}. Cambridge, UK: Cambridge University Press.
+#' @description \code{dda.indep} evaluates asymmetries of predictor-error
+#' independence of causally competing models (\code{y ~ x} vs. \code{x ~ y}).
+#' \code{print} returns DDA test statistics associated with \code{dda.indep}
+#' objects.
+#'
+#' @param formula Symbolic formula of the model to be tested or a \code{lm}
+#'   object.
+#' @param pred A character indicating the variable name of the predictor which
+#'   serves as the outcome in the alternative model.
+#' @param data An optional data frame containing the variables in the model
+#'   (by default variables are taken from the environment which
+#'   \code{dda.indep} is called from).
+#' @param nlfun Either a numeric value or a function of .Primitive type used
+#'   for non-linear correlation tests. When \code{nlfun} is numeric the value
+#'   is used in a power transformation.
+#' @param hetero A logical value indicating whether separate homoscedasticity
+#'   tests (i.e., standard and robust Breusch-Pagan tests) should be computed.
+#' @param hsic.method A character indicating the inference method for the
+#'   Hilbert-Schmidt Independence Criterion (HSIC). Must be one of the four
+#'   specifications \code{c("gamma", "eigenvalue", "bootstrap", "permutation")}.
+#'   \code{hsic.method = "gamma"} is the default.
+#' @param diff A logical value indicating whether differences in HSIC, Distance
+#'   Correlation (dCor), and MI values should be computed. Bootstrap confidence
+#'   intervals are computed using B bootstrap samples.
+#' @param B Number of permutations for separate dCor tests and number of
+#'   resamples if \code{hsic.method = c("bootstrap", "permutation")} or
+#'   \code{diff = TRUE}.
+#' @param boot.type A vector of character strings representing the type of
+#'   bootstrap confidence intervals. Must be one of the two specifications
+#'   \code{c("perc", "bca")}. \code{boot.type = "perc"} is the default.
+#' @param conf.level Confidence level for bootstrap confidence intervals.
+#' @param parallelize A logical value indicating whether bootstrapping is
+#'   performed on multiple cores. Only used if \code{diff = TRUE}.
+#' @param cores A numeric value indicating the number of cores. Only used if
+#'   \code{parallelize = TRUE}.
+#' @param robust A logical value indicating whether Siegel's (1982) repeated
+#'   median estimator should be used for model estimation. If
+#'   \code{robust = TRUE} repeated median estimation is applied for the
+#'   causally competing models, otherwise ordinary least squares (OLS)
+#'   estimation is used.
+#'
+#' @return An object of class \code{dda.indep} containing the results of DDA
+#'   independence tests.
+#'
+#' @references Wiedermann, W., & von Eye, A. (2025). \emph{Direction
+#'   Dependence Analysis: Foundations and Statistical Methods}. Cambridge, UK:
+#'   Cambridge University Press.
+#'
+#' @seealso \code{\link{cdda.indep}} for a conditional version.
 #'
 #' @examples
-#'
 #' set.seed(123)
 #' n <- 500
 #' x <- rchisq(n, df = 4) - 4
@@ -28,14 +58,12 @@
 #' y <- 0.5 * x + e
 #' d <- data.frame(x, y)
 #'
-#' result <- dda.indep(y ~ x, pred = "x", data = d, parallelize = TRUE, cores = 2,
-#'           nlfun = 2, B = 50, hetero = TRUE, diff = TRUE)
+#' result <- dda.indep(y ~ x, pred = "x", data = d, parallelize = TRUE,
+#'   cores = 2, nlfun = 2, B = 50, hetero = TRUE, diff = TRUE)
 #'
-#'
-#' @seealso \code{\link{cdda.indep}} for a conditional version.
 #' @export
 #' @rdname dda.indep
-#'
+
 dda.indep <- function(
              formula,
              pred = NULL,
@@ -344,9 +372,7 @@ dda.indep <- function(
 
 #' @title Print Method for \code{dda.indep} Objects
 #'
-#' @description \code{print} returns DDA test statistics associated with \code{dda.indep} objects.
-#'
-#' @param x   An object of class \code{dda.indep} when using \code{print}.
+#' @param x An object of class \code{dda.indep} when using \code{print}.
 #' @param ... Additional arguments to be passed to the function.
 #'
 #' @examples

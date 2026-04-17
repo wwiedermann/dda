@@ -26,9 +26,9 @@ cdda.vardist(
 \method{summary}{cdda.vardist}(object, skew = TRUE, coskew = FALSE, kurt = TRUE, cokurt = FALSE, ...)
 }
 \arguments{
-\item{formula}{Symbolic formula of the model to be tested or a \code{lm} object}
+\item{formula}{Symbolic formula of the model to be tested or an \code{lm} object}
 
-\item{pred}{A character indicating the variable name of the predictor 
+\item{pred}{A character indicating the variable name of the predictor
 which serves as the outcome in the alternative model.}
 
 \item{mod}{A character indicating the variable name of the moderator.}
@@ -62,31 +62,39 @@ pick-a-point approach is used for the selected numeric values.}
 
 \item{ylim}{A numeric vector of length 2 indicating the y-axis limits. If \code{NULL}, the function will set the limits automatically.}
 
-\item{object}{An object of class \code{cdda.vardist} when using \code{summary}.}
+\item{object}{An object of class \code{cdda.vardist} when using
+\code{summary}.}
 
-\item{skew}{A logical value indicating whether skewness differences and separate D'Agostino skewness tests should be returned when using \code{summary}, default is \code{TRUE}.}
+\item{skew}{A logical value indicating whether skewness differences and
+separate D'Agostino skewness tests should be returned when using
+\code{summary}, default is \code{TRUE}.}
 
-\item{coskew}{A logical value indicating whether co-skewness differences should be returned when using \code{summary}, default is \code{FALSE}.}
+\item{coskew}{A logical value indicating whether co-skewness differences
+should be returned when using \code{summary}, default is \code{FALSE}.}
 
-\item{kurt}{A logical value indicating whether excess kurtosis differences and Anscombe-Glynn kurtosis tests should be returned when using \code{summary}, default is \code{TRUE}.}
+\item{kurt}{A logical value indicating whether excess kurtosis differences
+and Anscombe-Glynn kurtosis tests should be returned when using
+\code{summary}, default is \code{TRUE}.}
 
-\item{cokurt}{A logical value indicating whether co-kurtosis differences should be returned when using \code{summary}, default is \code{FALSE}.}
+\item{cokurt}{A logical value indicating whether co-kurtosis differences
+should be returned when using \code{summary}, default is \code{FALSE}.}
 }
 \value{
-An object of class \code{cdda.vardist} containing the results of  
+An object of class \code{cdda.vardist} containing the results of
          conditional direction dependence tests of variable distributions.
 }
 \description{
-\code{cdda.vardist} evaluates variable distributions of competing 
+\code{cdda.vardist} evaluates variable distributions of competing
              conditional models (\code{y ~ x * m} vs.\code{x ~ y * m} with \code{m}
              being a continuous or categorical moderator).
 
 \code{print} returns the output of standard linear model coefficients
-             for competing target and alternative models.
+             for causally competing target and alternative models.
 
-\code{plot} returns graphs for results of \code{cdda.vardist}.
+\code{plot} returns graphs of \code{cdda.vardist} results.
 
-\code{summary} returns test statistics from the \code{cdda.vardist} class object.
+\code{summary} returns test statistics from the
+\code{cdda.vardist} class object.
 }
 \examples{
 set.seed(321)
