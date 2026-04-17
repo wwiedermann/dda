@@ -107,20 +107,62 @@ reaggregate_bagging <- function(object, agg_stat = NULL, trim_prob = 0.10, win_p
   return(object)
 }
 
-#' Print for dda_bagging Output (INDEP)
+#' @title Print Methods for Bootstrap Aggregated DDA Objects
 #'
-#' @param x Output from dda_bagging() for dda.indep objects (class: dda_bagging_indep)
-#' @param agg_stat Method for aggregating test statistics.
-#'                 Options: "mean", "median", "trimmed", "winsorized",
-#'                 "midhinge", "tukey". If NULL, uses the method established
-#'                 in dda_bagging().
-#' @param trim_prob Proportion of observations to be trimmed (default: 0.10).
-#' @param win_prob Proportion of observations to be Winsorized (default: 0.10).
-#' @param digits Number of digits for rounding
-#' @param alpha Significance level for decisions (default: 0.05)
-#' @param ... Additional arguments passed to print
+#' @description \code{print} returns aggregated test statistics of bootstrap
+#' aggregated Direction Dependence Analysis (DDA) objects. The function
+#' supports independence properties (obtained from \code{dda.indep}),
+#' residual distributions (obtained from \code{dda.resdist}), variable
+#' distributions (obtained from \code{dda.vardist}), and OLS summaries
+#' (\code{print_ols_summary}).
+#'
+#' @param x An object of class \code{dda_bagging_indep},
+#'   \code{dda_bagging_resdist}, or \code{dda_bagging_vardist}.
+#' @param agg.stat Character. Specifies the method used for aggregating test
+#'   statistics and coefficients across bootstrap samples. Must be one of the
+#'   following specifications \code{c("mean", "median", "trimmed",
+#'   "winsorized", "midhinge", "tukey")}. If \code{NULL}, the method
+#'   established in \code{dda.bagging()} is used.
+#' @param trim.prob Numeric. Proportion of observations to be trimmed on each
+#'   side of the sampling distribution when \code{agg.stat = "trimmed"}
+#'   (default: 0.10).
+#' @param win.prob Numeric. Proportion of observations to be winsorized on
+#'   each side of the sampling distribution when
+#'   \code{agg.stat = "winsorized"} (default: 0.10).
+#' @param digits Integer. Number of digits used for rounding (default: 4).
+#' @param alpha Numeric. Significance level used for causal model selection
+#'   (default: 0.05).
+#' @param ... Additional arguments passed to \code{print}.
+#'
+#' @return Returns a summary of the bootstrap aggregated DDA object.
+#'
+#' @examples
+#' \donttest{
+#' set.seed(123)
+#' n <- 500
+#' x <- rchisq(n, df = 4) - 4
+#' e <- rchisq(n, df = 3) - 3
+#' y <- 0.5 * x + e
+#' d <- data.frame(x, y)
+#'
+#' base_model <- dda.indep(y ~ x, pred = "x", data = d, B = 50,
+#'                          hetero = TRUE, nlfun = 2, diff = TRUE)
+#' bagged <- dda_bagging(base_model, data = d, iter = 10,
+#'                        agg_stat = "mean", progress = FALSE)
+#'
+#' # Default print
+#' print(bagged)
+#'
+#' # Override aggregation method at print time
+#' print(bagged, agg_stat = "trimmed", trim_prob = 0.05)
+#'
+#' # Print aggregated OLS summaries
+#' print_ols_summary(bagged)
+#' }
 #' @export
+#' @rdname print.dda_bagging
 #' @method print dda_bagging_indep
+
 print.dda_bagging_indep <- function(x,
                                     agg_stat = NULL,
                                     trim_prob = 0.10,
@@ -302,18 +344,22 @@ print.dda_bagging_indep <- function(x,
   invisible(object)
 }
 
-#' Print for dda_bagging Output (RESDIST)
-#'
-#' @param x Output from dda_bagging() for dda.resdist objects
-#' @param agg_stat Method for aggregating test statistics.
-#'                 Options: "mean", "median", "trimmed", "winsorized",
-#'                 "midhinge", "tukey". If NULL, uses the method established
-#'                 in dda_bagging().
-#' @param trim_prob Proportion of observations to be trimmed (default: 0.10).
-#' @param win_prob Proportion of observations to be Winsorized (default: 0.10).
-#' @param digits Number of digits for rounding
-#' @param ... Additional arguments passed to print
 #' @export
+#' @rdname print.dda_bagging
+#' @examples
+#' \donttest{
+#' set.seed(123)
+#' n <- 500
+#' x <- rchisq(n, df = 4) - 4
+#' e <- rchisq(n, df = 3) - 3
+#' y <- 0.5 * x + e
+#' d <- data.frame(x, y)
+#'
+#' base_rd <- dda.resdist(y ~ x, pred = "x", data = d, B = 50)
+#' bagged_rd <- dda_bagging(base_rd, data = d, iter = 10, progress = FALSE)
+#' print(bagged_rd)
+#' print(bagged_rd, agg_stat = "median")
+#' }
 #' @method print dda_bagging_resdist
 print.dda_bagging_resdist <- function(x, agg_stat = NULL, trim_prob = 0.10, win_prob = 0.10, digits = 4, ...) {
   object <- reaggregate_bagging(x, agg_stat, trim_prob, win_prob)
@@ -379,18 +425,22 @@ print.dda_bagging_resdist <- function(x, agg_stat = NULL, trim_prob = 0.10, win_
   invisible(object)
 }
 
-#' Print for dda_bagging Output (VARDIST)
-#'
-#' @param x Output from dda_bagging() for dda.vardist objects
-#' @param agg_stat Method for aggregating test statistics.
-#'                 Options: "mean", "median", "trimmed", "winsorized",
-#'                 "midhinge", "tukey". If NULL, uses the method established
-#'                 in dda_bagging().
-#' @param trim_prob Proportion of observations to be trimmed (default: 0.10).
-#' @param win_prob Proportion of observations to be Winsorized (default: 0.10).
-#' @param digits Number of digits for rounding
-#' @param ... Additional arguments passed to print
 #' @export
+#' @rdname print.dda_bagging
+#' @examples
+#' \donttest{
+#' set.seed(123)
+#' n <- 500
+#' x <- rchisq(n, df = 4) - 4
+#' e <- rchisq(n, df = 3) - 3
+#' y <- 0.5 * x + e
+#' d <- data.frame(x, y)
+#'
+#' base_vd <- dda.vardist(y ~ x, pred = "x", data = d, B = 50)
+#' bagged_vd <- dda_bagging(base_vd, data = d, iter = 10, progress = FALSE)
+#' print(bagged_vd)
+#' print(bagged_vd, agg_stat = "winsorized", win_prob = 0.10)
+#' }
 #' @method print dda_bagging_vardist
 print.dda_bagging_vardist <- function(x, agg_stat = NULL, trim_prob = 0.10, win_prob = 0.10, digits = 4, ...) {
   object <- reaggregate_bagging(x, agg_stat, trim_prob, win_prob)
@@ -452,18 +502,8 @@ print.dda_bagging_vardist <- function(x, agg_stat = NULL, trim_prob = 0.10, win_
   invisible(object)
 }
 
-#' Print OLS Summary from Bagged DDA
-#'
-#' @param object Output from dda_bagging()
-#' @param agg_stat Method for aggregating test statistics.
-#'                 Options: "mean", "median", "trimmed", "winsorized",
-#'                 "midhinge", "tukey". If NULL, uses the method established
-#'                 in dda_bagging().
-#' @param trim_prob Proportion of observations to be trimmed (default: 0.10).
-#' @param win_prob Proportion of observations to be Winsorized (default: 0.10).
-#' @param digits Number of digits for rounding
-#' @param ... Additional arguments passed to print
 #' @export
+#' @rdname print.dda_bagging
 print_ols_summary <- function(object, agg_stat = NULL, trim_prob = 0.10, win_prob = 0.10, digits = 4, ...) {
 
   if (!inherits(object, "dda_bagging")) {

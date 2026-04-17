@@ -1,26 +1,30 @@
 #' @title Plots of \code{cdda.indep} Class Objects
-#' @description \code{plot} returns graphs for results of \code{cdda.indep}.
+#'
+#' @description \code{plot} returns graphs of \code{cdda.indep} results.
+#'
 #' @name plot.cdda.indep
 #'
-#' @param x           An object of class \code{cdda.indep} when using \code{print} or \code{plot}.
-#' @param stat        A character indicating the CDDA statistic to be plotted with the options \code{c("hsic.diff", "dcor.diff", "mi.diff")}.
-#' @param ylim        A numeric vector of length 2 indicating the y-axis limits if \code{NULL}, the function will set the limits automatically.
-#' @param ...         Additional arguments to be passed to the function.
+#' @param stat A character indicating the CDDA statistic to be plotted with
+#'   the options \code{c("hsic.diff", "dcor.diff", "mi.diff")}.
+#' @param ylim A numeric vector of length 2 indicating the y-axis limits.
+#'   If \code{NULL}, the function will set the limits automatically.
+#' @param ... Additional arguments to be passed to the function.
 #'
-#' @examples plot(result, stat = "dcor.diff")
+#' @examples
+#' plot(result, stat = "dcor.diff")
 #'
 #' @export
 #' @rdname cdda.indep
 #' @method plot cdda.indep
 plot.cdda.indep <- function(x = NULL,
-                            stat = NULL, 
-                            ylim =  NULL, 
+                            stat = NULL,
+                            ylim =  NULL,
                             ...
                             ){
 
-  oldpar <- par(no.readonly = TRUE) 
-  on.exit(par(oldpar)) 
-  
+  oldpar <- par(no.readonly = TRUE)
+  on.exit(par(oldpar))
+
   if(is.null(stat)){
     stop("stat argument must be specified. as 'hsic.diff', 'dcor.diff', or 'mi.diff'")
   }
