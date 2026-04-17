@@ -1,4 +1,4 @@
-#' Bootstrap Aggregated DDA Analysis
+#' @title Bootstrap Aggregated Direction Dependence Analysis
 #'
 #' @param dda_result Output from any DDA function (dda.indep, dda.vardist, dda.resdist)
 #' @param iter Number of bootstrap iterations (default: 100)
@@ -25,31 +25,47 @@ dda.bagging <- function(
 
   agg_stat <- match.arg(agg_stat)
 
-  # --- Helper: Robust Aggregation ---
+  # --- Input Validation & Safety Checks ---
+  if (!inherits(dda_result, c("dda.indep", "dda.resdist", "dda.vardist"))) {
+    stop("Unsupported DDA object. Must be dda.indep, dda.resdist, or dda.vardist.")
+  }
+  if (!is.data.frame(data) || nrow(data) == 0) {
+    stop("Valid 'data' data.frame must be provided.")
+  }
+  stopifnot(
+    is.numeric(iter) && iter > 0,
+    is.numeric(alpha) && alpha > 0 && alpha < 1,
+    is.numeric(trim_prob) && trim_prob >= 0 && trim_prob < 0.5,
+    is.numeric(win_prob) && win_prob >= 0 && win_prob < 0.5
+  )
+
+  # --- Helper: Robust & Finite Aggregation ---
   agg_helper <- function(x) {
     x <- as.numeric(x)
-    x <- x[!is.na(x)]
+    #  Strip NA, NaN, and Infinite values
+    x <- x[!is.na(x) & !is.nan(x) & is.finite(x)]
     if (length(x) == 0) return(NA_real_)
+
     switch(agg_stat,
            "mean"       = mean(x),
            "median"     = median(x),
            "trimmed"    = mean(x, trim = trim_prob),
            "winsorized" = {
-             q_low  <- quantile(x, probs = win_prob,    na.rm = TRUE, names = FALSE)
+             q_low  <- quantile(x, probs = win_prob,     na.rm = TRUE, names = FALSE)
              q_high <- quantile(x, probs = 1 - win_prob,  na.rm = TRUE, names = FALSE)
              x[x < q_low]  <- q_low
              x[x > q_high] <- q_high
              mean(x)
            },
-           "midhinge"   = { q <- quantile(x, probs = c(0.25, 0.75), names = FALSE); mean(q) },
+           "midhinge"   = { q <- quantile(x, probs = c(0.25, 0.75), names = FALSE, na.rm = TRUE); mean(q) },
            "tukey"      = {
-             q <- quantile(x, probs = c(0.25, 0.5, 0.75), names = FALSE)
+             q <- quantile(x, probs = c(0.25, 0.5, 0.75), names = FALSE, na.rm = TRUE)
              (q[1] + 2*q[2] + q[3]) / 4
            }
     )
   }
 
-  # --- Helper: Safe Extraction ---
+  # --- Helper: Safe Deep Extraction ---
   get_numeric <- function(x) {
     if (is.null(x))      return(NA_real_)
     if (is.numeric(x))   return(as.numeric(x[1]))
@@ -60,28 +76,29 @@ dda.bagging <- function(
   # --- Helper: Harmonic Mean P-values ---
   harmonic_p <- function(pvec) {
     pvec <- as.numeric(pvec)
-    pvec <- pvec[!is.na(pvec)]
-    pvec[pvec <= 0] <- 1e-300
+    pvec <- pvec[!is.na(pvec) & !is.nan(pvec)]
     if (length(pvec) == 0) return(NA_real_)
-    if (!requireNamespace("harmonicmeanp", quietly = TRUE)) return(mean(pvec))
+    pvec[pvec <= 0] <- 1e-300 # Prevent log(0) errors
+
+    if (!requireNamespace("harmonicmeanp", quietly = TRUE)) {
+      warning("Package 'harmonicmeanp' not found. Falling back to arithmetic mean.")
+      return(mean(pvec))
+    }
     harmonicmeanp::p.hmp(pvec, L = length(pvec))
   }
 
-  # --- Helper: Decision Proportions ---
+  # --- Helper: Safe Decision Proportions ---
   calc_props <- function(dec_vec) {
     levs <- c("Target", "Alternative", "Undecided")
+    dec_vec <- dec_vec[!is.na(dec_vec)]
     tab  <- table(factor(dec_vec, levels = levs))
-    return(tab / sum(tab))
+    sm <- sum(tab)
+    #  Prevent Division by Zero if all iterations failed
+    if (sm == 0) return(c(Target = 0, Alternative = 0, Undecided = 0))
+    return(tab / sm)
   }
 
-  # --- Validate Input ---
-  if (!inherits(dda_result, c("dda.indep", "dda.resdist", "dda.vardist"))) {
-    stop("Unsupported DDA object. Must be dda.indep, dda.resdist, or dda.vardist.")
-  }
-  if (is.null(data)) {
-    stop("Please provide the original raw data via the 'data' argument.")
-  }
-
+  # --- Extract Core DDA Info ---
   call_info     <- dda_result$call_info
   original_data <- data
   nobs          <- nrow(original_data)
@@ -95,7 +112,7 @@ dda.bagging <- function(
   y_name <- var_names[1]
   x_name <- var_names[2]
 
-  # --- Extract Formula ---
+  # --- Safe Formula Extraction ---
   original_formula <- NULL
   if (!is.null(call_info$formula)) {
     if (inherits(call_info$formula, "formula")) {
@@ -127,7 +144,7 @@ dda.bagging <- function(
     full_formula_alt <- as.formula(paste(x_name, "~", y_name))
   }
 
-  # --- Bootstrap Loop ---
+  # --- Bootstrap Execution Loop ---
   bagged_results  <- vector("list", iter)
   ols_tar_coefs   <- vector("list", iter)
   ols_alt_coefs   <- vector("list", iter)
@@ -188,18 +205,19 @@ dda.bagging <- function(
   }
   if (progress) close(pb)
 
-  # --- Filter Valid Results ---
+  # --- Filter Valid Results Safely ---
   is_valid <- vapply(bagged_results, function(x) !is.null(x) && !all(is.na(x)), logical(1))
   valid_res <- bagged_results[is_valid]
   n_valid   <- length(valid_res)
-  if (n_valid == 0) stop("No valid bootstrap iterations. Check your data.")
+
+  if (n_valid == 0) stop("No valid bootstrap iterations succeeded. Check data variance.")
 
   raw_stats <- list()
   agg       <- list()
   decs      <- list()
   crit_val  <- qnorm(1 - alpha / 2)
 
-  # --- OLS Aggregation ---
+  # --- Safely Save & Aggregate OLS Results ---
   raw_stats$ols_tar_coefs <- tryCatch(do.call(rbind, ols_tar_coefs[is_valid]), error = function(e) NULL)
   raw_stats$ols_alt_coefs <- tryCatch(do.call(rbind, ols_alt_coefs[is_valid]), error = function(e) NULL)
   raw_stats$ols_tar_rsq   <- tryCatch(do.call(rbind, ols_tar_rsq[is_valid]),   error = function(e) NULL)
@@ -210,7 +228,7 @@ dda.bagging <- function(
   lb <- alpha / 2
   ub <- 1 - alpha / 2
 
-  if (!is.null(raw_stats$ols_tar_coefs)) {
+  if (!is.null(raw_stats$ols_tar_coefs) && is.matrix(raw_stats$ols_tar_coefs)) {
     prop_sig_tar        <- apply(raw_stats$ols_tar_pvals, 2, function(x) mean(x < alpha, na.rm = TRUE))
     agg$ols_target      <- cbind(
       estimate = apply(raw_stats$ols_tar_coefs, 2, agg_helper),
@@ -218,11 +236,10 @@ dda.bagging <- function(
       apply(raw_stats$ols_tar_coefs, 2, quantile, probs = ub, na.rm = TRUE),
       prop_sig_tar
     )
-    colnames(agg$ols_target) <- c("estimate", paste0(lb*100," %"), paste0(ub*100," %"),
-                                  paste0("Prop (p<", alpha, ")"))
+    colnames(agg$ols_target) <- c("estimate", paste0(lb*100," %"), paste0(ub*100," %"), paste0("Prop (p<", alpha, ")"))
   }
 
-  if (!is.null(raw_stats$ols_alt_coefs)) {
+  if (!is.null(raw_stats$ols_alt_coefs) && is.matrix(raw_stats$ols_alt_coefs)) {
     prop_sig_alt          <- apply(raw_stats$ols_alt_pvals, 2, function(x) mean(x < alpha, na.rm = TRUE))
     agg$ols_alternative   <- cbind(
       estimate = apply(raw_stats$ols_alt_coefs, 2, agg_helper),
@@ -230,11 +247,12 @@ dda.bagging <- function(
       apply(raw_stats$ols_alt_coefs, 2, quantile, probs = ub, na.rm = TRUE),
       prop_sig_alt
     )
-    colnames(agg$ols_alternative) <- c("estimate", paste0(lb*100," %"), paste0(ub*100," %"),
-                                       paste0("Prop(p<", alpha, ")"))
+    colnames(agg$ols_alternative) <- c("estimate", paste0(lb*100," %"), paste0(ub*100," %"), paste0("Prop(p<", alpha, ")"))
   }
 
-  # --- INDEP Block ---
+  # ============================================================================
+  # INDEP Block
+  # ============================================================================
   if (obj_type == "dda.indep") {
     agg$var.names <- var_names
 
@@ -250,10 +268,7 @@ dda.bagging <- function(
 
     decs$hsic <- calc_props(ifelse(
       raw_stats$hsic_yx_pval >  alpha & raw_stats$hsic_xy_pval <= alpha, "Target",
-      ifelse(
-        raw_stats$hsic_xy_pval > alpha & raw_stats$hsic_yx_pval <= alpha, "Alternative",
-        "Undecided"
-      )
+      ifelse(raw_stats$hsic_xy_pval > alpha & raw_stats$hsic_yx_pval <= alpha, "Alternative", "Undecided")
     ))
 
     if (!is.null(valid_res[[1]]$distance_cor.dcor_yx) || !is.null(valid_res[[1]]$dcor.yx)) {
@@ -272,10 +287,7 @@ dda.bagging <- function(
 
       decs$dcor <- calc_props(ifelse(
         raw_stats$dcor_yx_pval >  alpha & raw_stats$dcor_xy_pval <= alpha, "Target",
-        ifelse(
-          raw_stats$dcor_xy_pval > alpha & raw_stats$dcor_yx_pval <= alpha, "Alternative",
-          "Undecided"
-        )
+        ifelse(raw_stats$dcor_xy_pval > alpha & raw_stats$dcor_yx_pval <= alpha, "Alternative", "Undecided")
       ))
     }
 
@@ -301,10 +313,7 @@ dda.bagging <- function(
       )
       decs$dec_bp <- calc_props(ifelse(
         raw_stats$rbp_yx_p >  alpha & raw_stats$rbp_xy_p <= alpha, "Target",
-        ifelse(
-          raw_stats$rbp_yx_p <= alpha & raw_stats$rbp_xy_p > alpha, "Alternative",
-          "Undecided"
-        )
+        ifelse(raw_stats$rbp_yx_p <= alpha & raw_stats$rbp_xy_p > alpha, "Alternative", "Undecided")
       ))
     }
 
@@ -317,34 +326,23 @@ dda.bagging <- function(
       raw_stats$nlcor_xy_t3 <- do.call(rbind, lapply(valid_res, function(x) as.numeric(x$nlcor.xy$t3)))
 
       agg$nlcor.yx <- list(
-        t1   = c(agg_helper(raw_stats$nlcor_yx_t1[,1]), agg_helper(raw_stats$nlcor_yx_t1[,2]),
-                 agg_helper(raw_stats$nlcor_yx_t1[,3]), harmonic_p(raw_stats$nlcor_yx_t1[,4])),
-        t2   = c(agg_helper(raw_stats$nlcor_yx_t2[,1]), agg_helper(raw_stats$nlcor_yx_t2[,2]),
-                 agg_helper(raw_stats$nlcor_yx_t2[,3]), harmonic_p(raw_stats$nlcor_yx_t2[,4])),
-        t3   = c(agg_helper(raw_stats$nlcor_yx_t3[,1]), agg_helper(raw_stats$nlcor_yx_t3[,2]),
-                 agg_helper(raw_stats$nlcor_yx_t3[,3]), harmonic_p(raw_stats$nlcor_yx_t3[,4])),
+        t1   = c(agg_helper(raw_stats$nlcor_yx_t1[,1]), agg_helper(raw_stats$nlcor_yx_t1[,2]), agg_helper(raw_stats$nlcor_yx_t1[,3]), harmonic_p(raw_stats$nlcor_yx_t1[,4])),
+        t2   = c(agg_helper(raw_stats$nlcor_yx_t2[,1]), agg_helper(raw_stats$nlcor_yx_t2[,2]), agg_helper(raw_stats$nlcor_yx_t2[,3]), harmonic_p(raw_stats$nlcor_yx_t2[,4])),
+        t3   = c(agg_helper(raw_stats$nlcor_yx_t3[,1]), agg_helper(raw_stats$nlcor_yx_t3[,2]), agg_helper(raw_stats$nlcor_yx_t3[,3]), harmonic_p(raw_stats$nlcor_yx_t3[,4])),
         func = valid_res[[1]]$nlcor.yx$func
       )
       agg$nlcor.xy <- list(
-        t1   = c(agg_helper(raw_stats$nlcor_xy_t1[,1]), agg_helper(raw_stats$nlcor_xy_t1[,2]),
-                 agg_helper(raw_stats$nlcor_xy_t1[,3]), harmonic_p(raw_stats$nlcor_xy_t1[,4])),
-        t2   = c(agg_helper(raw_stats$nlcor_xy_t2[,1]), agg_helper(raw_stats$nlcor_xy_t2[,2]),
-                 agg_helper(raw_stats$nlcor_xy_t2[,3]), harmonic_p(raw_stats$nlcor_xy_t2[,4])),
-        t3   = c(agg_helper(raw_stats$nlcor_xy_t3[,1]), agg_helper(raw_stats$nlcor_xy_t3[,2]),
-                 agg_helper(raw_stats$nlcor_xy_t3[,3]), harmonic_p(raw_stats$nlcor_xy_t3[,4])),
+        t1   = c(agg_helper(raw_stats$nlcor_xy_t1[,1]), agg_helper(raw_stats$nlcor_xy_t1[,2]), agg_helper(raw_stats$nlcor_xy_t1[,3]), harmonic_p(raw_stats$nlcor_xy_t1[,4])),
+        t2   = c(agg_helper(raw_stats$nlcor_xy_t2[,1]), agg_helper(raw_stats$nlcor_xy_t2[,2]), agg_helper(raw_stats$nlcor_xy_t2[,3]), harmonic_p(raw_stats$nlcor_xy_t2[,4])),
+        t3   = c(agg_helper(raw_stats$nlcor_xy_t3[,1]), agg_helper(raw_stats$nlcor_xy_t3[,2]), agg_helper(raw_stats$nlcor_xy_t3[,3]), harmonic_p(raw_stats$nlcor_xy_t3[,4])),
         func = valid_res[[1]]$nlcor.xy$func
       )
 
-      raw_stats$nlcor_yx_min <- apply(cbind(raw_stats$nlcor_yx_t1[,4], raw_stats$nlcor_yx_t2[,4],
-                                            raw_stats$nlcor_yx_t3[,4]), 1, min)
-      raw_stats$nlcor_xy_min <- apply(cbind(raw_stats$nlcor_xy_t1[,4], raw_stats$nlcor_xy_t2[,4],
-                                            raw_stats$nlcor_xy_t3[,4]), 1, min)
+      raw_stats$nlcor_yx_min <- apply(cbind(raw_stats$nlcor_yx_t1[,4], raw_stats$nlcor_yx_t2[,4], raw_stats$nlcor_yx_t3[,4]), 1, min, na.rm=TRUE)
+      raw_stats$nlcor_xy_min <- apply(cbind(raw_stats$nlcor_xy_t1[,4], raw_stats$nlcor_xy_t2[,4], raw_stats$nlcor_xy_t3[,4]), 1, min, na.rm=TRUE)
       decs$dec_nl.min <- calc_props(ifelse(
         raw_stats$nlcor_yx_min >  alpha & raw_stats$nlcor_xy_min <= alpha, "Target",
-        ifelse(
-          raw_stats$nlcor_yx_min <= alpha & raw_stats$nlcor_xy_min > alpha, "Alternative",
-          "Undecided"
-        )
+        ifelse(raw_stats$nlcor_yx_min <= alpha & raw_stats$nlcor_xy_min > alpha, "Alternative", "Undecided")
       ))
     }
 
@@ -354,10 +352,10 @@ dda.bagging <- function(
 
       calc_diff <- function(row) {
         nc      <- ncol(valid_res[[1]]$out.diff)
+        if (is.null(nc) || nc < 2) return(c(Target=0, Alternative=0, Undecided=0))
         low     <- raw_stats$diff_arr[row, nc - 1, ]
         upp     <- raw_stats$diff_arr[row, nc,     ]
-        calc_props(ifelse(low > 0 & upp > 0, "Target",
-                          ifelse(low < 0 & upp < 0, "Alternative", "Undecided")))
+        calc_props(ifelse(low > 0 & upp > 0, "Target", ifelse(low < 0 & upp < 0, "Alternative", "Undecided")))
       }
       decs$diff_hsic <- calc_diff(1)
       decs$diff_dcor <- calc_diff(2)
@@ -365,7 +363,9 @@ dda.bagging <- function(
     }
   }
 
-  # --- RESDIST Block ---
+  # ============================================================================
+  # RESDIST Block
+  # ============================================================================
   if (obj_type == "dda.resdist") {
     agg$var.names      <- var_names
     prob_trans_flag    <- isTRUE(if (!is.null(dda_result$probtrans)) dda_result$probtrans else FALSE)
@@ -400,30 +400,22 @@ dda.bagging <- function(
 
     decs$dec_agost  <- calc_props(ifelse(
       abs(raw_stats$agost_alt_z) >= crit_val & abs(raw_stats$agost_tar_z) <  crit_val, "Target",
-      ifelse(
-        abs(raw_stats$agost_tar_z) >= crit_val & abs(raw_stats$agost_alt_z) < crit_val, "Alternative",
-        "Undecided"
-      )
+      ifelse(abs(raw_stats$agost_tar_z) >= crit_val & abs(raw_stats$agost_alt_z) < crit_val, "Alternative", "Undecided")
     ))
     decs$dec_anscom <- calc_props(ifelse(
       abs(raw_stats$anscom_alt_z) >= crit_val & abs(raw_stats$anscom_tar_z) <  crit_val, "Target",
-      ifelse(
-        abs(raw_stats$anscom_tar_z) >= crit_val & abs(raw_stats$anscom_alt_z) < crit_val, "Alternative",
-        "Undecided"
-      )
+      ifelse(abs(raw_stats$anscom_tar_z) >= crit_val & abs(raw_stats$anscom_alt_z) < crit_val, "Alternative", "Undecided")
     ))
 
-    # --- Joint Moment Tests ---
-    # Sign convention per dda.resdist documentation:
-    #   prob.trans = FALSE : positive CI -> Target for ALL seven statistics.
-    #   prob.trans = TRUE  : skewdiff and kurtdiff are REVERSED (negative CI -> Target)
-    #                        because the probability integral transform inverts their
-    #                        directional meaning.  The co-moment statistics (cor12diff,
-    #                        cor13diff, RHS3, RCC, RHS4) keep positive = Target regardless.
+    # --- Safe Joint Moment Tests Extraction ---
     for (k in c("skewdiff", "kurtdiff", "cor12diff", "cor13diff", "RHS3", "RCC", "RHS4")) {
       if (is.null(valid_res[[1]][[k]])) next
 
-      raw_stats[[k]] <- do.call(rbind, lapply(valid_res, function(x) as.numeric(x[[k]])))
+      # Defensive array binding
+      extracted_mat <- tryCatch(do.call(rbind, lapply(valid_res, function(x) as.numeric(x[[k]]))), error = function(e) NULL)
+      if (is.null(extracted_mat) || ncol(extracted_mat) < 2) next
+
+      raw_stats[[k]] <- extracted_mat
       agg[[k]]       <- apply(raw_stats[[k]], 2, agg_helper)
 
       nc      <- ncol(raw_stats[[k]])
@@ -433,28 +425,24 @@ dda.bagging <- function(
       is_reversed <- prob_trans_flag && (k %in% c("skewdiff", "kurtdiff"))
 
       if (is_reversed) {
-        # Under prob.trans, negative CI -> Target; positive CI -> Alternative
+        # Under prob.trans, negative CI -> Target for marginal moments
         decs[[paste0("dec_", k)]] <- calc_props(ifelse(
           raw_stats[[k]][, low_idx] < 0 & raw_stats[[k]][, upp_idx] < 0, "Target",
-          ifelse(
-            raw_stats[[k]][, low_idx] > 0 & raw_stats[[k]][, upp_idx] > 0, "Alternative",
-            "Undecided"
-          )
+          ifelse(raw_stats[[k]][, low_idx] > 0 & raw_stats[[k]][, upp_idx] > 0, "Alternative", "Undecided")
         ))
       } else {
-        # Standard: positive CI -> Target; negative CI -> Alternative
+        # Standard: positive CI -> Target
         decs[[paste0("dec_", k)]] <- calc_props(ifelse(
           raw_stats[[k]][, low_idx] > 0 & raw_stats[[k]][, upp_idx] > 0, "Target",
-          ifelse(
-            raw_stats[[k]][, low_idx] < 0 & raw_stats[[k]][, upp_idx] < 0, "Alternative",
-            "Undecided"
-          )
+          ifelse(raw_stats[[k]][, low_idx] < 0 & raw_stats[[k]][, upp_idx] < 0, "Alternative", "Undecided")
         ))
       }
     }
   }
 
-  # --- VARDIST Block ---
+  # ============================================================================
+  # VARDIST Block
+  # ============================================================================
   if (obj_type == "dda.vardist") {
     agg$var.names <- var_names
 
@@ -488,39 +476,36 @@ dda.bagging <- function(
 
     decs$dec_agost  <- calc_props(ifelse(
       abs(raw_stats$agost_pre_z) >= crit_val & abs(raw_stats$agost_out_z) <  crit_val, "Target",
-      ifelse(
-        abs(raw_stats$agost_pre_z) <  crit_val & abs(raw_stats$agost_out_z) >= crit_val, "Alternative",
-        "Undecided"
-      )
+      ifelse(abs(raw_stats$agost_pre_z) <  crit_val & abs(raw_stats$agost_out_z) >= crit_val, "Alternative", "Undecided")
     ))
     decs$dec_anscom <- calc_props(ifelse(
       abs(raw_stats$anscom_pre_z) >= crit_val & abs(raw_stats$anscom_out_z) <  crit_val, "Target",
-      ifelse(
-        abs(raw_stats$anscom_pre_z) <  crit_val & abs(raw_stats$anscom_out_z) >= crit_val, "Alternative",
-        "Undecided"
-      )
+      ifelse(abs(raw_stats$anscom_pre_z) <  crit_val & abs(raw_stats$anscom_out_z) >= crit_val, "Alternative", "Undecided")
     ))
 
+    # --- Safe Joint Moment Tests Extraction ---
     for (k in c("skewdiff", "kurtdiff", "cor12diff", "cor13diff", "RHS", "RCC", "Rtanh")) {
       if (is.null(valid_res[[1]][[k]])) next
-      raw_stats[[k]] <- do.call(rbind, lapply(valid_res, function(x) as.numeric(x[[k]])))
+
+      extracted_mat <- tryCatch(do.call(rbind, lapply(valid_res, function(x) as.numeric(x[[k]]))), error = function(e) NULL)
+      if (is.null(extracted_mat) || ncol(extracted_mat) < 2) next
+
+      raw_stats[[k]] <- extracted_mat
       agg[[k]]       <- apply(raw_stats[[k]], 2, agg_helper)
       nc      <- ncol(raw_stats[[k]])
       low_idx <- nc - 1
       upp_idx <- nc
       decs[[paste0("dec_", k)]] <- calc_props(ifelse(
         raw_stats[[k]][, low_idx] > 0 & raw_stats[[k]][, upp_idx] > 0, "Target",
-        ifelse(
-          raw_stats[[k]][, low_idx] < 0 & raw_stats[[k]][, upp_idx] < 0, "Alternative",
-          "Undecided"
-        )
+        ifelse(raw_stats[[k]][, low_idx] < 0 & raw_stats[[k]][, upp_idx] < 0, "Alternative", "Undecided")
       ))
     }
   }
 
+  # --- Compile & Return ---
   if (!is.null(save_file)) {
     saveRDS(
-      list(bagged_results     = bagged_results,
+      list(bagged_results       = bagged_results,
            raw_stats          = raw_stats,
            aggregated_stats   = agg,
            decision_percentages = decs,
