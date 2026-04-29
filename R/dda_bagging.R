@@ -42,7 +42,6 @@ dda.bagging <- function(
   # --- Helper: Robust & Finite Aggregation ---
   agg_helper <- function(x) {
     x <- as.numeric(x)
-    #  Strip NA, NaN, and Infinite values
     x <- x[!is.na(x) & !is.nan(x) & is.finite(x)]
     if (length(x) == 0) return(NA_real_)
 
@@ -93,7 +92,6 @@ dda.bagging <- function(
     dec_vec <- dec_vec[!is.na(dec_vec)]
     tab  <- table(factor(dec_vec, levels = levs))
     sm <- sum(tab)
-    #  Prevent Division by Zero if all iterations failed
     if (sm == 0) return(c(Target = 0, Alternative = 0, Undecided = 0))
     return(tab / sm)
   }
@@ -350,16 +348,28 @@ dda.bagging <- function(
       raw_stats$diff_arr <- simplify2array(lapply(valid_res, function(x) as.matrix(x$out.diff)))
       agg$diff_matrix    <- apply(raw_stats$diff_arr, c(1,2), agg_helper)
 
-      calc_diff <- function(row) {
-        nc      <- ncol(valid_res[[1]]$out.diff)
-        if (is.null(nc) || nc < 2) return(c(Target=0, Alternative=0, Undecided=0))
-        low     <- raw_stats$diff_arr[row, nc - 1, ]
-        upp     <- raw_stats$diff_arr[row, nc,     ]
-        calc_props(ifelse(low > 0 & upp > 0, "Target", ifelse(low < 0 & upp < 0, "Alternative", "Undecided")))
+      nc <- ncol(valid_res[[1]]$out.diff)
+
+      # HSIC Diff
+      if (is.numeric(nc) && nc >= 2) {
+        low_hsic <- raw_stats$diff_arr[1, nc - 1, ]
+        upp_hsic <- raw_stats$diff_arr[1, nc, ]
+        decs$diff_hsic <- calc_props(ifelse(low_hsic > 0 & upp_hsic > 0, "Target", ifelse(low_hsic < 0 & upp_hsic < 0, "Alternative", "Undecided")))
       }
-      decs$diff_hsic <- calc_diff(1)
-      decs$diff_dcor <- calc_diff(2)
-      if (nrow(valid_res[[1]]$out.diff) >= 3) decs$diff_mi <- calc_diff(3)
+
+      # dCor Diff
+      if (is.numeric(nc) && nc >= 2 && nrow(valid_res[[1]]$out.diff) >= 2) {
+        low_dcor <- raw_stats$diff_arr[2, nc - 1, ]
+        upp_dcor <- raw_stats$diff_arr[2, nc, ]
+        decs$diff_dcor <- calc_props(ifelse(low_dcor > 0 & upp_dcor > 0, "Target", ifelse(low_dcor < 0 & upp_dcor < 0, "Alternative", "Undecided")))
+      }
+
+      # MI Diff
+      if (is.numeric(nc) && nc >= 2 && nrow(valid_res[[1]]$out.diff) >= 3) {
+        low_mi <- raw_stats$diff_arr[3, nc - 1, ]
+        upp_mi <- raw_stats$diff_arr[3, nc, ]
+        decs$diff_mi <- calc_props(ifelse(low_mi > 0 & upp_mi > 0, "Target", ifelse(low_mi < 0 & upp_mi < 0, "Alternative", "Undecided")))
+      }
     }
   }
 
@@ -370,6 +380,7 @@ dda.bagging <- function(
     agg$var.names      <- var_names
     prob_trans_flag    <- isTRUE(if (!is.null(dda_result$probtrans)) dda_result$probtrans else FALSE)
 
+    # --- Separate Tests Extraction ---
     raw_stats$agost_tar_stat  <- sapply(valid_res, function(x) get_numeric(x$agostino$target$statistic[1]))
     raw_stats$agost_tar_z     <- sapply(valid_res, function(x) get_numeric(x$agostino$target$statistic[2]))
     raw_stats$agost_tar_pval  <- sapply(valid_res, function(x) get_numeric(x$agostino$target$p.value))
@@ -384,6 +395,7 @@ dda.bagging <- function(
     raw_stats$anscom_alt_z    <- sapply(valid_res, function(x) get_numeric(x$anscombe$alternative$statistic[2]))
     raw_stats$anscom_alt_pval <- sapply(valid_res, function(x) get_numeric(x$anscombe$alternative$p.value))
 
+    # --- Separate Tests Aggregation ---
     agg$agostino.target.statistic      <- agg_helper(raw_stats$agost_tar_stat)
     agg$agostino.target.z              <- agg_helper(raw_stats$agost_tar_z)
     agg$agostino.target.p.value        <- harmonic_p(raw_stats$agost_tar_pval)
@@ -398,6 +410,7 @@ dda.bagging <- function(
     agg$anscombe.alternative.z         <- agg_helper(raw_stats$anscom_alt_z)
     agg$anscombe.alternative.p.value   <- harmonic_p(raw_stats$anscom_alt_pval)
 
+    # --- Separate Tests Decisions ---
     decs$dec_agost  <- calc_props(ifelse(
       abs(raw_stats$agost_alt_z) >= crit_val & abs(raw_stats$agost_tar_z) <  crit_val, "Target",
       ifelse(abs(raw_stats$agost_tar_z) >= crit_val & abs(raw_stats$agost_alt_z) < crit_val, "Alternative", "Undecided")
@@ -407,35 +420,109 @@ dda.bagging <- function(
       ifelse(abs(raw_stats$anscom_tar_z) >= crit_val & abs(raw_stats$anscom_alt_z) < crit_val, "Alternative", "Undecided")
     ))
 
-    # --- Safe Joint Moment Tests Extraction ---
-    for (k in c("skewdiff", "kurtdiff", "cor12diff", "cor13diff", "RHS3", "RCC", "RHS4")) {
-      if (is.null(valid_res[[1]][[k]])) next
+    # --- EXPLICIT UNROLLED DIFFERENCE TESTS ---
 
-      # Defensive array binding
-      extracted_mat <- tryCatch(do.call(rbind, lapply(valid_res, function(x) as.numeric(x[[k]]))), error = function(e) NULL)
-      if (is.null(extracted_mat) || ncol(extracted_mat) < 2) next
+    # 1. Skewness Difference
+    if (!is.null(valid_res[[1]]$skewdiff)) {
+      mat_skew <- tryCatch(do.call(rbind, lapply(valid_res, function(x) as.numeric(x$skewdiff))), error = function(e) NULL)
+      if (!is.null(mat_skew) && ncol(mat_skew) >= 2) {
+        raw_stats$skewdiff <- mat_skew
+        agg$skewdiff       <- apply(mat_skew, 2, agg_helper)
+        low_skew <- mat_skew[, ncol(mat_skew) - 1]
+        upp_skew <- mat_skew[, ncol(mat_skew)]
 
-      raw_stats[[k]] <- extracted_mat
-      agg[[k]]       <- apply(raw_stats[[k]], 2, agg_helper)
+        if (prob_trans_flag) {
+          decs$dec_skewdiff <- calc_props(ifelse(low_skew < 0 & upp_skew < 0, "Target", ifelse(low_skew > 0 & upp_skew > 0, "Alternative", "Undecided")))
+        } else {
+          decs$dec_skewdiff <- calc_props(ifelse(low_skew > 0 & upp_skew > 0, "Target", ifelse(low_skew < 0 & upp_skew < 0, "Alternative", "Undecided")))
+        }
+      }
+    }
 
-      nc      <- ncol(raw_stats[[k]])
-      low_idx <- nc - 1
-      upp_idx <- nc
+    # 2. Kurtosis Difference
+    if (!is.null(valid_res[[1]]$kurtdiff)) {
+      mat_kurt <- tryCatch(do.call(rbind, lapply(valid_res, function(x) as.numeric(x$kurtdiff))), error = function(e) NULL)
+      if (!is.null(mat_kurt) && ncol(mat_kurt) >= 2) {
+        raw_stats$kurtdiff <- mat_kurt
+        agg$kurtdiff       <- apply(mat_kurt, 2, agg_helper)
+        low_kurt <- mat_kurt[, ncol(mat_kurt) - 1]
+        upp_kurt <- mat_kurt[, ncol(mat_kurt)]
 
-      is_reversed <- prob_trans_flag && (k %in% c("skewdiff", "kurtdiff"))
+        if (prob_trans_flag) {
+          decs$dec_kurtdiff <- calc_props(ifelse(low_kurt < 0 & upp_kurt < 0, "Target", ifelse(low_kurt > 0 & upp_kurt > 0, "Alternative", "Undecided")))
+        } else {
+          decs$dec_kurtdiff <- calc_props(ifelse(low_kurt > 0 & upp_kurt > 0, "Target", ifelse(low_kurt < 0 & upp_kurt < 0, "Alternative", "Undecided")))
+        }
+      }
+    }
 
-      if (is_reversed) {
-        # Under prob.trans, negative CI -> Target for marginal moments
-        decs[[paste0("dec_", k)]] <- calc_props(ifelse(
-          raw_stats[[k]][, low_idx] < 0 & raw_stats[[k]][, upp_idx] < 0, "Target",
-          ifelse(raw_stats[[k]][, low_idx] > 0 & raw_stats[[k]][, upp_idx] > 0, "Alternative", "Undecided")
-        ))
-      } else {
-        # Standard: positive CI -> Target
-        decs[[paste0("dec_", k)]] <- calc_props(ifelse(
-          raw_stats[[k]][, low_idx] > 0 & raw_stats[[k]][, upp_idx] > 0, "Target",
-          ifelse(raw_stats[[k]][, low_idx] < 0 & raw_stats[[k]][, upp_idx] < 0, "Alternative", "Undecided")
-        ))
+    # 3. Co-Skewness Difference (cor12diff)
+    if (!is.null(valid_res[[1]]$cor12diff)) {
+      mat_cor12 <- tryCatch(do.call(rbind, lapply(valid_res, function(x) as.numeric(x$cor12diff))), error = function(e) NULL)
+      if (!is.null(mat_cor12) && ncol(mat_cor12) >= 2) {
+        raw_stats$cor12diff <- mat_cor12
+        agg$cor12diff       <- apply(mat_cor12, 2, agg_helper)
+        low_cor12 <- mat_cor12[, ncol(mat_cor12) - 1]
+        upp_cor12 <- mat_cor12[, ncol(mat_cor12)]
+
+        # Never flips with prob.trans
+        decs$dec_cor12diff <- calc_props(ifelse(low_cor12 > 0 & upp_cor12 > 0, "Target", ifelse(low_cor12 < 0 & upp_cor12 < 0, "Alternative", "Undecided")))
+      }
+    }
+
+    # 4. Co-Kurtosis Difference (cor13diff)
+    if (!is.null(valid_res[[1]]$cor13diff)) {
+      mat_cor13 <- tryCatch(do.call(rbind, lapply(valid_res, function(x) as.numeric(x$cor13diff))), error = function(e) NULL)
+      if (!is.null(mat_cor13) && ncol(mat_cor13) >= 2) {
+        raw_stats$cor13diff <- mat_cor13
+        agg$cor13diff       <- apply(mat_cor13, 2, agg_helper)
+        low_cor13 <- mat_cor13[, ncol(mat_cor13) - 1]
+        upp_cor13 <- mat_cor13[, ncol(mat_cor13)]
+
+        # Never flips with prob.trans
+        decs$dec_cor13diff <- calc_props(ifelse(low_cor13 > 0 & upp_cor13 > 0, "Target", ifelse(low_cor13 < 0 & upp_cor13 < 0, "Alternative", "Undecided")))
+      }
+    }
+
+    # 5. Hyvarinen-Smith Co-Skewness Difference (RHS3)
+    if (!is.null(valid_res[[1]]$RHS3)) {
+      mat_rhs3 <- tryCatch(do.call(rbind, lapply(valid_res, function(x) as.numeric(x$RHS3))), error = function(e) NULL)
+      if (!is.null(mat_rhs3) && ncol(mat_rhs3) >= 2) {
+        raw_stats$RHS3 <- mat_rhs3
+        agg$RHS3       <- apply(mat_rhs3, 2, agg_helper)
+        low_rhs3 <- mat_rhs3[, ncol(mat_rhs3) - 1]
+        upp_rhs3 <- mat_rhs3[, ncol(mat_rhs3)]
+
+        # Never flips with prob.trans
+        decs$dec_RHS3 <- calc_props(ifelse(low_rhs3 > 0 & upp_rhs3 > 0, "Target", ifelse(low_rhs3 < 0 & upp_rhs3 < 0, "Alternative", "Undecided")))
+      }
+    }
+
+    # 6. Chen-Chan Co-Kurtosis Difference (RCC)
+    if (!is.null(valid_res[[1]]$RCC)) {
+      mat_rcc <- tryCatch(do.call(rbind, lapply(valid_res, function(x) as.numeric(x$RCC))), error = function(e) NULL)
+      if (!is.null(mat_rcc) && ncol(mat_rcc) >= 2) {
+        raw_stats$RCC <- mat_rcc
+        agg$RCC       <- apply(mat_rcc, 2, agg_helper)
+        low_rcc <- mat_rcc[, ncol(mat_rcc) - 1]
+        upp_rcc <- mat_rcc[, ncol(mat_rcc)]
+
+        # Never flips with prob.trans
+        decs$dec_RCC <- calc_props(ifelse(low_rcc > 0 & upp_rcc > 0, "Target", ifelse(low_rcc < 0 & upp_rcc < 0, "Alternative", "Undecided")))
+      }
+    }
+
+    # 7. Hyvarinen-Smith Co-Kurtosis Difference (RHS4)
+    if (!is.null(valid_res[[1]]$RHS4)) {
+      mat_rhs4 <- tryCatch(do.call(rbind, lapply(valid_res, function(x) as.numeric(x$RHS4))), error = function(e) NULL)
+      if (!is.null(mat_rhs4) && ncol(mat_rhs4) >= 2) {
+        raw_stats$RHS4 <- mat_rhs4
+        agg$RHS4       <- apply(mat_rhs4, 2, agg_helper)
+        low_rhs4 <- mat_rhs4[, ncol(mat_rhs4) - 1]
+        upp_rhs4 <- mat_rhs4[, ncol(mat_rhs4)]
+
+        # Never flips with prob.trans
+        decs$dec_RHS4 <- calc_props(ifelse(low_rhs4 > 0 & upp_rhs4 > 0, "Target", ifelse(low_rhs4 < 0 & upp_rhs4 < 0, "Alternative", "Undecided")))
       }
     }
   }
@@ -446,6 +533,7 @@ dda.bagging <- function(
   if (obj_type == "dda.vardist") {
     agg$var.names <- var_names
 
+    # --- Separate Tests Extraction ---
     raw_stats$agost_pre_stat  <- sapply(valid_res, function(x) get_numeric(x$agostino$predictor$statistic[1]))
     raw_stats$agost_pre_z     <- sapply(valid_res, function(x) get_numeric(x$agostino$predictor$statistic[2]))
     raw_stats$agost_pre_pval  <- sapply(valid_res, function(x) get_numeric(x$agostino$predictor$p.value))
@@ -460,6 +548,7 @@ dda.bagging <- function(
     raw_stats$anscom_out_z    <- sapply(valid_res, function(x) get_numeric(x$anscombe$outcome$statistic[2]))
     raw_stats$anscom_out_pval <- sapply(valid_res, function(x) get_numeric(x$anscombe$outcome$p.value))
 
+    # --- Separate Tests Aggregation ---
     agg$agostino.predictor.statistic.skew <- agg_helper(raw_stats$agost_pre_stat)
     agg$agostino.predictor.statistic.z    <- agg_helper(raw_stats$agost_pre_z)
     agg$agostino.predictor.p.value        <- harmonic_p(raw_stats$agost_pre_pval)
@@ -474,6 +563,7 @@ dda.bagging <- function(
     agg$anscombe.outcome.statistic.z      <- agg_helper(raw_stats$anscom_out_z)
     agg$anscombe.outcome.p.value          <- harmonic_p(raw_stats$anscom_out_pval)
 
+    # --- Separate Tests Decisions ---
     decs$dec_agost  <- calc_props(ifelse(
       abs(raw_stats$agost_pre_z) >= crit_val & abs(raw_stats$agost_out_z) <  crit_val, "Target",
       ifelse(abs(raw_stats$agost_pre_z) <  crit_val & abs(raw_stats$agost_out_z) >= crit_val, "Alternative", "Undecided")
@@ -483,22 +573,90 @@ dda.bagging <- function(
       ifelse(abs(raw_stats$anscom_pre_z) <  crit_val & abs(raw_stats$anscom_out_z) >= crit_val, "Alternative", "Undecided")
     ))
 
-    # --- Safe Joint Moment Tests Extraction ---
-    for (k in c("skewdiff", "kurtdiff", "cor12diff", "cor13diff", "RHS", "RCC", "Rtanh")) {
-      if (is.null(valid_res[[1]][[k]])) next
+    # --- EXPLICIT UNROLLED DIFFERENCE TESTS ---
 
-      extracted_mat <- tryCatch(do.call(rbind, lapply(valid_res, function(x) as.numeric(x[[k]]))), error = function(e) NULL)
-      if (is.null(extracted_mat) || ncol(extracted_mat) < 2) next
+    # 1. Skewness Difference
+    if (!is.null(valid_res[[1]]$skewdiff)) {
+      mat_skew <- tryCatch(do.call(rbind, lapply(valid_res, function(x) as.numeric(x$skewdiff))), error = function(e) NULL)
+      if (!is.null(mat_skew) && ncol(mat_skew) >= 2) {
+        raw_stats$skewdiff <- mat_skew
+        agg$skewdiff       <- apply(mat_skew, 2, agg_helper)
+        low_skew <- mat_skew[, ncol(mat_skew) - 1]
+        upp_skew <- mat_skew[, ncol(mat_skew)]
+        decs$dec_skewdiff <- calc_props(ifelse(low_skew > 0 & upp_skew > 0, "Target", ifelse(low_skew < 0 & upp_skew < 0, "Alternative", "Undecided")))
+      }
+    }
 
-      raw_stats[[k]] <- extracted_mat
-      agg[[k]]       <- apply(raw_stats[[k]], 2, agg_helper)
-      nc      <- ncol(raw_stats[[k]])
-      low_idx <- nc - 1
-      upp_idx <- nc
-      decs[[paste0("dec_", k)]] <- calc_props(ifelse(
-        raw_stats[[k]][, low_idx] > 0 & raw_stats[[k]][, upp_idx] > 0, "Target",
-        ifelse(raw_stats[[k]][, low_idx] < 0 & raw_stats[[k]][, upp_idx] < 0, "Alternative", "Undecided")
-      ))
+    # 2. Kurtosis Difference
+    if (!is.null(valid_res[[1]]$kurtdiff)) {
+      mat_kurt <- tryCatch(do.call(rbind, lapply(valid_res, function(x) as.numeric(x$kurtdiff))), error = function(e) NULL)
+      if (!is.null(mat_kurt) && ncol(mat_kurt) >= 2) {
+        raw_stats$kurtdiff <- mat_kurt
+        agg$kurtdiff       <- apply(mat_kurt, 2, agg_helper)
+        low_kurt <- mat_kurt[, ncol(mat_kurt) - 1]
+        upp_kurt <- mat_kurt[, ncol(mat_kurt)]
+        decs$dec_kurtdiff <- calc_props(ifelse(low_kurt > 0 & upp_kurt > 0, "Target", ifelse(low_kurt < 0 & upp_kurt < 0, "Alternative", "Undecided")))
+      }
+    }
+
+    # 3. Co-Skewness Difference (cor12diff)
+    if (!is.null(valid_res[[1]]$cor12diff)) {
+      mat_cor12 <- tryCatch(do.call(rbind, lapply(valid_res, function(x) as.numeric(x$cor12diff))), error = function(e) NULL)
+      if (!is.null(mat_cor12) && ncol(mat_cor12) >= 2) {
+        raw_stats$cor12diff <- mat_cor12
+        agg$cor12diff       <- apply(mat_cor12, 2, agg_helper)
+        low_cor12 <- mat_cor12[, ncol(mat_cor12) - 1]
+        upp_cor12 <- mat_cor12[, ncol(mat_cor12)]
+        decs$dec_cor12diff <- calc_props(ifelse(low_cor12 > 0 & upp_cor12 > 0, "Target", ifelse(low_cor12 < 0 & upp_cor12 < 0, "Alternative", "Undecided")))
+      }
+    }
+
+    # 4. Co-Kurtosis Difference (cor13diff)
+    if (!is.null(valid_res[[1]]$cor13diff)) {
+      mat_cor13 <- tryCatch(do.call(rbind, lapply(valid_res, function(x) as.numeric(x$cor13diff))), error = function(e) NULL)
+      if (!is.null(mat_cor13) && ncol(mat_cor13) >= 2) {
+        raw_stats$cor13diff <- mat_cor13
+        agg$cor13diff       <- apply(mat_cor13, 2, agg_helper)
+        low_cor13 <- mat_cor13[, ncol(mat_cor13) - 1]
+        upp_cor13 <- mat_cor13[, ncol(mat_cor13)]
+        decs$dec_cor13diff <- calc_props(ifelse(low_cor13 > 0 & upp_cor13 > 0, "Target", ifelse(low_cor13 < 0 & upp_cor13 < 0, "Alternative", "Undecided")))
+      }
+    }
+
+    # 5. Hyvarinen-Smith Co-Skewness Difference (RHS)
+    if (!is.null(valid_res[[1]]$RHS)) {
+      mat_rhs <- tryCatch(do.call(rbind, lapply(valid_res, function(x) as.numeric(x$RHS))), error = function(e) NULL)
+      if (!is.null(mat_rhs) && ncol(mat_rhs) >= 2) {
+        raw_stats$RHS <- mat_rhs
+        agg$RHS       <- apply(mat_rhs, 2, agg_helper)
+        low_rhs <- mat_rhs[, ncol(mat_rhs) - 1]
+        upp_rhs <- mat_rhs[, ncol(mat_rhs)]
+        decs$dec_RHS <- calc_props(ifelse(low_rhs > 0 & upp_rhs > 0, "Target", ifelse(low_rhs < 0 & upp_rhs < 0, "Alternative", "Undecided")))
+      }
+    }
+
+    # 6. Chen-Chan Co-Kurtosis Difference (RCC)
+    if (!is.null(valid_res[[1]]$RCC)) {
+      mat_rcc <- tryCatch(do.call(rbind, lapply(valid_res, function(x) as.numeric(x$RCC))), error = function(e) NULL)
+      if (!is.null(mat_rcc) && ncol(mat_rcc) >= 2) {
+        raw_stats$RCC <- mat_rcc
+        agg$RCC       <- apply(mat_rcc, 2, agg_helper)
+        low_rcc <- mat_rcc[, ncol(mat_rcc) - 1]
+        upp_rcc <- mat_rcc[, ncol(mat_rcc)]
+        decs$dec_RCC <- calc_props(ifelse(low_rcc > 0 & upp_rcc > 0, "Target", ifelse(low_rcc < 0 & upp_rcc < 0, "Alternative", "Undecided")))
+      }
+    }
+
+    # 7. Hyvarinen-Smith (tanh) Difference (Rtanh)
+    if (!is.null(valid_res[[1]]$Rtanh)) {
+      mat_rtanh <- tryCatch(do.call(rbind, lapply(valid_res, function(x) as.numeric(x$Rtanh))), error = function(e) NULL)
+      if (!is.null(mat_rtanh) && ncol(mat_rtanh) >= 2) {
+        raw_stats$Rtanh <- mat_rtanh
+        agg$Rtanh       <- apply(mat_rtanh, 2, agg_helper)
+        low_rtanh <- mat_rtanh[, ncol(mat_rtanh) - 1]
+        upp_rtanh <- mat_rtanh[, ncol(mat_rtanh)]
+        decs$dec_Rtanh <- calc_props(ifelse(low_rtanh > 0 & upp_rtanh > 0, "Target", ifelse(low_rtanh < 0 & upp_rtanh < 0, "Alternative", "Undecided")))
+      }
     }
   }
 
@@ -506,11 +664,11 @@ dda.bagging <- function(
   if (!is.null(save_file)) {
     saveRDS(
       list(bagged_results       = bagged_results,
-           raw_stats          = raw_stats,
-           aggregated_stats   = agg,
+           raw_stats            = raw_stats,
+           aggregated_stats     = agg,
            decision_percentages = decs,
-           n_valid_iterations = n_valid,
-           agg_stat_used      = agg_stat),
+           n_valid_iterations   = n_valid,
+           agg_stat_used        = agg_stat),
       file = save_file
     )
   }
