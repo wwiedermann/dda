@@ -60,7 +60,7 @@ hsic_test_gamma <- function(x, y, sigma2 = 1, alpha_level = 0.05) {
   p_value <- pgamma(test_stat, shape = gamma_shape, scale = gamma_scale, lower.tail = FALSE)
   critical_val <- qgamma(1 - alpha_level, shape = gamma_shape, scale = gamma_scale)
 
-  # structured output
+  #  output
   structure(list(
     method = "HSIC Test via Gamma Approximation",
     hsic_value = hsic_val,
