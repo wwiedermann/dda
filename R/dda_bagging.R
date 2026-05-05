@@ -438,7 +438,7 @@ dda.bagging <- function(
           decs$dec_skewdiff <- calc_props(ifelse(low_skew < 0 & upp_skew < 0, "Target",
                                                  ifelse(low_skew > 0 & upp_skew > 0, "Alternative",
                                                         "Undecided")))
-        } else {
+        } else { # prob.trans = FALSE
           decs$dec_skewdiff <- calc_props(ifelse(low_skew > 0 & upp_skew > 0, "Target",
                                                  ifelse(low_skew < 0 & upp_skew < 0, "Alternative",
                                                         "Undecided")))
@@ -462,7 +462,7 @@ dda.bagging <- function(
           decs$dec_kurtdiff <- calc_props(ifelse(low_kurt < 0 & upp_kurt < 0, "Target",
                                                  ifelse(low_kurt > 0 & upp_kurt > 0, "Alternative",
                                                         "Undecided")))
-        } else {
+        } else { #prob.trans = FALSE
           decs$dec_kurtdiff <- calc_props(ifelse(low_kurt > 0 & upp_kurt > 0, "Target",
                                                  ifelse(low_kurt < 0 & upp_kurt < 0, "Alternative",
                                                         "Undecided")))
