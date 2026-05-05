@@ -13,6 +13,8 @@ Description: A collection of tests to analyze the causal direction of dependence
 Imports: dHSIC, energy, foreach, graphics, methods, stats
 Suggests: boot, doParallel, devtools, interactions, iterators, lmtest, mblm,
         moments, spelling, testthat (>= 3.0.0), waldo
+        
+        ?iterators -> do we need this still? (maybe for the function )
 Encoding: UTF-8
 RoxygenNote: 7.3.3
 Config/testthat/edition: 3

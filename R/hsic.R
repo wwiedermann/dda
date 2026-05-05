@@ -56,6 +56,7 @@ hsic_test_gamma <- function(x, y, sigma2 = 1, alpha_level = 0.05) {
   gamma_shape <- (mean_T^2) / var_T
   gamma_scale <- var_T / mean_T
 
+  #add the permutation & bootstrap options
   # 5: p-value and crit region using the Gamma dist
   p_value <- pgamma(test_stat, shape = gamma_shape, scale = gamma_scale, lower.tail = FALSE)
   critical_val <- qgamma(1 - alpha_level, shape = gamma_shape, scale = gamma_scale)
