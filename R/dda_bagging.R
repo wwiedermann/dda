@@ -9,6 +9,10 @@
 #' @param agg_stat Method for aggregating test statistics and coefficients.
 #' @param trim_prob Proportion of observations to be trimmed (default: 0.10).
 #' @param win_prob Proportion of observations to be Winsorized (default: 0.10).
+#' @param inner_B Optional integer cap on the inner bootstrap B passed to each
+#'   per-iteration DDA call. NULL (default) keeps whatever B was used in the
+#'   original DDA call. Setting e.g. inner_B = 50 dramatically reduces run
+#'   time for dda.resdist / dda.vardist without changing how bagging aggregates.
 #' @return A list containing bootstrap and aggregated results
 #' @export
 dda.bagging <- function(
@@ -20,8 +24,14 @@ dda.bagging <- function(
     data         = NULL,
     agg_stat     = c("mean", "median", "trimmed", "winsorized", "midhinge", "tukey"),
     trim_prob    = 0.10,
-    win_prob     = 0.10
+    win_prob     = 0.10,
+    inner_B      = NULL    # [CHANGE D] optional cap on per-iteration inner B
 ) {
+
+  # [CHANGE A] capture caller environment immediately, before anything
+  # shifts the call stack.  Symbols stored in call_info$all_args (e.g.
+  # data = dat, B = my_b) need to be resolved here, not inside the loop.
+  caller_env <- parent.frame()
 
   agg_stat <- match.arg(agg_stat)
 
@@ -51,7 +61,7 @@ dda.bagging <- function(
            "trimmed"    = mean(x, trim = trim_prob),
            "winsorized" = {
              q_low  <- quantile(x, probs = win_prob,     na.rm = TRUE, names = FALSE)
-             q_high <- quantile(x, probs = 1 - win_prob,  na.rm = TRUE, names = FALSE)
+             q_high <- quantile(x, probs = 1 - win_prob, na.rm = TRUE, names = FALSE)
              x[x < q_low]  <- q_low
              x[x > q_high] <- q_high
              mean(x)
@@ -66,9 +76,9 @@ dda.bagging <- function(
 
   # --- Helper: Extraction ---
   get_numeric <- function(x) {
-    if (is.null(x))      return(NA_real_)
-    if (is.numeric(x))   return(as.numeric(x[1]))
-    if (is.list(x))      return(get_numeric(x[[1]]))
+    if (is.null(x))    return(NA_real_)
+    if (is.numeric(x)) return(as.numeric(x[1]))
+    if (is.list(x))    return(get_numeric(x[[1]]))
     return(NA_real_)
   }
 
@@ -77,7 +87,7 @@ dda.bagging <- function(
     pvec <- as.numeric(pvec)
     pvec <- pvec[!is.na(pvec) & !is.nan(pvec)]
     if (length(pvec) == 0) return(NA_real_)
-    pvec[pvec <= 0] <- 1e-300 # Prevent log(0) errors
+    pvec[pvec <= 0] <- 1e-300
 
     if (!requireNamespace("harmonicmeanp", quietly = TRUE)) {
       warning("Package 'harmonicmeanp' not found. Falling back to arithmetic mean.")
@@ -90,8 +100,8 @@ dda.bagging <- function(
   calc_props <- function(dec_vec) {
     levs <- c("Target", "Alternative", "Undecided")
     dec_vec <- dec_vec[!is.na(dec_vec)]
-    tab  <- table(factor(dec_vec, levels = levs))
-    sm <- sum(tab)
+    tab <- table(factor(dec_vec, levels = levs))
+    sm  <- sum(tab)
     if (sm == 0) return(c(Target = 0, Alternative = 0, Undecided = 0))
     return(tab / sm)
   }
@@ -110,7 +120,7 @@ dda.bagging <- function(
   y_name <- var_names[1]
   x_name <- var_names[2]
 
-  # ---  Formula Extraction ---
+  # --- Formula Extraction ---
   original_formula <- NULL
   if (!is.null(call_info$formula)) {
     if (inherits(call_info$formula, "formula")) {
@@ -142,14 +152,29 @@ dda.bagging <- function(
     full_formula_alt <- as.formula(paste(x_name, "~", y_name))
   }
 
+  # [CHANGE B] pre-evaluate all call_info$all_args once in the caller's frame.
+  #
+  # match.call() stores arguments as unevaluated language objects, so
+  # passing them raw via do.call() inside dda.bagging resolves symbols in
+  # the wrong environment and silently returns NULL for every iteration.
+  # eval(..., envir = caller_env) turns each element into its actual R value.
+  # tryCatch keeps the original object if evaluation fails (e.g. a literal
+  # formula or a function object that doesn't need eval).
+  boot_args_pre <- lapply(call_info$all_args, function(a) {
+    tryCatch(eval(a, envir = caller_env), error = function(e) a)
+  })
+  # guard: drop first element if it has no name (positional formula arg)
+  if (length(boot_args_pre) > 0 && names(boot_args_pre)[1] == "")
+    boot_args_pre[[1]] <- NULL
+
   # --- Bootstrap Execution ---
-  bagged_results  <- vector("list", iter)
-  ols_tar_coefs   <- vector("list", iter)
-  ols_alt_coefs   <- vector("list", iter)
-  ols_tar_rsq     <- vector("list", iter)
-  ols_alt_rsq     <- vector("list", iter)
-  ols_tar_pvals   <- vector("list", iter)
-  ols_alt_pvals   <- vector("list", iter)
+  bagged_results <- vector("list", iter)
+  ols_tar_coefs  <- vector("list", iter)
+  ols_alt_coefs  <- vector("list", iter)
+  ols_tar_rsq    <- vector("list", iter)
+  ols_alt_rsq    <- vector("list", iter)
+  ols_tar_pvals  <- vector("list", iter)
+  ols_alt_pvals  <- vector("list", iter)
 
   if (progress) pb <- txtProgressBar(min = 0, max = iter, style = 3)
 
@@ -185,14 +210,19 @@ dda.bagging <- function(
       rx <- as.vector(scale(datboot[[x_name]]))
     }
 
-    boot_args         <- call_info$all_args
-    if (length(boot_args) > 0 && names(boot_args)[1] == "") boot_args[[1]] <- NULL
+    # [CHANGE C] use pre-evaluated args (was: boot_args <- call_info$all_args)
+    # The unnamed-arg guard has moved to the pre-eval block above.
+    boot_args         <- boot_args_pre
     boot_args$formula <- as.formula(paste(y_name, "~", x_name))
     boot_args$pred    <- x_name
 
     boot_processed        <- data.frame(rx, ry)
     names(boot_processed) <- c(x_name, y_name)
     boot_args$data        <- boot_processed
+
+    # [CHANGE D] cap inner B when requested (reduces run time for
+    # resdist/vardist which run their own bootstrap on every iteration)
+    if (!is.null(inner_B)) boot_args$B <- as.integer(inner_B)
 
     bagged_results[[i]] <- tryCatch(
       do.call(dda_func, boot_args),
@@ -203,8 +233,8 @@ dda.bagging <- function(
   }
   if (progress) close(pb)
 
-  # --- Filter Valid Results  ---
-  is_valid <- vapply(bagged_results, function(x) !is.null(x) && !all(is.na(x)), logical(1))
+  # --- Filter Valid Results ---
+  is_valid  <- vapply(bagged_results, function(x) !is.null(x) && !all(is.na(x)), logical(1))
   valid_res <- bagged_results[is_valid]
   n_valid   <- length(valid_res)
 
@@ -227,25 +257,25 @@ dda.bagging <- function(
   ub <- 1 - alpha / 2
 
   if (!is.null(raw_stats$ols_tar_coefs) && is.matrix(raw_stats$ols_tar_coefs)) {
-    prop_sig_tar        <- apply(raw_stats$ols_tar_pvals, 2, function(x) mean(x < alpha, na.rm = TRUE))
-    agg$ols_target      <- cbind(
+    prop_sig_tar   <- apply(raw_stats$ols_tar_pvals, 2, function(x) mean(x < alpha, na.rm = TRUE))
+    agg$ols_target <- cbind(
       estimate = apply(raw_stats$ols_tar_coefs, 2, agg_helper),
       apply(raw_stats$ols_tar_coefs, 2, quantile, probs = lb, na.rm = TRUE),
       apply(raw_stats$ols_tar_coefs, 2, quantile, probs = ub, na.rm = TRUE),
       prop_sig_tar
     )
-    colnames(agg$ols_target) <- c("estimate", paste0(lb*100," %"), paste0(ub*100," %"), paste0("Prop (p<", alpha, ")"))
+    colnames(agg$ols_target) <- c("estimate", paste0(lb*100, " %"), paste0(ub*100, " %"), paste0("Prop (p<", alpha, ")"))
   }
 
   if (!is.null(raw_stats$ols_alt_coefs) && is.matrix(raw_stats$ols_alt_coefs)) {
-    prop_sig_alt          <- apply(raw_stats$ols_alt_pvals, 2, function(x) mean(x < alpha, na.rm = TRUE))
-    agg$ols_alternative   <- cbind(
+    prop_sig_alt        <- apply(raw_stats$ols_alt_pvals, 2, function(x) mean(x < alpha, na.rm = TRUE))
+    agg$ols_alternative <- cbind(
       estimate = apply(raw_stats$ols_alt_coefs, 2, agg_helper),
       apply(raw_stats$ols_alt_coefs, 2, quantile, probs = lb, na.rm = TRUE),
       apply(raw_stats$ols_alt_coefs, 2, quantile, probs = ub, na.rm = TRUE),
       prop_sig_alt
     )
-    colnames(agg$ols_alternative) <- c("estimate", paste0(lb*100," %"), paste0(ub*100," %"), paste0("Prop(p<", alpha, ")"))
+    colnames(agg$ols_alternative) <- c("estimate", paste0(lb*100, " %"), paste0(ub*100, " %"), paste0("Prop(p<", alpha, ")"))
   }
 
   # ============================================================================
@@ -290,18 +320,18 @@ dda.bagging <- function(
     }
 
     if (!is.null(valid_res[[1]]$breusch_pagan)) {
-      raw_stats$bp_yx_stat   <- sapply(valid_res, function(x) get_numeric(x$breusch_pagan[[1]]$statistic))
-      raw_stats$bp_yx_df     <- sapply(valid_res, function(x) get_numeric(x$breusch_pagan[[1]]$parameter))
-      raw_stats$bp_yx_p      <- sapply(valid_res, function(x) get_numeric(x$breusch_pagan[[1]]$p.value))
-      raw_stats$rbp_yx_stat  <- sapply(valid_res, function(x) get_numeric(x$breusch_pagan[[2]]$statistic))
-      raw_stats$rbp_yx_df    <- sapply(valid_res, function(x) get_numeric(x$breusch_pagan[[2]]$parameter))
-      raw_stats$rbp_yx_p     <- sapply(valid_res, function(x) get_numeric(x$breusch_pagan[[2]]$p.value))
-      raw_stats$bp_xy_stat   <- sapply(valid_res, function(x) get_numeric(x$breusch_pagan[[3]]$statistic))
-      raw_stats$bp_xy_df     <- sapply(valid_res, function(x) get_numeric(x$breusch_pagan[[3]]$parameter))
-      raw_stats$bp_xy_p      <- sapply(valid_res, function(x) get_numeric(x$breusch_pagan[[3]]$p.value))
-      raw_stats$rbp_xy_stat  <- sapply(valid_res, function(x) get_numeric(x$breusch_pagan[[4]]$statistic))
-      raw_stats$rbp_xy_df    <- sapply(valid_res, function(x) get_numeric(x$breusch_pagan[[4]]$parameter))
-      raw_stats$rbp_xy_p     <- sapply(valid_res, function(x) get_numeric(x$breusch_pagan[[4]]$p.value))
+      raw_stats$bp_yx_stat  <- sapply(valid_res, function(x) get_numeric(x$breusch_pagan[[1]]$statistic))
+      raw_stats$bp_yx_df    <- sapply(valid_res, function(x) get_numeric(x$breusch_pagan[[1]]$parameter))
+      raw_stats$bp_yx_p     <- sapply(valid_res, function(x) get_numeric(x$breusch_pagan[[1]]$p.value))
+      raw_stats$rbp_yx_stat <- sapply(valid_res, function(x) get_numeric(x$breusch_pagan[[2]]$statistic))
+      raw_stats$rbp_yx_df   <- sapply(valid_res, function(x) get_numeric(x$breusch_pagan[[2]]$parameter))
+      raw_stats$rbp_yx_p    <- sapply(valid_res, function(x) get_numeric(x$breusch_pagan[[2]]$p.value))
+      raw_stats$bp_xy_stat  <- sapply(valid_res, function(x) get_numeric(x$breusch_pagan[[3]]$statistic))
+      raw_stats$bp_xy_df    <- sapply(valid_res, function(x) get_numeric(x$breusch_pagan[[3]]$parameter))
+      raw_stats$bp_xy_p     <- sapply(valid_res, function(x) get_numeric(x$breusch_pagan[[3]]$p.value))
+      raw_stats$rbp_xy_stat <- sapply(valid_res, function(x) get_numeric(x$breusch_pagan[[4]]$statistic))
+      raw_stats$rbp_xy_df   <- sapply(valid_res, function(x) get_numeric(x$breusch_pagan[[4]]$parameter))
+      raw_stats$rbp_xy_p    <- sapply(valid_res, function(x) get_numeric(x$breusch_pagan[[4]]$p.value))
 
       agg$breusch_pagan <- list(
         list(statistic = agg_helper(raw_stats$bp_yx_stat),  parameter = agg_helper(raw_stats$bp_yx_df),  p.value = harmonic_p(raw_stats$bp_yx_p)),
@@ -336,8 +366,8 @@ dda.bagging <- function(
         func = valid_res[[1]]$nlcor.xy$func
       )
 
-      raw_stats$nlcor_yx_min <- apply(cbind(raw_stats$nlcor_yx_t1[,4], raw_stats$nlcor_yx_t2[,4], raw_stats$nlcor_yx_t3[,4]), 1, min, na.rm=TRUE)
-      raw_stats$nlcor_xy_min <- apply(cbind(raw_stats$nlcor_xy_t1[,4], raw_stats$nlcor_xy_t2[,4], raw_stats$nlcor_xy_t3[,4]), 1, min, na.rm=TRUE)
+      raw_stats$nlcor_yx_min <- apply(cbind(raw_stats$nlcor_yx_t1[,4], raw_stats$nlcor_yx_t2[,4], raw_stats$nlcor_yx_t3[,4]), 1, min, na.rm = TRUE)
+      raw_stats$nlcor_xy_min <- apply(cbind(raw_stats$nlcor_xy_t1[,4], raw_stats$nlcor_xy_t2[,4], raw_stats$nlcor_xy_t3[,4]), 1, min, na.rm = TRUE)
       decs$dec_nl.min <- calc_props(ifelse(
         raw_stats$nlcor_yx_min >  alpha & raw_stats$nlcor_xy_min <= alpha, "Target",
         ifelse(raw_stats$nlcor_yx_min <= alpha & raw_stats$nlcor_xy_min > alpha, "Alternative", "Undecided")
@@ -346,25 +376,22 @@ dda.bagging <- function(
 
     if (!is.null(valid_res[[1]]$out.diff)) {
       raw_stats$diff_arr <- simplify2array(lapply(valid_res, function(x) as.matrix(x$out.diff)))
-      agg$diff_matrix    <- apply(raw_stats$diff_arr, c(1,2), agg_helper)
+      agg$diff_matrix    <- apply(raw_stats$diff_arr, c(1, 2), agg_helper)
 
       nc <- ncol(valid_res[[1]]$out.diff)
 
-      # HSIC Diff
       if (is.numeric(nc) && nc >= 2) {
         low_hsic <- raw_stats$diff_arr[1, nc - 1, ]
         upp_hsic <- raw_stats$diff_arr[1, nc, ]
         decs$diff_hsic <- calc_props(ifelse(low_hsic > 0 & upp_hsic > 0, "Target", ifelse(low_hsic < 0 & upp_hsic < 0, "Alternative", "Undecided")))
       }
 
-      # dCor Diff
       if (is.numeric(nc) && nc >= 2 && nrow(valid_res[[1]]$out.diff) >= 2) {
         low_dcor <- raw_stats$diff_arr[2, nc - 1, ]
         upp_dcor <- raw_stats$diff_arr[2, nc, ]
         decs$diff_dcor <- calc_props(ifelse(low_dcor > 0 & upp_dcor > 0, "Target", ifelse(low_dcor < 0 & upp_dcor < 0, "Alternative", "Undecided")))
       }
 
-      # MI Diff
       if (is.numeric(nc) && nc >= 2 && nrow(valid_res[[1]]$out.diff) >= 3) {
         low_mi <- raw_stats$diff_arr[3, nc - 1, ]
         upp_mi <- raw_stats$diff_arr[3, nc, ]
@@ -377,11 +404,9 @@ dda.bagging <- function(
   # RESDIST Block
   # ============================================================================
   if (obj_type == "dda.resdist") {
-    agg$var.names      <- var_names
-    prob_trans_flag    <- isTRUE(if (!is.null(dda_result$probtrans))
-                                    dda_result$probtrans else FALSE)
+    agg$var.names   <- var_names
+    prob_trans_flag <- isTRUE(if (!is.null(dda_result$probtrans)) dda_result$probtrans else FALSE)
 
-    # --- Separate Tests Extraction ---
     raw_stats$agost_tar_stat  <- sapply(valid_res, function(x) get_numeric(x$agostino$target$statistic[1]))
     raw_stats$agost_tar_z     <- sapply(valid_res, function(x) get_numeric(x$agostino$target$statistic[2]))
     raw_stats$agost_tar_pval  <- sapply(valid_res, function(x) get_numeric(x$agostino$target$p.value))
@@ -396,7 +421,6 @@ dda.bagging <- function(
     raw_stats$anscom_alt_z    <- sapply(valid_res, function(x) get_numeric(x$anscombe$alternative$statistic[2]))
     raw_stats$anscom_alt_pval <- sapply(valid_res, function(x) get_numeric(x$anscombe$alternative$p.value))
 
-    # --- Separate Tests Agg ---
     agg$agostino.target.statistic      <- agg_helper(raw_stats$agost_tar_stat)
     agg$agostino.target.z              <- agg_helper(raw_stats$agost_tar_z)
     agg$agostino.target.p.value        <- harmonic_p(raw_stats$agost_tar_pval)
@@ -411,150 +435,118 @@ dda.bagging <- function(
     agg$anscombe.alternative.z         <- agg_helper(raw_stats$anscom_alt_z)
     agg$anscombe.alternative.p.value   <- harmonic_p(raw_stats$anscom_alt_pval)
 
-    # --- Separate Decisions  ---
     decs$dec_agost  <- calc_props(ifelse(
       abs(raw_stats$agost_alt_z) >= crit_val & abs(raw_stats$agost_tar_z) <  crit_val, "Target",
-      ifelse(abs(raw_stats$agost_tar_z) >= crit_val & abs(raw_stats$agost_alt_z) < crit_val, "Alternative",
-             "Undecided")
+      ifelse(abs(raw_stats$agost_tar_z) >= crit_val & abs(raw_stats$agost_alt_z) < crit_val, "Alternative", "Undecided")
     ))
     decs$dec_anscom <- calc_props(ifelse(
       abs(raw_stats$anscom_alt_z) >= crit_val & abs(raw_stats$anscom_tar_z) <  crit_val, "Target",
-      ifelse(abs(raw_stats$anscom_tar_z) >= crit_val & abs(raw_stats$anscom_alt_z) < crit_val, "Alternative",
-             "Undecided")
+      ifelse(abs(raw_stats$anscom_tar_z) >= crit_val & abs(raw_stats$anscom_alt_z) < crit_val, "Alternative", "Undecided")
     ))
 
-    # 1. Skew Diff
     if (!is.null(valid_res[[1]]$skewdiff)) {
-      mat_skew <- tryCatch(do.call(rbind, lapply(valid_res,
-                                                 function(x) as.numeric(x$skewdiff))),
-                           error = function(e) NULL)
+      mat_skew <- tryCatch(do.call(rbind, lapply(valid_res, function(x) as.numeric(x$skewdiff))), error = function(e) NULL)
       if (!is.null(mat_skew) && ncol(mat_skew) >= 2) {
         raw_stats$skewdiff <- mat_skew
         agg$skewdiff       <- apply(mat_skew, 2, agg_helper)
         low_skew <- mat_skew[, ncol(mat_skew) - 1]
         upp_skew <- mat_skew[, ncol(mat_skew)]
-
         if (prob_trans_flag) {
           decs$dec_skewdiff <- calc_props(ifelse(low_skew < 0 & upp_skew < 0, "Target",
+<<<<<<< Updated upstream
                                                  ifelse(low_skew > 0 & upp_skew > 0, "Alternative",
                                                         "Undecided")))
         } else { # prob.trans = FALSE
+=======
+                                                 ifelse(low_skew > 0 & upp_skew > 0, "Alternative", "Undecided")))
+        } else {
+>>>>>>> Stashed changes
           decs$dec_skewdiff <- calc_props(ifelse(low_skew > 0 & upp_skew > 0, "Target",
-                                                 ifelse(low_skew < 0 & upp_skew < 0, "Alternative",
-                                                        "Undecided")))
+                                                 ifelse(low_skew < 0 & upp_skew < 0, "Alternative", "Undecided")))
         }
       }
     }
 
-    # 2. Kurt Diff
     if (!is.null(valid_res[[1]]$kurtdiff)) {
-      mat_kurt <- tryCatch(do.call(rbind, lapply(valid_res,
-                                                 function(x) as.numeric(x$kurtdiff))),
-                           error = function(e) NULL)
-
+      mat_kurt <- tryCatch(do.call(rbind, lapply(valid_res, function(x) as.numeric(x$kurtdiff))), error = function(e) NULL)
       if (!is.null(mat_kurt) && ncol(mat_kurt) >= 2) {
         raw_stats$kurtdiff <- mat_kurt
         agg$kurtdiff       <- apply(mat_kurt, 2, agg_helper)
         low_kurt <- mat_kurt[, ncol(mat_kurt) - 1]
         upp_kurt <- mat_kurt[, ncol(mat_kurt)]
-
         if (prob_trans_flag) {
           decs$dec_kurtdiff <- calc_props(ifelse(low_kurt < 0 & upp_kurt < 0, "Target",
+<<<<<<< Updated upstream
                                                  ifelse(low_kurt > 0 & upp_kurt > 0, "Alternative",
                                                         "Undecided")))
         } else { #prob.trans = FALSE
+=======
+                                                 ifelse(low_kurt > 0 & upp_kurt > 0, "Alternative", "Undecided")))
+        } else {
+>>>>>>> Stashed changes
           decs$dec_kurtdiff <- calc_props(ifelse(low_kurt > 0 & upp_kurt > 0, "Target",
-                                                 ifelse(low_kurt < 0 & upp_kurt < 0, "Alternative",
-                                                        "Undecided")))
+                                                 ifelse(low_kurt < 0 & upp_kurt < 0, "Alternative", "Undecided")))
         }
       }
     }
 
-    # 3. Co-Skew Diff (cor12diff)
     if (!is.null(valid_res[[1]]$cor12diff)) {
-      mat_cor12 <- tryCatch(do.call(rbind, lapply(valid_res,
-                                                  function(x) as.numeric(x$cor12diff))),
-                            error = function(e) NULL)
+      mat_cor12 <- tryCatch(do.call(rbind, lapply(valid_res, function(x) as.numeric(x$cor12diff))), error = function(e) NULL)
       if (!is.null(mat_cor12) && ncol(mat_cor12) >= 2) {
         raw_stats$cor12diff <- mat_cor12
         agg$cor12diff       <- apply(mat_cor12, 2, agg_helper)
         low_cor12 <- mat_cor12[, ncol(mat_cor12) - 1]
         upp_cor12 <- mat_cor12[, ncol(mat_cor12)]
-
-        # Does not flip with prob.trans
-        decs$dec_cor12diff <- calc_props(ifelse(low_cor12 > 0 & upp_cor12 > 0, "Target", ifelse(low_cor12 < 0 & upp_cor12 < 0, "Alternative", "Undecided")))
+        decs$dec_cor12diff <- calc_props(ifelse(low_cor12 > 0 & upp_cor12 > 0, "Target",
+                                                ifelse(low_cor12 < 0 & upp_cor12 < 0, "Alternative", "Undecided")))
       }
     }
 
-    # 4. Co-Kurt Diff (cor13diff)
     if (!is.null(valid_res[[1]]$cor13diff)) {
-      mat_cor13 <- tryCatch(do.call(rbind, lapply(valid_res,
-                                                  function(x) as.numeric(x$cor13diff))),
-                            error = function(e) NULL)
+      mat_cor13 <- tryCatch(do.call(rbind, lapply(valid_res, function(x) as.numeric(x$cor13diff))), error = function(e) NULL)
       if (!is.null(mat_cor13) && ncol(mat_cor13) >= 2) {
         raw_stats$cor13diff <- mat_cor13
         agg$cor13diff       <- apply(mat_cor13, 2, agg_helper)
         low_cor13 <- mat_cor13[, ncol(mat_cor13) - 1]
         upp_cor13 <- mat_cor13[, ncol(mat_cor13)]
-
-        # Does not flip with prob.trans
         decs$dec_cor13diff <- calc_props(ifelse(low_cor13 > 0 & upp_cor13 > 0, "Target",
-                                                ifelse(low_cor13 < 0 & upp_cor13 < 0, "Alternative",
-                                                       "Undecided")))
+                                                ifelse(low_cor13 < 0 & upp_cor13 < 0, "Alternative", "Undecided")))
       }
     }
 
-    # 5. HS Co-Skew Diff(RHS3)
     if (!is.null(valid_res[[1]]$RHS3)) {
-      mat_rhs3 <- tryCatch(do.call(rbind, lapply(valid_res,
-                                                 function(x) as.numeric(x$RHS3))),
-                           error = function(e) NULL)
+      mat_rhs3 <- tryCatch(do.call(rbind, lapply(valid_res, function(x) as.numeric(x$RHS3))), error = function(e) NULL)
       if (!is.null(mat_rhs3) && ncol(mat_rhs3) >= 2) {
         raw_stats$RHS3 <- mat_rhs3
         agg$RHS3       <- apply(mat_rhs3, 2, agg_helper)
         low_rhs3 <- mat_rhs3[, ncol(mat_rhs3) - 1]
         upp_rhs3 <- mat_rhs3[, ncol(mat_rhs3)]
-
-        # Does not flip with prob.trans
         decs$dec_RHS3 <- calc_props(ifelse(low_rhs3 > 0 & upp_rhs3 > 0, "Target",
-                                           ifelse(low_rhs3 < 0 & upp_rhs3 < 0, "Alternative",
-                                                  "Undecided")))
+                                           ifelse(low_rhs3 < 0 & upp_rhs3 < 0, "Alternative", "Undecided")))
       }
     }
 
-    # 6. Chen-Chan Co-Kurt Diff (RCC)
     if (!is.null(valid_res[[1]]$RCC)) {
-      mat_rcc <- tryCatch(do.call(rbind, lapply(valid_res,
-                                                function(x) as.numeric(x$RCC))),
-                          error = function(e) NULL)
+      mat_rcc <- tryCatch(do.call(rbind, lapply(valid_res, function(x) as.numeric(x$RCC))), error = function(e) NULL)
       if (!is.null(mat_rcc) && ncol(mat_rcc) >= 2) {
         raw_stats$RCC <- mat_rcc
         agg$RCC       <- apply(mat_rcc, 2, agg_helper)
         low_rcc <- mat_rcc[, ncol(mat_rcc) - 1]
         upp_rcc <- mat_rcc[, ncol(mat_rcc)]
-
-        # Does not flip with prob.trans
         decs$dec_RCC <- calc_props(ifelse(low_rcc > 0 & upp_rcc > 0, "Target",
-                                          ifelse(low_rcc < 0 & upp_rcc < 0, "Alternative",
-                                                 "Undecided")))
+                                          ifelse(low_rcc < 0 & upp_rcc < 0, "Alternative", "Undecided")))
       }
     }
 
-    # 7. HS Co-Kurt Diff (RHS4)
     if (!is.null(valid_res[[1]]$RHS4)) {
-      mat_rhs4 <- tryCatch(do.call(rbind, lapply(valid_res,
-                                                 function(x) as.numeric(x$RHS4))),
-                           error = function(e) NULL)
+      mat_rhs4 <- tryCatch(do.call(rbind, lapply(valid_res, function(x) as.numeric(x$RHS4))), error = function(e) NULL)
       if (!is.null(mat_rhs4) && ncol(mat_rhs4) >= 2) {
         raw_stats$RHS4 <- mat_rhs4
         agg$RHS4       <- apply(mat_rhs4, 2, agg_helper)
         low_rhs4 <- mat_rhs4[, ncol(mat_rhs4) - 1]
         upp_rhs4 <- mat_rhs4[, ncol(mat_rhs4)]
-
-        # Does not flip with prob.trans
         decs$dec_RHS4 <- calc_props(ifelse(low_rhs4 > 0 & upp_rhs4 > 0, "Target",
-                                           ifelse(low_rhs4 < 0 & upp_rhs4 < 0, "Alternative",
-                                                  "Undecided")))
+                                           ifelse(low_rhs4 < 0 & upp_rhs4 < 0, "Alternative", "Undecided")))
       }
     }
   }
@@ -565,7 +557,6 @@ dda.bagging <- function(
   if (obj_type == "dda.vardist") {
     agg$var.names <- var_names
 
-    # --- Separate Tests Extraction ---
     raw_stats$agost_pre_stat  <- sapply(valid_res, function(x) get_numeric(x$agostino$predictor$statistic[1]))
     raw_stats$agost_pre_z     <- sapply(valid_res, function(x) get_numeric(x$agostino$predictor$statistic[2]))
     raw_stats$agost_pre_pval  <- sapply(valid_res, function(x) get_numeric(x$agostino$predictor$p.value))
@@ -580,7 +571,6 @@ dda.bagging <- function(
     raw_stats$anscom_out_z    <- sapply(valid_res, function(x) get_numeric(x$anscombe$outcome$statistic[2]))
     raw_stats$anscom_out_pval <- sapply(valid_res, function(x) get_numeric(x$anscombe$outcome$p.value))
 
-    # --- Separate Tests Aggregation ---
     agg$agostino.predictor.statistic.skew <- agg_helper(raw_stats$agost_pre_stat)
     agg$agostino.predictor.statistic.z    <- agg_helper(raw_stats$agost_pre_z)
     agg$agostino.predictor.p.value        <- harmonic_p(raw_stats$agost_pre_pval)
@@ -595,19 +585,15 @@ dda.bagging <- function(
     agg$anscombe.outcome.statistic.z      <- agg_helper(raw_stats$anscom_out_z)
     agg$anscombe.outcome.p.value          <- harmonic_p(raw_stats$anscom_out_pval)
 
-    # --- Separate Tests Decisions ---
     decs$dec_agost  <- calc_props(ifelse(
       abs(raw_stats$agost_pre_z) >= crit_val & abs(raw_stats$agost_out_z) <  crit_val, "Target",
-      ifelse(abs(raw_stats$agost_pre_z) <  crit_val & abs(raw_stats$agost_out_z) >= crit_val, "Alternative",
-             "Undecided")
+      ifelse(abs(raw_stats$agost_pre_z) <  crit_val & abs(raw_stats$agost_out_z) >= crit_val, "Alternative", "Undecided")
     ))
     decs$dec_anscom <- calc_props(ifelse(
       abs(raw_stats$anscom_pre_z) >= crit_val & abs(raw_stats$anscom_out_z) <  crit_val, "Target",
-      ifelse(abs(raw_stats$anscom_pre_z) <  crit_val & abs(raw_stats$anscom_out_z) >= crit_val, "Alternative",
-             "Undecided")
+      ifelse(abs(raw_stats$anscom_pre_z) <  crit_val & abs(raw_stats$anscom_out_z) >= crit_val, "Alternative", "Undecided")
     ))
 
-    # 1. Skew Diff
     if (!is.null(valid_res[[1]]$skewdiff)) {
       mat_skew <- tryCatch(do.call(rbind, lapply(valid_res, function(x) as.numeric(x$skewdiff))), error = function(e) NULL)
       if (!is.null(mat_skew) && ncol(mat_skew) >= 2) {
@@ -616,92 +602,70 @@ dda.bagging <- function(
         low_skew <- mat_skew[, ncol(mat_skew) - 1]
         upp_skew <- mat_skew[, ncol(mat_skew)]
         decs$dec_skewdiff <- calc_props(ifelse(low_skew > 0 & upp_skew > 0, "Target",
-                                               ifelse(low_skew < 0 & upp_skew < 0, "Alternative",
-                                                      "Undecided")))
+                                               ifelse(low_skew < 0 & upp_skew < 0, "Alternative", "Undecided")))
       }
     }
 
-    # 2. Kurt Diff
     if (!is.null(valid_res[[1]]$kurtdiff)) {
-      mat_kurt <- tryCatch(do.call(rbind, lapply(valid_res,
-                                                 function(x) as.numeric(x$kurtdiff))),
-                           error = function(e) NULL)
+      mat_kurt <- tryCatch(do.call(rbind, lapply(valid_res, function(x) as.numeric(x$kurtdiff))), error = function(e) NULL)
       if (!is.null(mat_kurt) && ncol(mat_kurt) >= 2) {
         raw_stats$kurtdiff <- mat_kurt
         agg$kurtdiff       <- apply(mat_kurt, 2, agg_helper)
         low_kurt <- mat_kurt[, ncol(mat_kurt) - 1]
         upp_kurt <- mat_kurt[, ncol(mat_kurt)]
         decs$dec_kurtdiff <- calc_props(ifelse(low_kurt > 0 & upp_kurt > 0, "Target",
-                                               ifelse(low_kurt < 0 & upp_kurt < 0, "Alternative",
-                                                      "Undecided")))
+                                               ifelse(low_kurt < 0 & upp_kurt < 0, "Alternative", "Undecided")))
       }
     }
 
-    # 3. Co-Skew Diff (cor12diff)
     if (!is.null(valid_res[[1]]$cor12diff)) {
-      mat_cor12 <- tryCatch(do.call(rbind, lapply(valid_res,
-                                                  function(x) as.numeric(x$cor12diff))),
-                            error = function(e) NULL)
+      mat_cor12 <- tryCatch(do.call(rbind, lapply(valid_res, function(x) as.numeric(x$cor12diff))), error = function(e) NULL)
       if (!is.null(mat_cor12) && ncol(mat_cor12) >= 2) {
         raw_stats$cor12diff <- mat_cor12
         agg$cor12diff       <- apply(mat_cor12, 2, agg_helper)
         low_cor12 <- mat_cor12[, ncol(mat_cor12) - 1]
         upp_cor12 <- mat_cor12[, ncol(mat_cor12)]
         decs$dec_cor12diff <- calc_props(ifelse(low_cor12 > 0 & upp_cor12 > 0, "Target",
-                                                ifelse(low_cor12 < 0 & upp_cor12 < 0, "Alternative",
-                                                       "Undecided")))
+                                                ifelse(low_cor12 < 0 & upp_cor12 < 0, "Alternative", "Undecided")))
       }
     }
 
-    # 4. Co-Kurt Diff (cor13diff)
     if (!is.null(valid_res[[1]]$cor13diff)) {
-      mat_cor13 <- tryCatch(do.call(rbind, lapply(valid_res,
-                                                  function(x) as.numeric(x$cor13diff))),
-                            error = function(e) NULL)
+      mat_cor13 <- tryCatch(do.call(rbind, lapply(valid_res, function(x) as.numeric(x$cor13diff))), error = function(e) NULL)
       if (!is.null(mat_cor13) && ncol(mat_cor13) >= 2) {
         raw_stats$cor13diff <- mat_cor13
         agg$cor13diff       <- apply(mat_cor13, 2, agg_helper)
         low_cor13 <- mat_cor13[, ncol(mat_cor13) - 1]
         upp_cor13 <- mat_cor13[, ncol(mat_cor13)]
         decs$dec_cor13diff <- calc_props(ifelse(low_cor13 > 0 & upp_cor13 > 0, "Target",
-                                                ifelse(low_cor13 < 0 & upp_cor13 < 0, "Alternative",
-                                                       "Undecided")))
+                                                ifelse(low_cor13 < 0 & upp_cor13 < 0, "Alternative", "Undecided")))
       }
     }
 
-    # 5. HS Co-Skew Diff (RHS)
     if (!is.null(valid_res[[1]]$RHS)) {
-      mat_rhs <- tryCatch(do.call(rbind, lapply(valid_res,
-                                                function(x) as.numeric(x$RHS))),
-                          error = function(e) NULL)
+      mat_rhs <- tryCatch(do.call(rbind, lapply(valid_res, function(x) as.numeric(x$RHS))), error = function(e) NULL)
       if (!is.null(mat_rhs) && ncol(mat_rhs) >= 2) {
         raw_stats$RHS <- mat_rhs
         agg$RHS       <- apply(mat_rhs, 2, agg_helper)
         low_rhs <- mat_rhs[, ncol(mat_rhs) - 1]
         upp_rhs <- mat_rhs[, ncol(mat_rhs)]
         decs$dec_RHS <- calc_props(ifelse(low_rhs > 0 & upp_rhs > 0, "Target",
-                                          ifelse(low_rhs < 0 & upp_rhs < 0, "Alternative",
-                                                 "Undecided")))
+                                          ifelse(low_rhs < 0 & upp_rhs < 0, "Alternative", "Undecided")))
       }
     }
 
-    # 6. Chen-Chan Co-Kurt Diff (RCC)
     if (!is.null(valid_res[[1]]$RCC)) {
-      mat_rcc <- tryCatch(do.call(rbind, lapply(valid_res,
-                                                function(x) as.numeric(x$RCC))),
-                          error = function(e) NULL)
+      mat_rcc <- tryCatch(do.call(rbind, lapply(valid_res, function(x) as.numeric(x$RCC))), error = function(e) NULL)
       if (!is.null(mat_rcc) && ncol(mat_rcc) >= 2) {
         raw_stats$RCC <- mat_rcc
         agg$RCC       <- apply(mat_rcc, 2, agg_helper)
         low_rcc <- mat_rcc[, ncol(mat_rcc) - 1]
         upp_rcc <- mat_rcc[, ncol(mat_rcc)]
         decs$dec_RCC <- calc_props(ifelse(low_rcc > 0 & upp_rcc > 0, "Target",
-                                          ifelse(low_rcc < 0 & upp_rcc < 0, "Alternative",
-                                                 "Undecided")))
+                                          ifelse(low_rcc < 0 & upp_rcc < 0, "Alternative", "Undecided")))
       }
     }
 
-    # 7. HS (tanh) Diff (Rtanh)
     if (!is.null(valid_res[[1]]$Rtanh)) {
       mat_rtanh <- tryCatch(do.call(rbind, lapply(valid_res, function(x) as.numeric(x$Rtanh))), error = function(e) NULL)
       if (!is.null(mat_rtanh) && ncol(mat_rtanh) >= 2) {
@@ -710,8 +674,7 @@ dda.bagging <- function(
         low_rtanh <- mat_rtanh[, ncol(mat_rtanh) - 1]
         upp_rtanh <- mat_rtanh[, ncol(mat_rtanh)]
         decs$dec_Rtanh <- calc_props(ifelse(low_rtanh > 0 & upp_rtanh > 0, "Target",
-                                            ifelse(low_rtanh < 0 & upp_rtanh < 0, "Alternative",
-                                                   "Undecided")))
+                                            ifelse(low_rtanh < 0 & upp_rtanh < 0, "Alternative", "Undecided")))
       }
     }
   }
