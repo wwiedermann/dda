@@ -24,13 +24,12 @@ dda.bagging <- function(
     data         = NULL,
     agg_stat     = c("mean", "median", "trimmed", "winsorized", "midhinge", "tukey"),
     trim_prob    = 0.10,
-    win_prob     = 0.10,
-    inner_B      = NULL    # [CHANGE D] optional cap on per-iteration inner B
+    win_prob     = 0.10
+    #inner_B      = NULL    # optional cap on per-iteration inner B
 ) {
 
-  # [CHANGE A] capture caller environment immediately, before anything
-  # shifts the call stack.  Symbols stored in call_info$all_args (e.g.
-  # data = dat, B = my_b) need to be resolved here, not inside the loop.
+  # capture caller environment immediately here. Symbols stored in call_info$all_args (e.g.
+  # data = dat, B = my_b) are resolved here not inside the loop.
   caller_env <- parent.frame()
 
   agg_stat <- match.arg(agg_stat)
@@ -152,7 +151,7 @@ dda.bagging <- function(
     full_formula_alt <- as.formula(paste(x_name, "~", y_name))
   }
 
-  # [CHANGE B] pre-evaluate all call_info$all_args once in the caller's frame.
+  # pre-evaluate all call_info$all_args once in the caller's frame.
   #
   # match.call() stores arguments as unevaluated language objects, so
   # passing them raw via do.call() inside dda.bagging resolves symbols in
@@ -210,7 +209,7 @@ dda.bagging <- function(
       rx <- as.vector(scale(datboot[[x_name]]))
     }
 
-    # [CHANGE C] use pre-evaluated args (was: boot_args <- call_info$all_args)
+    # use pre-evaluated args (was: boot_args <- call_info$all_args)
     # The unnamed-arg guard has moved to the pre-eval block above.
     boot_args         <- boot_args_pre
     boot_args$formula <- as.formula(paste(y_name, "~", x_name))
@@ -220,7 +219,7 @@ dda.bagging <- function(
     names(boot_processed) <- c(x_name, y_name)
     boot_args$data        <- boot_processed
 
-    # [CHANGE D] cap inner B when requested (reduces run time for
+    #  cap inner B when requested (reduces run time for
     # resdist/vardist which run their own bootstrap on every iteration)
     if (!is.null(inner_B)) boot_args$B <- as.integer(inner_B)
 
@@ -453,14 +452,8 @@ dda.bagging <- function(
         upp_skew <- mat_skew[, ncol(mat_skew)]
         if (prob_trans_flag) {
           decs$dec_skewdiff <- calc_props(ifelse(low_skew < 0 & upp_skew < 0, "Target",
-<<<<<<< Updated upstream
-                                                 ifelse(low_skew > 0 & upp_skew > 0, "Alternative",
-                                                        "Undecided")))
-        } else { # prob.trans = FALSE
-=======
                                                  ifelse(low_skew > 0 & upp_skew > 0, "Alternative", "Undecided")))
         } else {
->>>>>>> Stashed changes
           decs$dec_skewdiff <- calc_props(ifelse(low_skew > 0 & upp_skew > 0, "Target",
                                                  ifelse(low_skew < 0 & upp_skew < 0, "Alternative", "Undecided")))
         }
@@ -476,14 +469,8 @@ dda.bagging <- function(
         upp_kurt <- mat_kurt[, ncol(mat_kurt)]
         if (prob_trans_flag) {
           decs$dec_kurtdiff <- calc_props(ifelse(low_kurt < 0 & upp_kurt < 0, "Target",
-<<<<<<< Updated upstream
-                                                 ifelse(low_kurt > 0 & upp_kurt > 0, "Alternative",
-                                                        "Undecided")))
-        } else { #prob.trans = FALSE
-=======
                                                  ifelse(low_kurt > 0 & upp_kurt > 0, "Alternative", "Undecided")))
         } else {
->>>>>>> Stashed changes
           decs$dec_kurtdiff <- calc_props(ifelse(low_kurt > 0 & upp_kurt > 0, "Target",
                                                  ifelse(low_kurt < 0 & upp_kurt < 0, "Alternative", "Undecided")))
         }
