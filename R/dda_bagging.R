@@ -221,7 +221,7 @@ dda.bagging <- function(
 
     #  cap inner B when requested (reduces run time for
     # resdist/vardist which run their own bootstrap on every iteration)
-    if (!is.null(inner_B)) boot_args$B <- as.integer(inner_B)
+    #if (!is.null(inner_B)) boot_args$B <- as.integer(inner_B)
 
     bagged_results[[i]] <- tryCatch(
       do.call(dda_func, boot_args),
