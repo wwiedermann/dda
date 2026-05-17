@@ -1,19 +1,63 @@
 #' @title Bootstrap Aggregated Direction Dependence Analysis
 #'
-#' @param dda_result Output from any DDA function (dda.indep, dda.vardist, dda.resdist)
-#' @param iter Number of bootstrap iterations (default: 100)
-#' @param progress Whether to show progress bar (default: TRUE)
-#' @param save_file Optional file path to save results
-#' @param alpha Significance level for decisions (default: 0.05)
-#' @param data Raw data frame with ALL variables (outcome, predictor, covariates)
-#' @param agg_stat Method for aggregating test statistics and coefficients.
-#' @param trim_prob Proportion of observations to be trimmed (default: 0.10).
-#' @param win_prob Proportion of observations to be Winsorized (default: 0.10).
-#' @param inner_B Optional integer cap on the inner bootstrap B passed to each
-#'   per-iteration DDA call. NULL (default) keeps whatever B was used in the
-#'   original DDA call. Setting e.g. inner_B = 50 dramatically reduces run
-#'   time for dda.resdist / dda.vardist without changing how bagging aggregates.
-#' @return A list containing bootstrap and aggregated results
+#' @description
+#' \code{dda.bagging} performs bootstrap aggregation (bagging) on an existing
+#' Direction Dependence Analysis (DDA) object to test the stability and
+#' robustness of direction dependence decisions.
+#'
+#' @param dda_result An output object from any base DDA function (e.g.,
+#'   \code{dda.indep}, \code{dda.vardist}, or \code{dda.resdist}).
+#' @param iter Number of bootstrap samples (default: 100).
+#' @param progress Logical. Whether to display a progress bar during
+#'   resampling (default: \code{TRUE}).
+#' @param save_file Character. Optional file path to save the resulting
+#'   object (e.g., \code{"results.rds"}).
+#' @param alpha Numeric. Significance level used for causal model selection
+#'   (default: 0.05).
+#' @param data A \code{data.frame} containing ALL raw variables used in the
+#'   original DDA model (outcome, predictor, and any covariates).
+#' @param agg_stat Character. Specifies the method used for aggregating test
+#'   statistics and coefficients across bootstrap samples. Must be one of the
+#'   following specifications \code{c("mean", "median", "trimmed",
+#'   "winsorized", "midhinge", "tukey")}.
+#' @param trim_prob Numeric. Proportion of observations to be trimmed from
+#'   each side of the sampling distribution when \code{agg_stat = "trimmed"}
+#'   (default: 0.10).
+#' @param win_prob Numeric. Proportion of observations to be winsorized from
+#'   each side of the sampling distribution when
+#'   \code{agg_stat = "winsorized"} (default: 0.10).
+#' @param inner_B Optional positive integer. Caps the number of inner
+#'   bootstrap resamples (\code{B}) passed to each per-iteration DDA call.
+#'   \code{NULL} (default) keeps whatever \code{B} was used in the original
+#'   DDA call. Setting a smaller value (e.g., \code{inner_B = 50}) reduces
+#'   run time substantially for \code{dda.resdist} and \code{dda.vardist},
+#'   which run their own internal bootstrap on every outer iteration, without
+#'   changing how the outer bagging loop aggregates results.
+#'
+#' @details
+#' This function uses a fitted DDA output object (obtained from
+#' \code{dda.indep}, \code{dda.vardist}, or \code{dda.resdist}) and performs
+#' bootstrap aggregation of DDA test statistics. The function computes DDA
+#' statistics across \code{iter} bootstrap samples and aggregates the results
+#' to evaluate the stability and robustness of DDA model selection. p-values
+#' obtained from significance tests are aggregated using the harmonic mean
+#' p-value approach (Wilson, 2019).
+#'
+#' @references
+#' Wiedermann, W., & von Eye, A. (2025). \emph{Direction Dependence Analysis:
+#' Foundations and Statistical Methods}. Cambridge, UK: Cambridge University
+#' Press.
+#'
+#' Wilson, D. J. (2019). The harmonic mean p-value for combining dependent
+#' tests. \emph{Proceedings of the National Academy of Sciences}, \emph{116}(4),
+#' 1195--1200.
+#'
+#' @return An object of class \code{dda_bagging} (with subclasses
+#'   \code{dda_bagging_indep}, \code{dda_bagging_vardist}, or
+#'   \code{dda_bagging_resdist}), which contains aggregated and raw results
+#'   from tests matching the initial DDA function (\code{dda.indep},
+#'   \code{dda.vardist}, or \code{dda.resdist}).
+#'
 #' @export
 dda.bagging <- function(
     dda_result,
@@ -24,12 +68,12 @@ dda.bagging <- function(
     data         = NULL,
     agg_stat     = c("mean", "median", "trimmed", "winsorized", "midhinge", "tukey"),
     trim_prob    = 0.10,
-    win_prob     = 0.10
-    #inner_B      = NULL    # optional cap on per-iteration inner B
+    win_prob     = 0.10,
+    inner_B      = NULL
 ) {
 
-  # capture caller environment immediately here. Symbols stored in call_info$all_args (e.g.
-  # data = dat, B = my_b) are resolved here not inside the loop.
+  # Capture caller environment immediately. Symbols stored in call_info$all_args
+  # (e.g. data = dat, B = my_b) are resolved here, not inside the loop.
   caller_env <- parent.frame()
 
   agg_stat <- match.arg(agg_stat)
@@ -42,13 +86,17 @@ dda.bagging <- function(
     stop("Valid 'data' data.frame must be provided.")
   }
   stopifnot(
-    is.numeric(iter) && iter > 0,
-    is.numeric(alpha) && alpha > 0 && alpha < 1,
+    is.numeric(iter)     && iter > 0,
+    is.numeric(alpha)    && alpha > 0 && alpha < 1,
     is.numeric(trim_prob) && trim_prob >= 0 && trim_prob < 0.5,
-    is.numeric(win_prob) && win_prob >= 0 && win_prob < 0.5
+    is.numeric(win_prob)  && win_prob  >= 0 && win_prob  < 0.5
   )
+  if (!is.null(inner_B)) {
+    stopifnot(is.numeric(inner_B) && length(inner_B) == 1 && inner_B > 0)
+    inner_B <- as.integer(inner_B)
+  }
 
-  # --- Helper: Robust & Finite Agg ---
+  # --- Helper: Robust & Finite Aggregation ---
   agg_helper <- function(x) {
     x <- as.numeric(x)
     x <- x[!is.na(x) & !is.nan(x) & is.finite(x)]
@@ -65,15 +113,18 @@ dda.bagging <- function(
              x[x > q_high] <- q_high
              mean(x)
            },
-           "midhinge"   = { q <- quantile(x, probs = c(0.25, 0.75), names = FALSE, na.rm = TRUE); mean(q) },
-           "tukey"      = {
+           "midhinge" = {
+             q <- quantile(x, probs = c(0.25, 0.75), names = FALSE, na.rm = TRUE)
+             mean(q)
+           },
+           "tukey" = {
              q <- quantile(x, probs = c(0.25, 0.5, 0.75), names = FALSE, na.rm = TRUE)
              (q[1] + 2*q[2] + q[3]) / 4
            }
     )
   }
 
-  # --- Helper: Extraction ---
+  # --- Helper: Safe Numeric Extraction ---
   get_numeric <- function(x) {
     if (is.null(x))    return(NA_real_)
     if (is.numeric(x)) return(as.numeric(x[1]))
@@ -97,15 +148,15 @@ dda.bagging <- function(
 
   # --- Helper: Decision Proportions ---
   calc_props <- function(dec_vec) {
-    levs <- c("Target", "Alternative", "Undecided")
+    levs    <- c("Target", "Alternative", "Undecided")
     dec_vec <- dec_vec[!is.na(dec_vec)]
-    tab <- table(factor(dec_vec, levels = levs))
-    sm  <- sum(tab)
+    tab     <- table(factor(dec_vec, levels = levs))
+    sm      <- sum(tab)
     if (sm == 0) return(c(Target = 0, Alternative = 0, Undecided = 0))
     return(tab / sm)
   }
 
-  # --- Extract Core DDA ---
+  # --- Extract Core DDA Information ---
   call_info     <- dda_result$call_info
   original_data <- data
   nobs          <- nrow(original_data)
@@ -151,7 +202,7 @@ dda.bagging <- function(
     full_formula_alt <- as.formula(paste(x_name, "~", y_name))
   }
 
-  # pre-evaluate all call_info$all_args once in the caller's frame.
+  # Pre-evaluate all call_info$all_args once in the caller's frame.
   #
   # match.call() stores arguments as unevaluated language objects, so
   # passing them raw via do.call() inside dda.bagging resolves symbols in
@@ -162,7 +213,7 @@ dda.bagging <- function(
   boot_args_pre <- lapply(call_info$all_args, function(a) {
     tryCatch(eval(a, envir = caller_env), error = function(e) a)
   })
-  # guard: drop first element if it has no name (positional formula arg)
+  # Guard: drop first element if it has no name (positional formula arg).
   if (length(boot_args_pre) > 0 && names(boot_args_pre)[1] == "")
     boot_args_pre[[1]] <- NULL
 
@@ -178,9 +229,12 @@ dda.bagging <- function(
   if (progress) pb <- txtProgressBar(min = 0, max = iter, style = 3)
 
   for (i in 1:iter) {
+
+    # Draw n observations with replacement from the original data.
     boot_indices <- sample(1:nobs, nobs, replace = TRUE)
     datboot      <- original_data[boot_indices, ]
 
+    # Fit OLS target and alternative models on the bootstrap sample.
     lm_tar <- tryCatch(lm(full_formula_tar, data = datboot), error = function(e) NULL)
     lm_alt <- tryCatch(lm(full_formula_alt, data = datboot), error = function(e) NULL)
 
@@ -197,6 +251,7 @@ dda.bagging <- function(
       ols_alt_pvals[[i]] <- s$coefficients[, 4]
     }
 
+    # Residualize covariates if present, then scale the working variables.
     if (has_covariates) {
       cov_formula_y <- as.formula(paste(y_name, "~", paste(cov_names, collapse = " + ")))
       cov_formula_x <- as.formula(paste(x_name, "~", paste(cov_names, collapse = " + ")))
@@ -209,8 +264,8 @@ dda.bagging <- function(
       rx <- as.vector(scale(datboot[[x_name]]))
     }
 
-    # use pre-evaluated args (was: boot_args <- call_info$all_args)
-    # The unnamed-arg guard has moved to the pre-eval block above.
+    # Build the argument list for this iteration's DDA call, starting from
+    # the pre-evaluated original arguments.
     boot_args         <- boot_args_pre
     boot_args$formula <- as.formula(paste(y_name, "~", x_name))
     boot_args$pred    <- x_name
@@ -219,9 +274,12 @@ dda.bagging <- function(
     names(boot_processed) <- c(x_name, y_name)
     boot_args$data        <- boot_processed
 
-    #  cap inner B when requested (reduces run time for
-    # resdist/vardist which run their own bootstrap on every iteration)
-    #if (!is.null(inner_B)) boot_args$B <- as.integer(inner_B)
+    # If inner_B is specified, override the inner bootstrap B passed to the
+    # DDA function on this iteration. This caps the number of resamples used
+    # inside dda.resdist / dda.vardist on each outer iteration, which can
+    # dramatically reduce total run time without changing how the outer
+    # bagging loop aggregates across iter samples.
+    if (!is.null(inner_B)) boot_args$B <- inner_B
 
     bagged_results[[i]] <- tryCatch(
       do.call(dda_func, boot_args),
@@ -244,7 +302,7 @@ dda.bagging <- function(
   decs      <- list()
   crit_val  <- qnorm(1 - alpha / 2)
 
-  # --- Save & Aggregate OLS Results ---
+  # --- Aggregate OLS Results ---
   raw_stats$ols_tar_coefs <- tryCatch(do.call(rbind, ols_tar_coefs[is_valid]), error = function(e) NULL)
   raw_stats$ols_alt_coefs <- tryCatch(do.call(rbind, ols_alt_coefs[is_valid]), error = function(e) NULL)
   raw_stats$ols_tar_rsq   <- tryCatch(do.call(rbind, ols_tar_rsq[is_valid]),   error = function(e) NULL)
@@ -403,8 +461,11 @@ dda.bagging <- function(
   # RESDIST Block
   # ============================================================================
   if (obj_type == "dda.resdist") {
-    agg$var.names   <- var_names
+    agg$var.names <- var_names
+
+    # Store the prob.trans flag so print methods can retrieve it for footnotes.
     prob_trans_flag <- isTRUE(if (!is.null(dda_result$probtrans)) dda_result$probtrans else FALSE)
+    agg$probtrans   <- prob_trans_flag
 
     raw_stats$agost_tar_stat  <- sapply(valid_res, function(x) get_numeric(x$agostino$target$statistic[1]))
     raw_stats$agost_tar_z     <- sapply(valid_res, function(x) get_numeric(x$agostino$target$statistic[2]))
