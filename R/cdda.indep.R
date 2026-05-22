@@ -27,8 +27,8 @@
 #'   \item \strong{For \code{cdda.indep}:} Either a numeric value or a function of .Primitive type used for non-linear correlation tests. When numeric, the value is used in a power transformation.
 #'   \item \strong{For \code{summary}:} A logical value indicating whether non-linear correlation tests should be returned in the output. Default is \code{FALSE}.
 #' }
-#' @param hsic.method A character indicating the inference method for the Hilbert-Schmidt Independence Criterion. Must be one of the four specifications \code{c("gamma", "eigenvalue", "boot", "permutation")}.\code{hsic.method = "gamma"} is the default.
-#' @param B           Number of permutations for separate dCor tests and number of resamples when \code{hsic.method = c("boot", "permutation")} or \code{diff = TRUE}.
+#' @param hsic.method A character indicating the inference method for the Hilbert-Schmidt Independence Criterion. Must be one of the four specifications \code{c("gamma", "eigenvalue", "bootstrap", "permutation")}.\code{hsic.method = "gamma"} is the default.
+#' @param B           Number of permutations for separate dCor tests and number of resamples when \code{hsic.method = c("bootstrap", "permutation")} or \code{diff = TRUE}.
 #' @param boot.type   A character indicating the type of bootstrap confidence intervals. Must be one of the two specifications \code{c("perc", "bca")}. \code{boot.type = "perc"} is the default.
 #' @param conf.level  Confidence level for bootstrap confidence intervals.
 #' @param parallelize A logical value indicating whether bootstrapping is performed on multiple cores. Only used if \code{diff = TRUE}.

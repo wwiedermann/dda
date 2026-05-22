@@ -73,7 +73,7 @@ dda.indep <- function(
       rx     <- dat[,3] # purified predictor
       err.yx <- dat[,4] # errors of target model
 
-      diff.hsic <- dHSIC::dhsic.test(err.xy, ry, method = "gamma")$statistic - dHSIC::dhsic.test(err.yx, rx, method = "gamma")$statistic
+      diff.hsic <- hsic.test(err.xy, ry, method = "gamma")$statistic - hsic.test(err.yx, rx, method = "gamma")$statistic
       diff.dcor <- energy::dcor.test(err.xy, ry)$statistic - energy::dcor.test(err.yx, rx)$statistic
       diff.mi <- (max.entropy(ry) + max.entropy(err.xy)) - (max.entropy(rx) + max.entropy(err.yx))
       c(diff.hsic, diff.dcor, diff.mi)
@@ -195,8 +195,8 @@ dda.indep <- function(
 
 	if(hsic.method %in% c("gamma", "eigenvalue")){
 
-	   hsic.yx <- dHSIC::dhsic.test(rx, err.yx, method = hsic.method, kernel = "gaussian")
-	   hsic.xy <- dHSIC::dhsic.test(ry, err.xy, method = hsic.method, kernel = "gaussian")
+  	  hsic.yx <- hsic.test(rx, err.yx, method = hsic.method)
+  	  hsic.xy <- hsic.test(ry, err.xy, method = hsic.method)
 
 	   output <- list(hsic.yx = hsic.yx, hsic.xy = hsic.xy, hsic.method = hsic.method)
 
@@ -205,10 +205,10 @@ dda.indep <- function(
 
 	if(hsic.method %in% c("bootstrap", "permutation")){
 
-	   hsic.yx <- dHSIC::dhsic.test(rx, err.yx, method = hsic.method, kernel = "gaussian", B = B)
-	   hsic.xy <- dHSIC::dhsic.test(ry, err.xy, method = hsic.method, kernel = "gaussian", B = B)
+	    hsic.yx <- hsic.test(rx, err.yx, method = hsic.method, B = B)
+	    hsic.xy <- hsic.test(ry, err.xy, method = hsic.method, B = B)
 
-	   output <- list(hsic.yx = hsic.yx, hsic.xy = hsic.xy, hsic.method = c(hsic.method, as.character(B)) )
+	    output <- list(hsic.yx = hsic.yx, hsic.xy = hsic.xy, hsic.method = c(hsic.method, as.character(B)) )
 
 	}
 

@@ -1,35 +1,44 @@
-# cran-comments.md for dda (0.1.1)
+# cran-comments.md for dda (0.1.2)
 
-### R CMD check results
+## R CMD check results
 
 0 errors | 0 warnings | 0 notes
 
-We saw 3 new problems:
+## Issues addressed
 
-* dda.indep
-* dda.vardist
-* dda.resdist
+Two main changes occur in this release:
 
-Both maintainers were notified on Oct 29 (~2 weeks ago) and supplied with patches.
+- The primary author (Wiedermann) was notified on 30 April 2026
+of the potential `dHSIC` CRAN package archival. This patch release provides
+a local `hsic` function to replace the dependency on `dHSIC`.
 
-Package: dda
-Version: 0.1.1
-Date: 2025-11-07
+- **dda.indep** now utilizes the local `hsic` function which computes the
+Hilbert-Schmidt Independence Criterion (HSIC) for two variables. 
 
-Summary of changes
-- Bug fixes: Correction in the  HSIC method argument in `dda.indep` (now `hsic.method = "bootstrap"`), and `dda.vardist` and `dda.resdist` now consistently return error messages when the number of bootstrap replications (B) is too small for `boot.type = "bca"`. 
-- See NEWS.md for the changelog.
+- **hsic** contains options for different kernel types and 
+methods for estimating the null distribution.
 
-Check results
-- Ran R CMD check –as-CRAN locally (Windows 11 and macOS Ventura) and on win-builder. - Tested on the current CRAN release platform(s) and on Windows via the win-builder service.
-- Tested on the current CRAN release platform(s) and on Windows via the win-builder service. 
 
-Package details for CRAN reviewers
-- The package contains only R code (no compiled code or use of src/).  
-- No special SystemRequirements (no external software required).
-- Examples, tests, and vignettes should not require internet access or non-standard hardware.
-- All user-facing (exported) functions are documented; internal helper functions are marked internal.
+## Test environments
 
-Contact
-- Maintainer: Wolfgang Wiedermann (wiedermannw@missouri.edu)
-- If you need additional details, test logs, or versions of R used for testing, please reach out via email.
+- Local: Windows 11, R release
+- Local: macOS Ventura, R release
+- win-builder: R release and R devel
+
+## Package details
+
+- Contains only R code; no compiled code and no `src/` directory.
+- No external `SystemRequirements`.
+- All examples, tests, and vignettes run without internet access or
+  non-standard hardware.
+- All exported functions are documented; internal helpers are marked
+  with `@keywords internal`.
+
+## Changes in this version
+
+See `NEWS.md` for the changelog.
+
+## Contact
+
+Maintainer: Wolfgang Wiedermann <wiedermannw@missouri.edu>
+Additional test logs or platform details are available on request.
