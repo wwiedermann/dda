@@ -1,25 +1,41 @@
 #' @title Direction Dependence Analysis: Variable Distributions
-#' @description \code{dda.vardist} evaluates patterns of asymmetry of variable
-#'              distributions for causally competing models
-#'              (\code{y ~ x} vs. \code{x ~ y}).
+#'
+#' @description \code{dda.vardist} evaluates patterns of asymmetry of
+#'   variable distributions for causally competing models (\code{y ~ x}
+#'   vs. \code{x ~ y}). \code{print} returns DDA test statistics
+#'   associated with \code{dda.vardist} objects.
+#'
 #' @name dda.vardist
 #'
-#' @param formula     Symbolic formula of the model to be tested or a \code{lm}object.
-#' @param pred        Variable name of the predictor which serves as the outcome in the alternative model.
-#' @param data        An optional data frame containing the variables in the
-#'                    model (by default variables are taken from the environment
-#'                    which \code{dda.vardist} is called from).
-#' @param B           Number of bootstrap samples.
-#' @param boot.type   A character indicating the type of bootstrap confidence intervals. Must be one of the two specifications c("perc", "bca"). boot.type = "perc" is the default.
-#' @param conf.level  Confidence level for bootstrap confidence intervals.
+#' @param formula    Symbolic formula of the model to be tested or an
+#'   \code{lm} object.
+#' @param pred       Variable name of the predictor which serves as the
+#'   outcome in the alternative model.
+#' @param data       An optional data frame containing the variables in
+#'   the model (by default variables are taken from the environment which
+#'   \code{dda.vardist} is called from).
+#' @param B          Number of bootstrap samples.
+#' @param boot.type  A character indicating the type of bootstrap
+#'   confidence intervals. Must be one of \code{c("perc", "bca")}.
+#'   \code{boot.type = "perc"} is the default.
+#' @param conf.level Confidence level for bootstrap confidence intervals.
+#' @param x          An object of class \code{dda.vardist} when using
+#'   \code{print}.
+#' @param ...        Additional arguments to be passed to the function.
 #'
-#' @returns An object of class \code{dda.vardist} containing the results of
-#'          direction dependence tests of variable distributions.
+#' @return An object of class \code{dda.vardist} containing the results
+#'   of direction dependence tests of variable distributions.
+#'
+#' @references
+#' Wiedermann, W., & von Eye, A. (2025). \emph{Direction Dependence
+#'   Analysis: Foundations and Statistical Methods}. Cambridge, UK:
+#'   Cambridge University Press.
+#'
+#' @seealso \code{\link{cdda.vardist}} for a conditional version.
 #'
 #' @examples
 #' set.seed(123)
 #' n <- 500
-#'
 #' x <- rchisq(n, df = 4) - 4
 #' e <- rchisq(n, df = 3) - 3
 #' y <- 0.5 * x + e
@@ -27,8 +43,8 @@
 #'
 #' result <- dda.vardist(y ~ x, pred = "x", data = d, B = 50)
 #'
-#' @references Wiedermann, W., & von Eye, A. (2025). \emph{Direction Dependence Analysis: Foundations and Statistical Methods}. Cambridge, UK: Cambridge University Press.
-#' @seealso \code{\link{cdda.vardist}} for a conditional version.
+#' print(result)
+#'
 #' @export
 #' @rdname dda.vardist
 dda.vardist <- function(formula,
@@ -187,17 +203,7 @@ dda.vardist <- function(formula,
 
 }
 
-#'
-#' @name print.dda.vardist
-#' @title Print Method for \code{dda.vardist} Objects
-#'
-#' @description \code{print} returns DDA test statistics associated with \code{dda.vardist} objects.
-#' @param x     An object of class \code{dda.vardist} when using \code{print}.
-#' @param ...   Additional arguments to be passed to the function.
-#'
-#' @examples print(result)
-#' @returns An object of class \code{dda.vardist}.
-#'
+
 #' @export
 #' @rdname dda.vardist
 #' @method print dda.vardist

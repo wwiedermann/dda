@@ -1,18 +1,3 @@
-#' @title Summary of \code{cdda.indep} Class Objects
-#' @description \code{summary} returns test statistics from the \code{cdda.indep} class object.
-#' @name summary.cdda.indep
-#'
-#' @param object          An object of class \code{cdda.indep} when using \code{summary}.
-#' @param hetero          A logical value indicating whether separate homoscedasticity tests should be returned when using \code{summary}, default is \code{FALSE}.
-#' @param hsic            A logical value indicating whether deparate HSIC tests should be returned when using \code{summary}, default is \code{TRUE}.
-#' @param hsic.diff       A logical value indicating whether HSIC difference statistics should be returned when using \code{summary}, default is \code{FALSE}.
-#' @param dcor            A logical value indicating whether separate Distance Correlation (dCor) tests should be returned when using \code{summary}, default is \code{TRUE}.
-#' @param dcor.diff       A logical value indicating whether dCor difference statistics should be returned when using \code{summary}, default is \code{FALSE}.
-#' @param mi.diff         A logical value indicating whether Mutual Information (MI) difference statistics should be returned when using \code{summary}, default is \code{FALSE}.
-#' @param ...             Additional arguments to be passed to the function.
-#'
-#' @examples summary(result, hetero = FALSE)
-#'
 #' @export
 #' @rdname cdda.indep
 #' @method summary cdda.indep

@@ -335,67 +335,62 @@ median_bandwidth <- function(x) {
 # hsic
 # ------------------------------------------------------------------------------
 
-#' Compute the Empirical HSIC
+#' @title Compute the Empirical HSIC
 #'
-#' @description Computes the empirical Hilbert-Schmidt Independence Criterion
-#'   (HSIC) between two random variables \eqn{X} and \eqn{Y} using the
-#'   biased V-statistic estimator (Gretton et al., 2008):
-#'   \deqn{
-#'     \widehat{\mathrm{HSIC}}(X, Y)
-#'     = \frac{1}{n^2}\operatorname{tr}(\widetilde{K}_X \widetilde{K}_Y).
-#'   }
-#'   This is algebraically identical to the \code{dHSIC} three-term formula
-#'   (Peters et al., 2022).  All kernel and centering work is done in C++.
+#' @description \code{hsic} computes the empirical Hilbert-Schmidt
+#'   Independence Criterion between two variables X and Y using the
+#'   biased V-statistic
+#'   \eqn{(1/n^2) \, \mathrm{tr}(\tilde{K}_X \tilde{K}_Y)}.
+#'   All kernel and centering computations are performed in C++.
 #'
-#' @param x A numeric vector (length \eqn{n}) or matrix (\eqn{n \times p}).
-#' @param y A numeric vector (length \eqn{n}) or matrix (\eqn{n \times q}).
-#' @param kernel_x Kernel for \eqn{X}: \code{"gaussian"} (default),
-#'   \code{"laplace"}, \code{"linear"}, or \code{"polynomial"}.
-#' @param kernel_y Kernel for \eqn{Y}.  Defaults to \code{kernel_x}.
-#' @param bandwidth_x Bandwidth for the \eqn{X} kernel.  \code{NULL} (default)
-#'   or \code{"median"} uses the median heuristic (\code{\link{median_bandwidth}}).
-#'   A strictly positive numeric is used directly as \eqn{\sigma^2} for the
-#'   Gaussian kernel \eqn{K(x,y) = \exp(-\|x-y\|^2 / (2\sigma^2))}, matching
-#'   the \pkg{dHSIC} parameterisation (Peters et al., 2022).
-#' @param bandwidth_y Bandwidth for the \eqn{Y} kernel.  Same options as
+#' @name hsic
+#'
+#' @param x           A numeric vector of length n or matrix (n x p).
+#' @param y           A numeric vector of length n or matrix (n x q).
+#' @param kernel_x    Kernel for X. One of \code{c("gaussian",
+#'   "laplace", "linear", "polynomial")}. Default is
+#'   \code{"gaussian"}.
+#' @param kernel_y    Kernel for Y. Defaults to \code{kernel_x}.
+#' @param bandwidth_x Bandwidth for the X kernel. \code{NULL} (default)
+#'   or \code{"median"} applies the median heuristic
+#'   (\code{\link{median_bandwidth}}). A strictly positive numeric value
+#'   is used directly as \eqn{\sigma^2} for the Gaussian kernel
+#'   \eqn{K(x,y) = \exp(-\|x-y\|^2 / (2\sigma^2))}.
+#' @param bandwidth_y Bandwidth for the Y kernel. Same options as
 #'   \code{bandwidth_x}.
-#' @param degree Integer degree for the polynomial kernel.  Default \code{2}.
-#' @param coef0 Constant for the polynomial kernel.  Default \code{1}.
-#'
-#' @return A single non-negative numeric: raw HSIC \eqn{= (1/n^2)\,\mathrm{tr}(\widetilde{K}_X \widetilde{K}_Y)}.
-#'   Zero (with a characteristic kernel) implies independence (Suzuki, 2025,
-#'   Proposition 12).
+#' @param degree      Integer degree for the polynomial kernel. Default
+#'   \code{2}.
+#' @param coef0       Constant term for the polynomial kernel. Default
+#'   \code{1}.
 #'
 #' @details
-#' \subsection{Kernel and bandwidth convention}{
-#'   The Gaussian kernel uses \eqn{K(x,y) = \exp(-\|x-y\|^2 / (2\sigma^2))}
-#'   where \code{bandwidth} = \eqn{\sigma^2}.  This matches the
-#'   \pkg{dHSIC} source (Peters et al., 2022).  With \code{bandwidth = 1}
-#'   both functions compute \eqn{\exp(-d^2/2)}.  The median heuristic sets
-#'   \eqn{\sigma^2 = \mathrm{median}\{\|x_i - x_j\|^2 : i \neq j\}},
-#'   also matching \pkg{dHSIC}.
-#' }
+#' The Gaussian kernel uses \eqn{K(x,y) = \exp(-\|x-y\|^2 / (2\sigma^2))}
+#' where \code{bandwidth} = \eqn{\sigma^2}. The median heuristic sets
+#' \eqn{\sigma^2} to the median of all strictly positive squared pairwise
+#' distances, matching the convention in the \pkg{dHSIC} package.
 #'
-#' @seealso \code{\link{hsic.test}}, \code{\link{median_bandwidth}}
+#' @return A single non-negative numeric value: the raw HSIC estimate
+#'   \eqn{(1/n^2) \, \mathrm{tr}(\tilde{K}_X \tilde{K}_Y)}. A value of
+#'   zero (with a characteristic kernel) implies independence.
 #'
 #' @references
 #' Gretton, A., Fukumizu, K., Teo, C. H., Song, L., Scholkopf, B., &
 #'   Smola, A. J. (2008). A kernel statistical test of independence.
 #'   \emph{Advances in Neural Information Processing Systems}, 20.
 #'
-#' Suzuki, T. (2025). \emph{Statistical Learning Theory}. Springer.
-#'   Propositions 12, 13, 15.
+#' Peters, J., Pfister, N., & Mooij, J. M. (2022). \emph{dHSIC:
+#'   Independence Testing via Hilbert Schmidt Independence Criterion}.
+#'   R package version 2.1.
+#'   \url{https://CRAN.R-project.org/package=dHSIC}
 #'
-#' Peters, J., Pfister, N., & Mooij, J. M. (2022). \emph{dHSIC: Independence
-#'   Testing via Hilbert Schmidt Independence Criterion}. R package version
-#'   2.1.
+#' @seealso \code{\link{hsic.test}}, \code{\link{median_bandwidth}}
 #'
 #' @examples
 #' set.seed(12)
 #' x <- rnorm(100)
-#' hsic(x, rnorm(100))             # near zero (independent)
-#' hsic(x, x + rnorm(100, sd=0.5)) # positive (dependent)
-#' hsic(x, rnorm(100), bandwidth_x = 1, bandwidth_y = 1)  # fixed bw, matches dHSIC
+#' hsic(x, rnorm(100))
+#' hsic(x, x + rnorm(100, sd = 0.5))
+#' hsic(x, rnorm(100), bandwidth_x = 1, bandwidth_y = 1)
 #'
 #' @export
 hsic <- function(x, y,
@@ -429,71 +424,85 @@ hsic <- function(x, y,
 # hsic.test
 # ------------------------------------------------------------------------------
 
-#' HSIC Independence Test
+#' @title HSIC Independence Test
 #'
-#' @description Tests whether \eqn{X \perp\!\!\!\perp Y} using HSIC.
-#'   The test statistic is \eqn{n \times \widehat{\mathrm{HSIC}}}, matching
-#'   the \code{dHSIC::dhsic.test()} convention (\code{stat = dHSIC * len}),
-#'   so printed statistics are directly comparable.
+#' @description \code{hsic.test} tests whether X and Y are independent
+#'   using the Hilbert-Schmidt Independence Criterion. The test statistic
+#'   is \eqn{n \times \widehat{\mathrm{HSIC}}}, labelled \code{"HSIC"},
+#'   and is consistent across all four inference methods.
 #'
-#'   Four null-distribution methods are available:
+#'   Available null-distribution methods:
 #'   \describe{
-#'     \item{\code{"gamma"}}{Exact Gamma approximation matching the
-#'       \pkg{dHSIC} source moment formula (Peters et al., 2022).  Fits a
-#'       \eqn{\Gamma(\alpha, \beta)} to the first two moments of the \eqn{n \times
-#'       \widehat{\mathrm{HSIC}}} null distribution, computed from the
-#'       \emph{uncentered} Gram matrices via sufficient statistics
-#'       \eqn{\hat{a}_j = n^{-2}\sum K_j},
-#'       \eqn{\hat{b}_j = n^{-2}\sum K_j^2},
-#'       \eqn{\hat{c}_j = n^{-3}\sum_i (\sum_k K_j(i,k))^2}.
-#'       Instantaneous; no replications required.}
-#'     \item{\code{"permutation"}}{Permutes indices of \eqn{x} in C++ (no R
-#'       loop).  Exact conditional level (Suzuki, 2025, Section 4.2).}
-#'     \item{\code{"eigenvalue"}}{asymptotic spectral mixture: under
-#'       \eqn{H_0}, \eqn{n^3\,\widehat{\mathrm{HSIC}} \xrightarrow{d}
-#'       \sum_{i,j}\lambda_{X,i}\lambda_{Y,j}\chi^2_1} (Zhang; Suzuki, 2025,
-#'       Proposition 16).  \code{B} Monte Carlo draws estimate the p-value.}
-#'     \item{\code{"bootstrap"}}{Independently resamples rows of \eqn{K_X}
-#'       and \eqn{K_Y} with replacement in C++ (Peters et al., 2022).}
+#'     \item{\code{"gamma"}}{Fits a Gamma distribution to the first two
+#'       null moments of HSIC analytically (Peters, Pfister & Mooij,
+#'       2022). No resampling required.}
+#'     \item{\code{"permutation"}}{Permutes the row index of X to
+#'       simulate the null distribution entirely in C++.}
+#'     \item{\code{"eigenvalue"}}{Derives the null distribution from the
+#'       eigenvalue spectrum of the centered kernel matrices (Zhang
+#'       method). More accurate in small samples; uses \code{B} Monte
+#'       Carlo draws. Reports \eqn{n \times \widehat{\mathrm{HSIC}}} with
+#'       p-value from the spectral null.}
+#'     \item{\code{"bootstrap"}}{Independently resamples rows of the
+#'       kernel matrices with replacement in C++ (Peters, Pfister &
+#'       Mooij, 2022).}
 #'   }
 #'
-#' @param x A numeric vector or matrix (\eqn{n \times p}).
-#' @param y A numeric vector or matrix (\eqn{n \times q}).
-#' @param method One of \code{"gamma"} (default), \code{"permutation"},
-#'   \code{"eigenvalue"}, \code{"bootstrap"}.
-#' @param kernel_x Kernel for \eqn{X}: \code{"gaussian"} (default),
-#'   \code{"laplace"}, \code{"linear"}, \code{"polynomial"}.
-#' @param kernel_y Kernel for \eqn{Y}.  Defaults to \code{kernel_x}.
-#' @param bandwidth_x Bandwidth (\eqn{\sigma^2}) for the \eqn{X} kernel.
-#'   \code{NULL} (default) uses the median heuristic.  See \code{\link{hsic}}.
-#' @param bandwidth_y Bandwidth for the \eqn{Y} kernel.
-#' @param degree Polynomial degree.  Default \code{2}.
-#' @param coef0 Polynomial constant.  Default \code{1}.
-#' @param B Permutation / bootstrap replications, or MC draws for
-#'   \code{"eigenvalue"}.  Ignored for \code{"gamma"}.  Default \code{1000}.
+#' @name hsic.test
 #'
-#' @return An object of class \code{"htest"}:
+#' @param x           A numeric vector of length n or matrix (n x p).
+#' @param y           A numeric vector of length n or matrix (n x q).
+#' @param method      Inference method for the null distribution. One of
+#'   \code{c("gamma", "permutation", "eigenvalue", "bootstrap")}.
+#'   Default is \code{"gamma"}.
+#' @param kernel_x    Kernel for X. One of \code{c("gaussian",
+#'   "laplace", "linear", "polynomial")}. Default is
+#'   \code{"gaussian"}.
+#' @param kernel_y    Kernel for Y. Defaults to \code{kernel_x}.
+#' @param bandwidth_x Bandwidth (\eqn{\sigma^2}) for the X kernel.
+#'   \code{NULL} (default) applies the median heuristic. A strictly
+#'   positive numeric value is used directly.
+#' @param bandwidth_y Bandwidth for the Y kernel. Same options as
+#'   \code{bandwidth_x}.
+#' @param degree      Integer degree for the polynomial kernel. Default
+#'   \code{2}.
+#' @param coef0       Constant term for the polynomial kernel. Default
+#'   \code{1}.
+#' @param B           Number of permutation or bootstrap replicates, or
+#'   Monte Carlo draws for \code{method = "eigenvalue"}. Ignored for
+#'   \code{method = "gamma"}. Default is \code{1000}.
+#'
+#' @details
+#' All four methods report \eqn{n \times \widehat{\mathrm{HSIC}}} as
+#' the test statistic. Permutation and bootstrap p-values use the
+#' Laplace correction
+#' \eqn{(\#\{T_b \geq T_{\mathrm{obs}}\} + 1) / (B + 1)}.
+#'
+#' @return An object of class \code{"htest"} with components:
 #'   \describe{
-#'     \item{\code{statistic}}{All methods report \eqn{n \times \widehat{\mathrm{HSIC}}},
-#'       labelled \code{"HSIC"}. The eigenvalue method derives its p-value from
-#'       the spectral null but uses the same statistic scale for consistency.}
-#'     \item{\code{p.value}}{Permutation and bootstrap use Laplace correction
-#'       \eqn{(\#\{T_b \geq T_{\mathrm{obs}}\} + 1)/(B + 1)}.}
-#'     \item{\code{bandwidths}}{Resolved \code{c(x, y)} bandwidths.}
+#'     \item{\code{statistic}}{The test statistic
+#'       \eqn{n \times \widehat{\mathrm{HSIC}}}, labelled
+#'       \code{"HSIC"}.}
+#'     \item{\code{p.value}}{P-value for the test of independence.}
+#'     \item{\code{bandwidths}}{Resolved bandwidths \code{c(x, y)}.}
 #'   }
+#'
+#' @references
+#' Gretton, A., Fukumizu, K., Teo, C. H., Song, L., Scholkopf, B., &
+#'   Smola, A. J. (2008). A kernel statistical test of independence.
+#'   \emph{Advances in Neural Information Processing Systems}, 20.
+#'
+#' Peters, J., Pfister, N., & Mooij, J. M. (2022). \emph{dHSIC:
+#'   Independence Testing via Hilbert Schmidt Independence Criterion}.
+#'   R package version 2.1.
+#'   \url{https://CRAN.R-project.org/package=dHSIC}
 #'
 #' @seealso \code{\link{hsic}}, \code{\link{median_bandwidth}}
 #'
-#' @references
-#' Gretton et al. (2008). A kernel statistical test of independence.
-#'   \emph{NIPS}, 20.
-#'
-#' Peters, Pfister & Mooij (2022). \emph{dHSIC} R package v2.1.
-#'
-#' Zhang (eigenvalue null; see also Suzuki 2025 Stat. Learning Theory).
-#'
 #' @examples
-#' set.seed(7); n <- 80; x <- rnorm(n)
+#' set.seed(7)
+#' n <- 80
+#' x <- rnorm(n)
 #' hsic.test(x, rnorm(n), method = "gamma")
 #' hsic.test(x, rnorm(n), method = "permutation", B = 499)
 #' hsic.test(x, x + rnorm(n), method = "permutation", B = 499)
