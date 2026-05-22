@@ -1,87 +1,109 @@
-#' @title Conditional Direction Dependence Analysis: Independence Properties
-#' @description \code{cdda.indep} evaluates asymmetries of predictor-error independence of competing
-#'              conditional models (\code{y ~ x * m} vs. \code{x ~ y * m}
-#'              with \code{m} being a continuous or categorical moderator).
+#' @title Conditional Direction Dependence Analysis: Independence
+#'   Properties
+#'
+#' @description \code{cdda.indep} evaluates asymmetries of
+#'   predictor-error independence of competing conditional models
+#'   (\code{y ~ x * m} vs. \code{x ~ y * m} with \code{m} being a
+#'   continuous or categorical moderator). \code{print} returns the
+#'   output of standard linear model coefficients for causally competing
+#'   target and alternative models.
 #'
 #' @name cdda.indep
 #'
-#' @param formula     Symbolic formula of the model to be tested or an \code{lm} object.
-#' @param pred        A character indicating the variable name of the predictor which serves as the outcome in the alternative model.
-#' @param mod         A character indicating the variable name of the moderator.
-#' @param modval      Characters or a numeric sequence specifying the moderator
-#'                    values used in post-hoc probing. Possible characters include
-#'                    \code{c("mean", "median", "JN")}.\code{modval = "mean"}
-#'                    tests the interaction effect at the moderator values
-#'                    \code{M – 1SD}, \code{M}, and \code{M + 1SD};
-#'                    \code{modval = "median"} uses \code{Q1}, \code{Md},
-#'                    and \code{Q3}. The Johnson-Neyman approach is applied
-#'                    when \code{modval = "JN"} with conditional effects being
-#'                    evaluated at the boundary values of the significance
-#'                    regions. When a numeric sequence is specified,the
-#'                    pick-a-point approach is used for the selected numeric values.
-#' @param data        A required data frame containing the variables in the model.
-#' @param hetero      A logical value indicating whether separate homoscedasticity tests (i.e., standard and robust Breusch-Pagan tests) should be computed.
-#' @param diff        A logical value indicating whether differences in HSIC, dCor, and MI values should be computed. Bootstrap confidence intervals are computed using B bootstrap samples.
-#' @param nlfun Determines handling of non-linear correlation tests depending on the function used:
-#' \itemize{
-#'   \item \strong{For \code{cdda.indep}:} Either a numeric value or a function of .Primitive type used for non-linear correlation tests. When numeric, the value is used in a power transformation.
-#'   \item \strong{For \code{summary}:} A logical value indicating whether non-linear correlation tests should be returned in the output. Default is \code{FALSE}.
-#' }
-#' @param hsic.method A character indicating the inference method for the Hilbert-Schmidt Independence Criterion. Must be one of the four specifications \code{c("gamma", "eigenvalue", "bootstrap", "permutation")}.\code{hsic.method = "gamma"} is the default.
-#' @param B           Number of permutations for separate dCor tests and number of resamples when \code{hsic.method = c("bootstrap", "permutation")} or \code{diff = TRUE}.
-#' @param boot.type   A character indicating the type of bootstrap confidence intervals. Must be one of the two specifications \code{c("perc", "bca")}. \code{boot.type = "perc"} is the default.
-#' @param conf.level  Confidence level for bootstrap confidence intervals.
-#' @param parallelize A logical value indicating whether bootstrapping is performed on multiple cores. Only used if \code{diff = TRUE}.
-#' @param cores       A numeric value indicating the number of cores. Only used if \code{parallelize = TRUE}.
+#' @param formula     Symbolic formula of the model to be tested or an
+#'   \code{lm} object.
+#' @param pred        A character indicating the variable name of the
+#'   predictor which serves as the outcome in the alternative model.
+#' @param mod         A character indicating the variable name of the
+#'   moderator.
+#' @param modval      Characters or a numeric sequence specifying the
+#'   moderator values used in post-hoc probing. Possible characters
+#'   include \code{c("mean", "median", "JN")}. \code{modval = "mean"}
+#'   tests the interaction effect at the moderator values M - 1SD, M,
+#'   and M + 1SD; \code{modval = "median"} uses Q1, Md, and Q3. The
+#'   Johnson-Neyman approach is applied when \code{modval = "JN"} with
+#'   conditional effects being evaluated at the boundary values of the
+#'   significance regions. When a numeric sequence is specified, the
+#'   pick-a-point approach is used for the selected numeric values.
+#' @param data        A required data frame containing the variables in
+#'   the model.
+#' @param hetero      A logical value indicating whether separate
+#'   homoscedasticity tests (i.e., standard and robust Breusch-Pagan
+#'   tests) should be computed.
+#' @param diff        A logical value indicating whether differences in
+#'   HSIC, dCor, and MI values should be computed. Bootstrap confidence
+#'   intervals are computed using \code{B} bootstrap samples.
+#' @param nlfun       Determines handling of non-linear correlation tests
+#'   depending on the function used:
+#'   \itemize{
+#'     \item \strong{For \code{cdda.indep}:} Either a numeric value or a
+#'       function of \code{.Primitive} type. When numeric, the value is
+#'       used in a power transformation.
+#'     \item \strong{For \code{summary}:} A logical value indicating
+#'       whether non-linear correlation tests should be returned in the
+#'       output. Default is \code{FALSE}.
+#'   }
+#' @param hsic.method A character indicating the inference method for
+#'   the Hilbert-Schmidt Independence Criterion. Must be one of
+#'   \code{c("gamma", "eigenvalue", "bootstrap", "permutation")}.
+#'   \code{hsic.method = "gamma"} is the default.
+#' @param B           Number of permutation replicates for separate dCor
+#'   tests, and number of resamples when
+#'   \code{hsic.method = c("bootstrap", "permutation")} or
+#'   \code{diff = TRUE}.
+#' @param boot.type   A character indicating the type of bootstrap
+#'   confidence intervals. Must be one of \code{c("perc", "bca")}.
+#'   \code{boot.type = "perc"} is the default.
+#' @param conf.level  Confidence level for bootstrap confidence
+#'   intervals.
+#' @param parallelize A logical value indicating whether bootstrapping
+#'   is performed on multiple cores. Only used if \code{diff = TRUE}.
+#' @param cores       A numeric value indicating the number of cores.
+#'   Only used if \code{parallelize = TRUE}.
+#' @param x           An object of class \code{cdda.indep} when using
+#'   \code{print}.
+#' @param ...         Additional arguments to be passed to the function.
 #'
-#' @returns An object of class \code{dda.indep} containing the results of
-#'          independence tests of Conditional Direction Dependence Analysis.
+#' @return An object of class \code{cdda.indep} containing the results
+#'   of independence tests of Conditional Direction Dependence Analysis.
+#'
+#' @references
+#' Wiedermann, W., & von Eye, A. (2025). \emph{Direction Dependence
+#'   Analysis: Foundations and Statistical Methods}. Cambridge, UK:
+#'   Cambridge University Press.
+#'
+#' @seealso \code{\link{dda.indep}} for an unconditional version.
 #'
 #' @examples
 #' set.seed(321)
 #' n <- 700
 #'
 #' ## --- generate moderator
-#'
 #' z <- sort(rnorm(n))
 #' z1 <- z[z <= 0]
 #' z2 <- z[z > 0]
 #'
 #' ## --- x -> y when z <= 0
-#'
 #' x1 <- rchisq(length(z1), df = 4) - 4
 #' e1 <- rchisq(length(z1), df = 3) - 3
 #' y1 <- 0.5 * x1 + e1
 #'
-#' ## --- y -> x when m z > 0
-#'
+#' ## --- y -> x when z > 0
 #' y2 <- rchisq(length(z2), df = 4) - 4
 #' e2 <- rchisq(length(z2), df = 3) - 3
 #' x2 <- 0.25 * y2 + e2
 #'
 #' y <- c(y1, y2); x <- c(x1, x2)
-#'
 #' d <- data.frame(x, y, z)
-#'
 #' m <- lm(y ~ x * z, data = d)
 #'
-#'
 #' result <- cdda.indep(m,
-#'                      pred = "x",
-#'                      mod = "z",
-#'                      modval = c(-1, 1),
-#'                      data = d,
-#'                      hetero = TRUE,
-#'                      diff = TRUE,
-#'                      parallelize = TRUE,
-#'                      cores = 2,
-#'                      nlfun = 2,
-#'                      B = 2)
-#' # Note: Only 2 bootstrap samples are created here to lower computation time
+#'   pred = "x", mod = "z", modval = c(-1, 1), data = d,
+#'   hetero = TRUE, diff = TRUE, parallelize = TRUE, cores = 2,
+#'   nlfun = 2, B = 50)
+#' # Note: Use larger B in practice; B = 50 reduces computation time here.
 #'
-#'
-#' @references Wiedermann, W., & von Eye, A. (2025). \emph{Direction Dependence Analysis: Foundations and Statistical Methods}. Cambridge, UK: Cambridge University Press.
-#' @seealso \code{\link{dda.indep}} for an unconditional version.
+#' print(result)
 #'
 #' @export
 #' @rdname cdda.indep
@@ -350,14 +372,6 @@ cdda.indep <- function(
   return(cdda.output)
 }
 
-#' @title Print Method for \code{cdda.indep} Objects.
-#' @description \code{print} returns the output of standard linear model coefficients for competing target and alternative models.
-#' @param x     An object of class \code{cdda.indep} when using \code{print} or \code{plot}.
-#' @param ...   Additional arguments to be passed to the function.
-#'
-#' @examples print(result)
-#'
-#' @returns An object of class \code{cdda.indep} with competing model coefficients.
 #' @export
 #' @rdname cdda.indep
 #' @method print cdda.indep

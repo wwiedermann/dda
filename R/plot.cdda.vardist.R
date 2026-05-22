@@ -1,26 +1,13 @@
-#' @title Plots of \code{cdda.vardist} Class Objects
-#' @description \code{plot} returns graphs for results of \code{cdda.vardist}.
-#'              
-#' @name plot.cdda.vardist
-#'
-#' @param x      An object of class \code{cdda.vardist} when using \code{print} or \code{plot}.
-#' @param stat   A character indicating the statistic to be plotted, default is
-#'               \code{"rhs"}, with options \code{c("coskew", "cokurt", "rhs", "rcc", "rtanh")}.
-#' @param ylim   A numeric vector of length 2 indicating the y-axis limits. If \code{NULL}, the function will set the limits automatically.
-#' @param ...    Additional arguments to be passed to the function.
-#'
-#' @examples plot(result, stat = "rtanh", ylim = c(-0.05, 0.05))
-#'
 #' @export
 #' @rdname cdda.vardist
 #' @method plot cdda.vardist
-plot.cdda.vardist <- function(x, 
+plot.cdda.vardist <- function(x,
                               stat = NULL,
                               ylim =  NULL,
                               ...
                               ){
-  oldpar <- par(no.readonly = TRUE) 
-  on.exit(par(oldpar)) 
+  oldpar <- par(no.readonly = TRUE)
+  on.exit(par(oldpar))
 
   if(is.null(stat)){
     stop("stat argument must be specified. as 'rhs', 'coskew', 'cokurt', 'rcc', or 'rtanh'")
