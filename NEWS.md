@@ -1,4 +1,12 @@
-# dda 0.1.1
+# dda 0.1.2
+
+## dda 0.1.2
+
+---
+
+### HSIC function added
+
+- Added `hsic` function to compute the Hilbert-Schmidt Independence Criterion (HSIC) for two variables, with options for different kernel types and methods for estimating the null distribution.
 
 ## dda 0.1.1
 
