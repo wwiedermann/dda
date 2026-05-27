@@ -6,7 +6,8 @@
 \alias{print.cdda.vardist}
 \alias{plot.cdda.vardist}
 \alias{summary.cdda.vardist}
-\title{Conditional Directional Dependence Analysis: Variable Distributions}
+\title{Conditional Direction Dependence Analysis: Variable
+  Distributions}
 \usage{
 cdda.vardist(
   formula,
@@ -15,7 +16,7 @@ cdda.vardist(
   data = list(),
   modval = NULL,
   B = 200,
-  boot.type = "perc",
+  boot.type = "bca",
   conf.level = 0.95
 )
 
@@ -26,108 +27,119 @@ cdda.vardist(
 \method{summary}{cdda.vardist}(object, skew = TRUE, coskew = FALSE, kurt = TRUE, cokurt = FALSE, ...)
 }
 \arguments{
-\item{formula}{Symbolic formula of the model to be tested or a \code{lm} object}
+\item{formula}{Symbolic formula of the model to be tested or an
+\code{lm} object.}
 
-\item{pred}{A character indicating the variable name of the predictor 
-which serves as the outcome in the alternative model.}
+\item{pred}{A character indicating the variable name of the
+predictor which serves as the outcome in the alternative model.}
 
-\item{mod}{A character indicating the variable name of the moderator.}
+\item{mod}{A character indicating the variable name of the
+moderator.}
 
-\item{data}{A required data frame containing the variables in the model.}
+\item{data}{A required data frame containing the variables in
+the model.}
 
-\item{modval}{Characters or a numeric sequence specifying the moderator
-values used in post-hoc probing. Possible characters
+\item{modval}{Characters or a numeric sequence specifying the
+moderator values used in post-hoc probing. Possible characters
 include \code{c("mean", "median", "JN")}. \code{modval = "mean"}
-tests the interaction effect at the moderator values
-\code{M - 1SD}, \code{M}, and \code{M + 1SD};
-\code{modval = "median"} uses \code{Q1}, \code{Md},
-and \code{Q3}. The Johnson-Neyman approach is applied
-when \code{modval = "JN"} with conditional effects being
-evaluated at the boundary values of the significance
-regions. When a numeric sequence is specified, the
+tests the interaction effect at the moderator values M - 1SD, M,
+and M + 1SD; \code{modval = "median"} uses Q1, Md, and Q3. The
+Johnson-Neyman approach is applied when \code{modval = "JN"} with
+conditional effects being evaluated at the boundary values of the
+significance regions. When a numeric sequence is specified, the
 pick-a-point approach is used for the selected numeric values.}
 
 \item{B}{Number of bootstrap samples.}
 
-\item{boot.type}{A character indicating the type of bootstrap confidence intervals. Must be one of the two values \code{c("perc", "bca")}. \code{boot.type = "bca"} is the default.}
+\item{boot.type}{A character indicating the type of bootstrap
+confidence intervals. Must be one of \code{c("perc", "bca")}.
+\code{boot.type = "bca"} is the default.}
 
-\item{conf.level}{Confidence level for bootstrap confidence intervals.}
+\item{conf.level}{Confidence level for bootstrap confidence
+intervals.}
 
-\item{x}{An object of class \code{cdda.vardist} when using \code{print} or \code{plot}.}
+\item{x}{An object of class \code{cdda.vardist} when using
+\code{print} or \code{plot}.}
 
 \item{...}{Additional arguments to be passed to the function.}
 
-\item{stat}{A character indicating the statistic to be plotted, default is
-\code{"rhs"}, with options \code{c("coskew", "cokurt", "rhs", "rcc", "rtanh")}.}
+\item{stat}{A character indicating the statistic to be plotted.
+Default is \code{"rhs"}, with options
+\code{c("coskew", "cokurt", "rhs", "rcc", "rtanh")}.}
 
-\item{ylim}{A numeric vector of length 2 indicating the y-axis limits. If \code{NULL}, the function will set the limits automatically.}
+\item{ylim}{A numeric vector of length 2 indicating the y-axis
+limits for \code{plot}. If \code{NULL}, limits are set
+automatically.}
 
-\item{object}{An object of class \code{cdda.vardist} when using \code{summary}.}
+\item{object}{An object of class \code{cdda.vardist} when using
+\code{summary}.}
 
-\item{skew}{A logical value indicating whether skewness differences and separate D'Agostino skewness tests should be returned when using \code{summary}, default is \code{TRUE}.}
+\item{skew}{A logical value indicating whether skewness
+differences and separate D'Agostino skewness tests should be
+returned when using \code{summary}. Default is \code{TRUE}.}
 
-\item{coskew}{A logical value indicating whether co-skewness differences should be returned when using \code{summary}, default is \code{FALSE}.}
+\item{coskew}{A logical value indicating whether co-skewness
+differences should be returned when using \code{summary}. Default
+is \code{FALSE}.}
 
-\item{kurt}{A logical value indicating whether excess kurtosis differences and Anscombe-Glynn kurtosis tests should be returned when using \code{summary}, default is \code{TRUE}.}
+\item{kurt}{A logical value indicating whether excess kurtosis
+differences and Anscombe-Glynn kurtosis tests should be returned
+when using \code{summary}. Default is \code{TRUE}.}
 
-\item{cokurt}{A logical value indicating whether co-kurtosis differences should be returned when using \code{summary}, default is \code{FALSE}.}
+\item{cokurt}{A logical value indicating whether co-kurtosis
+differences should be returned when using \code{summary}. Default
+is \code{FALSE}.}
 }
 \value{
-An object of class \code{cdda.vardist} containing the results of  
-         conditional direction dependence tests of variable distributions.
+An object of class \code{cdda.vardist} containing the results
+  of conditional direction dependence tests of variable
+  distributions.
 }
 \description{
-\code{cdda.vardist} evaluates variable distributions of competing 
-             conditional models (\code{y ~ x * m} vs.\code{x ~ y * m} with \code{m}
-             being a continuous or categorical moderator).
-
-\code{print} returns the output of standard linear model coefficients
-             for competing target and alternative models.
-
-\code{plot} returns graphs for results of \code{cdda.vardist}.
-
-\code{summary} returns test statistics from the \code{cdda.vardist} class object.
+\code{cdda.vardist} evaluates variable distributions of
+  competing conditional models (\code{y ~ x * m} vs.
+  \code{x ~ y * m} with \code{m} being a continuous or categorical
+  moderator). \code{print} returns the output of standard linear
+  model coefficients for causally competing target and alternative
+  models. \code{plot} returns graphs of \code{cdda.vardist} results.
+  \code{summary} returns test statistics from the
+  \code{cdda.vardist} class object.
 }
 \examples{
 set.seed(321)
 n <- 700
 
 ## --- generate moderator
-
 z <- sort(rnorm(n))
 z1 <- z[z <= 0]
 z2 <- z[z > 0]
 
 ## --- x -> y when z <= 0
-
 x1 <- rchisq(length(z1), df = 4) - 4
 e1 <- rchisq(length(z1), df = 3) - 3
 y1 <- 0.5 * x1 + e1
 
-## --- y -> x when m z > 0
-
+## --- y -> x when z > 0
 y2 <- rchisq(length(z2), df = 4) - 4
 e2 <- rchisq(length(z2), df = 3) - 3
 x2 <- 0.25 * y2 + e2
 
 y <- c(y1, y2); x <- c(x1, x2)
-
 d <- data.frame(x, y, z)
-
 m <- lm(y ~ x * z, data = d)
 
 result <- cdda.vardist(m, pred = "x", mod = "z", B = 50,
-                      modval = c(-1, 1), data = d)
+  modval = c(-1, 1), data = d)
 
 print(result)
-
 plot(result, stat = "rtanh", ylim = c(-0.05, 0.05))
-
 summary(result, skew = FALSE, kurt = FALSE, coskew = TRUE)
 
 }
 \references{
-Wiedermann, W., & von Eye, A. (2025). \emph{Direction Dependence Analysis: Foundations and Statistical Methods}. Cambridge, UK: Cambridge University Press.
+Wiedermann, W., & von Eye, A. (2025). \emph{Direction Dependence
+  Analysis: Foundations and Statistical Methods}. Cambridge, UK:
+  Cambridge University Press.
 }
 \seealso{
 \code{\link{dda.vardist}} for an unconditional version.

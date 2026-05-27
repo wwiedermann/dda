@@ -6,7 +6,9 @@
 #'   (\code{y ~ x * m} vs. \code{x ~ y * m} with \code{m} being a
 #'   continuous or categorical moderator). \code{print} returns the
 #'   output of standard linear model coefficients for causally competing
-#'   target and alternative models.
+#'   target and alternative models. \code{plot} returns graphs of
+#'   \code{cdda.indep} results. \code{summary} returns test statistics
+#'   from the \code{cdda.indep} class object.
 #'
 #' @name cdda.indep
 #'
@@ -29,7 +31,9 @@
 #'   the model.
 #' @param hetero      A logical value indicating whether separate
 #'   homoscedasticity tests (i.e., standard and robust Breusch-Pagan
-#'   tests) should be computed.
+#'   tests) should be computed. When used in \code{summary}, a logical
+#'   value indicating whether homoscedasticity test results should be
+#'   returned in the output; default is \code{FALSE}.
 #' @param diff        A logical value indicating whether differences in
 #'   HSIC, dCor, and MI values should be computed. Bootstrap confidence
 #'   intervals are computed using \code{B} bootstrap samples.
@@ -61,11 +65,35 @@
 #' @param cores       A numeric value indicating the number of cores.
 #'   Only used if \code{parallelize = TRUE}.
 #' @param x           An object of class \code{cdda.indep} when using
-#'   \code{print}.
+#'   \code{print} or \code{plot}.
+#' @param stat        A character indicating the CDDA statistic to be
+#'   plotted. Must be one of
+#'   \code{c("hsic.diff", "dcor.diff", "mi.diff")}.
+#' @param ylim        A numeric vector of length 2 indicating the y-axis
+#'   limits for \code{plot}. If \code{NULL}, limits are set
+#'   automatically.
+#' @param object      An object of class \code{cdda.indep} when using
+#'   \code{summary}.
+#' @param hsic        A logical value indicating whether separate HSIC
+#'   tests should be returned in \code{summary} output. Default is
+#'   \code{TRUE}.
+#' @param hsic.diff   A logical value indicating whether HSIC difference
+#'   statistics should be returned in \code{summary} output. Default is
+#'   \code{FALSE}.
+#' @param dcor        A logical value indicating whether separate
+#'   Distance Correlation (dCor) tests should be returned in
+#'   \code{summary} output. Default is \code{TRUE}.
+#' @param dcor.diff   A logical value indicating whether dCor difference
+#'   statistics should be returned in \code{summary} output. Default is
+#'   \code{FALSE}.
+#' @param mi.diff     A logical value indicating whether Mutual
+#'   Information (MI) difference statistics should be returned in
+#'   \code{summary} output. Default is \code{FALSE}.
 #' @param ...         Additional arguments to be passed to the function.
 #'
-#' @return An object of class \code{cdda.indep} containing the results
-#'   of independence tests of Conditional Direction Dependence Analysis.
+#' @return A list of class \code{cdda.indep} containing the results of
+#'   independence tests of Conditional Direction Dependence Analysis for
+#'   pre-specified moderator values.
 #'
 #' @references
 #' Wiedermann, W., & von Eye, A. (2025). \emph{Direction Dependence
@@ -99,11 +127,13 @@
 #'
 #' result <- cdda.indep(m,
 #'   pred = "x", mod = "z", modval = c(-1, 1), data = d,
-#'   hetero = TRUE, diff = TRUE, parallelize = TRUE, cores = 2,
+#'   hetero = TRUE, diff = TRUE, parallelize = FALSE, cores = 2,
 #'   nlfun = 2, B = 50)
 #' # Note: Use larger B in practice; B = 50 reduces computation time here.
 #'
 #' print(result)
+#' plot(result, stat = "dcor.diff")
+#' summary(result, hetero = FALSE)
 #'
 #' @export
 #' @rdname cdda.indep

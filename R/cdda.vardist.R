@@ -4,10 +4,11 @@
 #' @description \code{cdda.vardist} evaluates variable distributions of
 #'   competing conditional models (\code{y ~ x * m} vs.
 #'   \code{x ~ y * m} with \code{m} being a continuous or categorical
-#'   moderator). \code{print} returns standard linear model coefficients
-#'   for causally competing target and alternative models. \code{plot}
-#'   returns graphs of \code{cdda.vardist} results. \code{summary}
-#'   returns test statistics from the \code{cdda.vardist} class object.
+#'   moderator). \code{print} returns the output of standard linear
+#'   model coefficients for causally competing target and alternative
+#'   models. \code{plot} returns graphs of \code{cdda.vardist} results.
+#'   \code{summary} returns test statistics from the
+#'   \code{cdda.vardist} class object.
 #'
 #' @name cdda.vardist
 #'
@@ -32,15 +33,16 @@
 #' @param boot.type  A character indicating the type of bootstrap
 #'   confidence intervals. Must be one of \code{c("perc", "bca")}.
 #'   \code{boot.type = "bca"} is the default.
-#' @param conf.level Confidence level for bootstrap confidence intervals.
+#' @param conf.level Confidence level for bootstrap confidence
+#'   intervals.
 #' @param x          An object of class \code{cdda.vardist} when using
 #'   \code{print} or \code{plot}.
-#' @param ...        Additional arguments to be passed to the function.
 #' @param stat       A character indicating the statistic to be plotted.
-#'   Default is \code{"rhs"} with options
+#'   Default is \code{"rhs"}, with options
 #'   \code{c("coskew", "cokurt", "rhs", "rcc", "rtanh")}.
 #' @param ylim       A numeric vector of length 2 indicating the y-axis
-#'   limits. If \code{NULL}, the function sets the limits automatically.
+#'   limits for \code{plot}. If \code{NULL}, limits are set
+#'   automatically.
 #' @param object     An object of class \code{cdda.vardist} when using
 #'   \code{summary}.
 #' @param skew       A logical value indicating whether skewness
@@ -55,9 +57,11 @@
 #' @param cokurt     A logical value indicating whether co-kurtosis
 #'   differences should be returned when using \code{summary}. Default
 #'   is \code{FALSE}.
+#' @param ...        Additional arguments to be passed to the function.
 #'
 #' @return An object of class \code{cdda.vardist} containing the results
-#'   of conditional direction dependence tests of variable distributions.
+#'   of conditional direction dependence tests of variable
+#'   distributions.
 #'
 #' @references
 #' Wiedermann, W., & von Eye, A. (2025). \emph{Direction Dependence
@@ -104,7 +108,7 @@ cdda.vardist <- function(formula,
                          data = list(),
                          modval = NULL,
                          B = 200,
-                         boot.type = "perc",
+                         boot.type = "bca",
                          conf.level = 0.95
                         ){
 
