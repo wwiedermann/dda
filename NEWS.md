@@ -4,9 +4,10 @@
 
 ---
 
-### HSIC function added
-
-- Added `hsic` function to compute the Hilbert-Schmidt Independence Criterion (HSIC) for two variables, with options for different kernel types and methods for estimating the null distribution.
+### New Features
+- **HSIC Independence Tests**: Added `hsic()` to compute the empirical Hilbert-Schmidt Independence Criterion with flexible kernel selection (Gaussian, Laplace, linear, polynomial).
+- **HSIC Inference Methods**: Added `hsic.test()` with four null-distribution methods: gamma approximation, permutation, eigenvalue (spectral), and bootstrap. Enables kernel-based independence testing integrated with DDA workflows.
+- **Bandwidth Selection**: Added `median_bandwidth()` utility for automated kernel bandwidth selection using the median heuristic, matching dHSIC conventions.
 
 ## dda 0.1.1
 
