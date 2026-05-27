@@ -6,8 +6,7 @@
 \alias{print.cdda.indep}
 \alias{plot.cdda.indep}
 \alias{summary.cdda.indep}
-\title{Conditional Direction Dependence Analysis: Independence
-  Properties}
+\title{Conditional Direction Dependence Analysis: Independence Properties}
 \usage{
 cdda.indep(
   formula = NULL,

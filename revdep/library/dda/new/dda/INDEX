@@ -1,0 +1,12 @@
+cdda.indep              Conditional Direction Dependence Analysis:
+                        Independence Properties
+cdda.vardist            Conditional Direction Dependence Analysis:
+                        Variable Distributions
+dda.indep               Direction Dependence Analysis: Independence
+                        Properties
+dda.resdist             Direction Dependence Analysis: Residual
+                        Distributions
+dda.vardist             Direction Dependence Analysis: Variable
+                        Distributions
+hsic                    Compute the Empirical HSIC
+hsic.test               HSIC Independence Test

@@ -1,0 +1,5 @@
+dHSIC-package           Independence Testing via Hilbert Schmidt
+                        Independence Criterion
+dhsic                   d-variable Hilbert Schmidt independence
+                        criterion - dHSIC
+dhsic.test              Independence test based on dHSIC
