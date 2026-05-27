@@ -64,7 +64,7 @@
 #'
 #' result <- dda.indep(y ~ x, pred = "x", data = d,
 #'             nlfun = 2, B = 50, hetero = TRUE, diff = TRUE,
-#'             parallelize = TRUE, cores = 2)
+#'             parallelize = FALSE, cores = 2)
 #'
 #' print(result)
 #'
@@ -108,7 +108,7 @@ dda.indep <- function(
       rx     <- dat[,3] # purified predictor
       err.yx <- dat[,4] # errors of target model
 
-      diff.hsic <- hsic.test(err.xy, ry, method = "gamma")$statistic - hsic.test(err.yx, rx, method = "gamma")$statistic
+      diff.hsic <- hsic.test(err.xy, ry, method = "gamma")$statistic - dda::hsic.test(err.yx, rx, method = "gamma")$statistic
       diff.dcor <- energy::dcor.test(err.xy, ry)$statistic - energy::dcor.test(err.yx, rx)$statistic
       diff.mi <- (max.entropy(ry) + max.entropy(err.xy)) - (max.entropy(rx) + max.entropy(err.yx))
       c(diff.hsic, diff.dcor, diff.mi)

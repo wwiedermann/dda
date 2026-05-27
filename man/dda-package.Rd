@@ -25,4 +25,4 @@ Authors:
 }
 
 }
-\keyword{internal}
+\keyword{package}

@@ -6,7 +6,8 @@
 \alias{print.cdda.indep}
 \alias{plot.cdda.indep}
 \alias{summary.cdda.indep}
-\title{Conditional Direction Dependence Analysis: Independence Properties}
+\title{Conditional Direction Dependence Analysis: Independence
+  Properties}
 \usage{
 cdda.indep(
   formula = NULL,
@@ -43,137 +44,161 @@ cdda.indep(
 )
 }
 \arguments{
-\item{formula}{Symbolic formula of the model to be tested or an \code{lm} object.}
+\item{formula}{Symbolic formula of the model to be tested or an
+\code{lm} object.}
 
-\item{pred}{A character indicating the variable name of the predictor which serves as the outcome in the alternative model.}
+\item{pred}{A character indicating the variable name of the
+predictor which serves as the outcome in the alternative model.}
 
-\item{mod}{A character indicating the variable name of the moderator.}
+\item{mod}{A character indicating the variable name of the
+moderator.}
 
-\item{modval}{Characters or a numeric sequence specifying the moderator
-values used in post-hoc probing. Possible characters include
-\code{c("mean", "median", "JN")}.\code{modval = "mean"}
-tests the interaction effect at the moderator values
-\code{M – 1SD}, \code{M}, and \code{M + 1SD};
-\code{modval = "median"} uses \code{Q1}, \code{Md},
-and \code{Q3}. The Johnson-Neyman approach is applied
-when \code{modval = "JN"} with conditional effects being
-evaluated at the boundary values of the significance
-regions. When a numeric sequence is specified,the
+\item{modval}{Characters or a numeric sequence specifying the
+moderator values used in post-hoc probing. Possible characters
+include \code{c("mean", "median", "JN")}. \code{modval = "mean"}
+tests the interaction effect at the moderator values M - 1SD, M,
+and M + 1SD; \code{modval = "median"} uses Q1, Md, and Q3. The
+Johnson-Neyman approach is applied when \code{modval = "JN"} with
+conditional effects being evaluated at the boundary values of the
+significance regions. When a numeric sequence is specified, the
 pick-a-point approach is used for the selected numeric values.}
 
-\item{data}{A required data frame containing the variables in the model.}
+\item{data}{A required data frame containing the variables in
+the model.}
 
-\item{hetero}{A logical value indicating whether separate homoscedasticity tests should be returned when using \code{summary}, default is \code{FALSE}.}
+\item{hetero}{A logical value indicating whether separate
+homoscedasticity tests (i.e., standard and robust Breusch-Pagan
+tests) should be computed. When used in \code{summary}, a logical
+value indicating whether homoscedasticity test results should be
+returned in the output; default is \code{FALSE}.}
 
-\item{diff}{A logical value indicating whether differences in HSIC, dCor, and MI values should be computed. Bootstrap confidence intervals are computed using B bootstrap samples.}
+\item{diff}{A logical value indicating whether differences in
+HSIC, dCor, and MI values should be computed. Bootstrap confidence
+intervals are computed using \code{B} bootstrap samples.}
 
-\item{nlfun}{Determines handling of non-linear correlation tests depending on the function used:
+\item{nlfun}{Determines handling of non-linear correlation tests
+depending on the function used:
 \itemize{
-  \item \strong{For \code{cdda.indep}:} Either a numeric value or a function of .Primitive type used for non-linear correlation tests. When numeric, the value is used in a power transformation.
-  \item \strong{For \code{summary}:} A logical value indicating whether non-linear correlation tests should be returned in the output. Default is \code{FALSE}.
+  \item \strong{For \code{cdda.indep}:} Either a numeric value or a
+    function of \code{.Primitive} type. When numeric, the value is
+    used in a power transformation.
+  \item \strong{For \code{summary}:} A logical value indicating
+    whether non-linear correlation tests should be returned in the
+    output. Default is \code{FALSE}.
 }}
 
-\item{hsic.method}{A character indicating the inference method for the Hilbert-Schmidt Independence Criterion. Must be one of the four specifications \code{c("gamma", "eigenvalue", "boot", "permutation")}.\code{hsic.method = "gamma"} is the default.}
+\item{hsic.method}{A character indicating the inference method for
+the Hilbert-Schmidt Independence Criterion. Must be one of
+\code{c("gamma", "eigenvalue", "bootstrap", "permutation")}.
+\code{hsic.method = "gamma"} is the default.}
 
-\item{B}{Number of permutations for separate dCor tests and number of resamples when \code{hsic.method = c("boot", "permutation")} or \code{diff = TRUE}.}
+\item{B}{Number of permutation replicates for separate dCor
+tests, and number of resamples when
+\code{hsic.method = c("bootstrap", "permutation")} or
+\code{diff = TRUE}.}
 
-\item{boot.type}{A character indicating the type of bootstrap confidence intervals. Must be one of the two specifications \code{c("perc", "bca")}. \code{boot.type = "perc"} is the default.}
+\item{boot.type}{A character indicating the type of bootstrap
+confidence intervals. Must be one of \code{c("perc", "bca")}.
+\code{boot.type = "perc"} is the default.}
 
-\item{conf.level}{Confidence level for bootstrap confidence intervals.}
+\item{conf.level}{Confidence level for bootstrap confidence
+intervals.}
 
-\item{parallelize}{A logical value indicating whether bootstrapping is performed on multiple cores. Only used if \code{diff = TRUE}.}
+\item{parallelize}{A logical value indicating whether bootstrapping
+is performed on multiple cores. Only used if \code{diff = TRUE}.}
 
-\item{cores}{A numeric value indicating the number of cores. Only used if \code{parallelize = TRUE}.}
+\item{cores}{A numeric value indicating the number of cores.
+Only used if \code{parallelize = TRUE}.}
 
 \item{...}{Additional arguments to be passed to the function.}
 
-\item{x}{An object of class \code{cdda.indep} when using \code{print} or \code{plot}.}
+\item{x}{An object of class \code{cdda.indep} when using
+\code{print} or \code{plot}.}
 
-\item{stat}{A character indicating the CDDA statistic to be plotted with the options \code{c("hsic.diff", "dcor.diff", "mi.diff")}.}
+\item{stat}{A character indicating the CDDA statistic to be
+plotted. Must be one of
+\code{c("hsic.diff", "dcor.diff", "mi.diff")}.}
 
-\item{ylim}{A numeric vector of length 2 indicating the y-axis limits if \code{NULL}, the function will set the limits automatically.}
+\item{ylim}{A numeric vector of length 2 indicating the y-axis
+limits for \code{plot}. If \code{NULL}, limits are set
+automatically.}
 
-\item{object}{An object of class \code{cdda.indep} when using \code{summary}.}
+\item{object}{An object of class \code{cdda.indep} when using
+\code{summary}.}
 
-\item{hsic}{A logical value indicating whether deparate HSIC tests should be returned when using \code{summary}, default is \code{TRUE}.}
+\item{hsic}{A logical value indicating whether separate HSIC
+tests should be returned in \code{summary} output. Default is
+\code{TRUE}.}
 
-\item{hsic.diff}{A logical value indicating whether HSIC difference statistics should be returned when using \code{summary}, default is \code{FALSE}.}
+\item{hsic.diff}{A logical value indicating whether HSIC difference
+statistics should be returned in \code{summary} output. Default is
+\code{FALSE}.}
 
-\item{dcor}{A logical value indicating whether separate Distance Correlation (dCor) tests should be returned when using \code{summary}, default is \code{TRUE}.}
+\item{dcor}{A logical value indicating whether separate
+Distance Correlation (dCor) tests should be returned in
+\code{summary} output. Default is \code{TRUE}.}
 
-\item{dcor.diff}{A logical value indicating whether dCor difference statistics should be returned when using \code{summary}, default is \code{FALSE}.}
+\item{dcor.diff}{A logical value indicating whether dCor difference
+statistics should be returned in \code{summary} output. Default is
+\code{FALSE}.}
 
-\item{mi.diff}{A logical value indicating whether Mutual Information (MI) difference statistics should be returned when using \code{summary}, default is \code{FALSE}.}
+\item{mi.diff}{A logical value indicating whether Mutual
+Information (MI) difference statistics should be returned in
+\code{summary} output. Default is \code{FALSE}.}
 }
 \value{
-An object of class \code{dda.indep} containing the results of
-         independence tests of Conditional Direction Dependence Analysis.
-
-An object of class \code{cdda.indep} with competing model coefficients.
+A list of class \code{cdda.indep} containing the results of
+  independence tests of Conditional Direction Dependence Analysis for
+  pre-specified moderator values.
 }
 \description{
-\code{cdda.indep} evaluates asymmetries of predictor-error independence of competing
-             conditional models (\code{y ~ x * m} vs. \code{x ~ y * m}
-             with \code{m} being a continuous or categorical moderator).
-
-\code{print} returns the output of standard linear model coefficients for competing target and alternative models.
-
-\code{plot} returns graphs for results of \code{cdda.indep}.
-
-\code{summary} returns test statistics from the \code{cdda.indep} class object.
+\code{cdda.indep} evaluates asymmetries of
+  predictor-error independence of competing conditional models
+  (\code{y ~ x * m} vs. \code{x ~ y * m} with \code{m} being a
+  continuous or categorical moderator). \code{print} returns the
+  output of standard linear model coefficients for causally competing
+  target and alternative models. \code{plot} returns graphs of
+  \code{cdda.indep} results. \code{summary} returns test statistics
+  from the \code{cdda.indep} class object.
 }
 \examples{
 set.seed(321)
 n <- 700
 
 ## --- generate moderator
-
 z <- sort(rnorm(n))
 z1 <- z[z <= 0]
 z2 <- z[z > 0]
 
 ## --- x -> y when z <= 0
-
 x1 <- rchisq(length(z1), df = 4) - 4
 e1 <- rchisq(length(z1), df = 3) - 3
 y1 <- 0.5 * x1 + e1
 
-## --- y -> x when m z > 0
-
+## --- y -> x when z > 0
 y2 <- rchisq(length(z2), df = 4) - 4
 e2 <- rchisq(length(z2), df = 3) - 3
 x2 <- 0.25 * y2 + e2
 
 y <- c(y1, y2); x <- c(x1, x2)
-
 d <- data.frame(x, y, z)
-
 m <- lm(y ~ x * z, data = d)
 
-
 result <- cdda.indep(m,
-                     pred = "x",
-                     mod = "z",
-                     modval = c(-1, 1),
-                     data = d,
-                     hetero = TRUE,
-                     diff = TRUE,
-                     parallelize = TRUE,
-                     cores = 2,
-                     nlfun = 2,
-                     B = 2)
-# Note: Only 2 bootstrap samples are created here to lower computation time
-
+  pred = "x", mod = "z", modval = c(-1, 1), data = d,
+  hetero = TRUE, diff = TRUE, parallelize = FALSE, cores = 2,
+  nlfun = 2, B = 50)
+# Note: Use larger B in practice; B = 50 reduces computation time here.
 
 print(result)
-
 plot(result, stat = "dcor.diff")
-
 summary(result, hetero = FALSE)
 
 }
 \references{
-Wiedermann, W., & von Eye, A. (2025). \emph{Direction Dependence Analysis: Foundations and Statistical Methods}. Cambridge, UK: Cambridge University Press.
+Wiedermann, W., & von Eye, A. (2025). \emph{Direction Dependence
+  Analysis: Foundations and Statistical Methods}. Cambridge, UK:
+  Cambridge University Press.
 }
 \seealso{
 \code{\link{dda.indep}} for an unconditional version.

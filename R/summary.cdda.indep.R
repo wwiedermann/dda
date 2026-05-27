@@ -118,16 +118,13 @@ summary.cdda.indep <- function(object,
   }
 
   if (hsic == TRUE) {
-
-    ### HSIC ### ------------------------------------------------------------
-    if(is.null(cdda.output[[1]][[1]]$hsic.yx)) stop("Difference tests not found, set 'diff = TRUE'.")
+    if(is.null(cdda.output[[1]][[1]]$hsic.yx)) stop("HSIC tests not found.")
 
     hsictests <- matrix(NA, length(mod_names), 6)
 
     for (i in 1:length(mod_names)) {
-
-      tar.hsic <- unlist(cdda.output[[1]][[i]]$hsic.yx[1:3])
-      alt.hsic <- unlist(cdda.output[[2]][[i]]$hsic.yx[1:3])
+      tar.hsic <- as.numeric(unlist(cdda.output[[1]][[i]]$hsic.yx[1:3]))
+      alt.hsic <- as.numeric(unlist(cdda.output[[2]][[i]]$hsic.yx[1:3]))
       hsictests[i, ] <- c(tar.hsic, alt.hsic)
     }
 
@@ -176,19 +173,19 @@ summary.cdda.indep <- function(object,
   ## dcor ## -------------------------------------------------------------------
   if (dcor == TRUE){
 
-    dcor <- matrix(NA, length(mod_names), 4)
+    dcor_mat <- matrix(NA, length(mod_names), 4)  # renamed from dcor
 
     for (i in 1:length(mod_names)) {
-      tar.dcor <- unlist(c(cdda.output[[1]][[i]]$distance_cor.dcor_yx$statistic,
-                           cdda.output[[1]][[i]]$distance_cor.dcor_yx$p.value))
-      alt.dcor <- unlist(c(cdda.output[[2]][[i]]$distance_cor.dcor_yx$statistic,
-                           cdda.output[[2]][[i]]$distance_cor.dcor_yx$p.value))
-      dcor[i, ] <- c(tar.dcor, alt.dcor)
+      tar.dcor <- as.numeric(unlist(c(cdda.output[[1]][[i]]$distance_cor.dcor_yx$statistic,
+                                      cdda.output[[1]][[i]]$distance_cor.dcor_yx$p.value)))
+      alt.dcor <- as.numeric(unlist(c(cdda.output[[2]][[i]]$distance_cor.dcor_yx$statistic,
+                                      cdda.output[[2]][[i]]$distance_cor.dcor_yx$p.value)))
+      dcor_mat[i, ] <- c(tar.dcor, alt.dcor)
     }
 
-    rownames(dcor) <- mod_names
-    colnames(dcor) <- rep(c("dCor", "p-value"), 2)
-    dcor <- round(dcor, 3)
+    rownames(dcor_mat) <- mod_names
+    colnames(dcor_mat) <- rep(c("dCor", "p-value"), 2)
+    dcor_mat <- round(dcor_mat, 3)
 
     cat(boot_print)
 
@@ -196,8 +193,7 @@ summary.cdda.indep <- function(object,
     cat(paste0("---------------------------------------------------------------------", "\n"))
     cat(paste0("            Target Model           Alternative Model ", "\n"))
     cat(paste0("---------------------------------------------------------------------", "\n"))
-
-    print(dcor)
+    print(dcor_mat)
     cat("---", "\n", "\n")
   }
 
