@@ -6,8 +6,7 @@
 \alias{print.cdda.vardist}
 \alias{plot.cdda.vardist}
 \alias{summary.cdda.vardist}
-\title{Conditional Direction Dependence Analysis: Variable
-  Distributions}
+\title{Conditional Direction Dependence Analysis: Variable Distributions}
 \usage{
 cdda.vardist(
   formula,

@@ -1,5 +1,4 @@
-#' @title Conditional Direction Dependence Analysis: Independence
-#'   Properties
+#' @title Conditional Direction Dependence Analysis: Independence Properties
 #'
 #' @description \code{cdda.indep} evaluates asymmetries of
 #'   predictor-error independence of competing conditional models

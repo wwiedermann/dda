@@ -1,5 +1,4 @@
-#' @title Conditional Direction Dependence Analysis: Variable
-#'   Distributions
+#' @title Conditional Direction Dependence Analysis: Variable Distributions
 #'
 #' @description \code{cdda.vardist} evaluates variable distributions of
 #'   competing conditional models (\code{y ~ x * m} vs.
