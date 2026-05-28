@@ -38,6 +38,7 @@
 #'
 #' @return A single strictly positive numeric.
 #' @keywords internal
+#' @noRd
 .get_bandwidth <- function(x, bw) {
   if (is.null(bw) || identical(bw, "median"))
     return(median_bandwidth_cpp(x))
@@ -54,20 +55,20 @@
 
 #' @title Median Heuristic Bandwidth
 #'
-#' @description Returns the median of all strictly positive squared pairwise
-#'   Euclidean distances, interpreted as the variance parameter
-#'   \eqn{\sigma^2} for the Gaussian kernel
-#'   \eqn{K(x,y) = \exp(-\|x-y\|^2 / (2\sigma^2))}.
-#'   This is the same convention used in the \pkg{dHSIC} source code
-#'   (Peters et al., 2022).
+#' @description Returns the median of all strictly positive squared
+#'   pairwise Euclidean distances, interpreted as the variance
+#'   parameter \eqn{\sigma^2} for the Gaussian kernel
+#'   \eqn{K(x,y) = \exp(-\|x-y\|^2 / (2\sigma^2))}. This is the same
+#'   convention used in the \code{dHSIC} source code (Peters et al.,
+#'   2022).
 #'
 #' @name median_bandwidth
 #'
 #' @param x A numeric vector or matrix of observations (n rows).
 #'
-#' @return A single strictly positive numeric: the bandwidth sigma^2,
-#'   ready to pass as \code{bandwidth_x} or \code{bandwidth_y}.
-#'   Returns 1 when all pairwise distances are zero.
+#' @return A single strictly positive numeric: the bandwidth
+#'   \eqn{\sigma^2}, ready to pass as \code{bandwidth_x} or
+#'   \code{bandwidth_y}. Returns 1 when all pairwise distances are zero.
 #'
 #' @references
 #' Gretton, A., Fukumizu, K., Teo, C. H., Song, L., Scholkopf, B., &
@@ -115,13 +116,14 @@ median_bandwidth <- function(x) {
 #'   "laplace", "linear", "polynomial")}. Default is
 #'   \code{"gaussian"}.
 #' @param kernel_y    Kernel for Y. Defaults to \code{kernel_x}.
-#' @param bandwidth_x Bandwidth for the X kernel. \code{NULL} (default)
-#'   or \code{"median"} applies the median heuristic
-#'   (\code{\link{median_bandwidth}}). A strictly positive numeric value
-#'   is used directly as \eqn{\sigma^2} for the Gaussian kernel
-#'   \eqn{K(x,y) = \exp(-\|x-y\|^2 / (2\sigma^2))}.
+#' @param bandwidth_x Bandwidth for the X kernel. The median heuristic
+#'   (\code{\link{median_bandwidth}}) is always the default and is
+#'   applied when \code{bandwidth_x = NULL} (default) or
+#'   \code{bandwidth_x = "median"}. Alternatively, a strictly positive
+#'   numeric value is used directly as \eqn{\sigma^2} for the Gaussian
+#'   kernel \eqn{K(x,y) = \exp(-\|x-y\|^2 / (2\sigma^2))}.
 #' @param bandwidth_y Bandwidth for the Y kernel. Same options as
-#'   \code{bandwidth_x}.
+#'   \code{bandwidth_x}; the median heuristic is the default.
 #' @param degree      Integer degree for the polynomial kernel. Default
 #'   \code{2}.
 #' @param coef0       Constant term for the polynomial kernel. Default
@@ -204,8 +206,8 @@ hsic <- function(
 #'     \item{\code{"permutation"}}{Permutes the row index of X to
 #'       simulate the null distribution entirely in C++.}
 #'     \item{\code{"eigenvalue"}}{Derives the null distribution from the
-#'       eigenvalue spectrum of the centered kernel matrices (Zhang
-#'       method). More accurate in small samples; uses \code{B} Monte
+#'       eigenvalue spectrum of the centered kernel matrices (Zhang, 2011)
+#'      More accurate in small samples; uses \code{B} Monte
 #'       Carlo draws. Reports \eqn{n \times \widehat{\mathrm{HSIC}}} with
 #'       p-value from the spectral null.}
 #'     \item{\code{"bootstrap"}}{Independently resamples rows of the
@@ -224,11 +226,12 @@ hsic <- function(
 #'   "laplace", "linear", "polynomial")}. Default is
 #'   \code{"gaussian"}.
 #' @param kernel_y    Kernel for Y. Defaults to \code{kernel_x}.
-#' @param bandwidth_x Bandwidth (\eqn{\sigma^2}) for the X kernel.
-#'   \code{NULL} (default) applies the median heuristic. A strictly
-#'   positive numeric value is used directly.
+#' @param bandwidth_x Bandwidth (\eqn{\sigma^2}) for the X kernel. The
+#'   median heuristic is always the default and is applied when
+#'   \code{bandwidth_x = NULL}. A strictly positive numeric value is
+#'   used directly.
 #' @param bandwidth_y Bandwidth for the Y kernel. Same options as
-#'   \code{bandwidth_x}.
+#'   \code{bandwidth_x}; the median heuristic is the default.
 #' @param degree      Integer degree for the polynomial kernel. Default
 #'   \code{2}.
 #' @param coef0       Constant term for the polynomial kernel. Default
@@ -261,6 +264,12 @@ hsic <- function(
 #'   Independence Testing via Hilbert Schmidt Independence Criterion}.
 #'   R package version 2.1.
 #'   \url{https://CRAN.R-project.org/package=dHSIC}
+#'
+#' Zhang, K., Peters, J., Janzing, D., & Scholkopf, B. (2011).
+#'   Kernel-based conditional independence test and application in
+#'   causal discovery. In \emph{Proceedings of the Twenty-Seventh
+#'   Conference on Uncertainty in Artificial Intelligence (UAI 2011)}
+#'   (pp. 804-813).
 #'
 #' @seealso \code{\link{hsic}}, \code{\link{median_bandwidth}}
 #'
