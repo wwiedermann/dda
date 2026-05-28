@@ -32,12 +32,13 @@ Default is \code{"gamma"}.}
 
 \item{kernel_y}{Kernel for Y. Defaults to \code{kernel_x}.}
 
-\item{bandwidth_x}{Bandwidth (\eqn{\sigma^2}) for the X kernel.
-\code{NULL} (default) applies the median heuristic. A strictly
-positive numeric value is used directly.}
+\item{bandwidth_x}{Bandwidth (\eqn{\sigma^2}) for the X kernel. The
+median heuristic is always the default and is applied when
+\code{bandwidth_x = NULL}. A strictly positive numeric value is
+used directly.}
 
 \item{bandwidth_y}{Bandwidth for the Y kernel. Same options as
-\code{bandwidth_x}.}
+\code{bandwidth_x}; the median heuristic is the default.}
 
 \item{degree}{Integer degree for the polynomial kernel. Default
 \code{2}.}
@@ -73,8 +74,8 @@ An object of class \code{"htest"} with components:
     \item{\code{"permutation"}}{Permutes the row index of X to
       simulate the null distribution entirely in C++.}
     \item{\code{"eigenvalue"}}{Derives the null distribution from the
-      eigenvalue spectrum of the centered kernel matrices (Zhang
-      method). More accurate in small samples; uses \code{B} Monte
+      eigenvalue spectrum of the centered kernel matrices (Zhang, 2011)
+     More accurate in small samples; uses \code{B} Monte
       Carlo draws. Reports \eqn{n \times \widehat{\mathrm{HSIC}}} with
       p-value from the spectral null.}
     \item{\code{"bootstrap"}}{Independently resamples rows of the
@@ -106,6 +107,11 @@ Peters, J., Pfister, N., & Mooij, J. M. (2022). \emph{dHSIC:
   Independence Testing via Hilbert Schmidt Independence Criterion}.
   R package version 2.1.
   \url{https://CRAN.R-project.org/package=dHSIC}
+
+Zhang, K., Peters, J., Janzing, D., & Scholkopf, B. (2011).
+  Kernel-based conditional independence test and application in
+  causal discovery. In \emph{Proceedings of the Twenty-Seventh
+  Conference on Uncertainty in Artificial Intelligence (UAI 2011)}
 }
 \seealso{
 \code{\link{hsic}}, \code{\link{median_bandwidth}}

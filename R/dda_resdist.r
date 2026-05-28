@@ -47,6 +47,14 @@
 #'
 #' print(result)
 #'
+#' \dontrun{
+#' # --- Larger bootstrap example
+#' result <- dda.indep(y ~ x, pred = "x", data = d,
+#'   nlfun = 2, B = 2000, hetero = TRUE, diff = TRUE,
+#'   parallelize = FALSE, cores = 2)
+#'
+#' print(result)
+#' }
 #' @export
 #' @rdname dda.resdist
 dda.resdist <- function(formula,

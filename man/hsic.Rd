@@ -26,14 +26,15 @@ hsic(
 
 \item{kernel_y}{Kernel for Y. Defaults to \code{kernel_x}.}
 
-\item{bandwidth_x}{Bandwidth for the X kernel. \code{NULL} (default)
-or \code{"median"} applies the median heuristic
-(\code{\link{median_bandwidth}}). A strictly positive numeric value
-is used directly as \eqn{\sigma^2} for the Gaussian kernel
-\eqn{K(x,y) = \exp(-\|x-y\|^2 / (2\sigma^2))}.}
+\item{bandwidth_x}{Bandwidth for the X kernel. The median heuristic
+(\code{\link{median_bandwidth}}) is always the default and is
+applied when \code{bandwidth_x = NULL} (default) or
+\code{bandwidth_x = "median"}. Alternatively, a strictly positive
+numeric value is used directly as \eqn{\sigma^2} for the Gaussian
+kernel \eqn{K(x,y) = \exp(-\|x-y\|^2 / (2\sigma^2))}.}
 
 \item{bandwidth_y}{Bandwidth for the Y kernel. Same options as
-\code{bandwidth_x}.}
+\code{bandwidth_x}; the median heuristic is the default.}
 
 \item{degree}{Integer degree for the polynomial kernel. Default
 \code{2}.}
