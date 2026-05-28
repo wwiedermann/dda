@@ -58,9 +58,16 @@ e <- rchisq(n, df = 3) - 3
 y <- 0.5 * x + e
 d <- data.frame(x, y)
 
-result <- dda.vardist(y ~ x, pred = "x", data = d, B = 50)
+result <- dda.vardist(y ~ x, pred = "x", data = d, B = 10)
 
 print(result)
+
+\dontrun{
+# --- Larger bootstrap example
+result <- dda.vardist(y ~ x, pred = "x", data = d, B = 2000)
+
+print(result)
+}
 
 }
 \references{

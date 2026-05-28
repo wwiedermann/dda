@@ -49,9 +49,8 @@
 #'
 #' \dontrun{
 #' # --- Larger bootstrap example
-#' result <- dda.indep(y ~ x, pred = "x", data = d,
-#'   nlfun = 2, B = 2000, hetero = TRUE, diff = TRUE,
-#'   parallelize = FALSE, cores = 2)
+#' result <- dda.resdist(y ~ x, pred = "x", data = d,
+#'                       B = 2000, conf.level = 0.90)
 #'
 #' print(result)
 #' }

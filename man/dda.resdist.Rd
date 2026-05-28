@@ -68,6 +68,13 @@ result <- dda.resdist(y ~ x, pred = "x", data = d,
 
 print(result)
 
+\dontrun{
+# --- Larger bootstrap example
+result <- dda.resdist(y ~ x, pred = "x", data = d,
+                      B = 2000, conf.level = 0.90)
+
+print(result)
+}
 }
 \references{
 Wiedermann, W., & von Eye, A. (2025). \emph{Direction Dependence

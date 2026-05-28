@@ -91,11 +91,21 @@ e <- rchisq(n, df = 3) - 3
 y <- 0.5 * x + e
 d <- data.frame(x, y)
 
+## --- quick example (small B for speed)
 result <- dda.indep(y ~ x, pred = "x", data = d,
-            nlfun = 2, B = 50, hetero = TRUE, diff = TRUE,
-            parallelize = FALSE, cores = 2)
+  nlfun = 2, B = 10, hetero = TRUE, diff = TRUE,
+  parallelize = FALSE, cores = 2)
 
 print(result)
+
+\dontrun{
+# --- Larger bootstrap example
+result <- dda.indep(y ~ x, pred = "x", data = d,
+  nlfun = 2, B = 2000, hetero = TRUE, diff = TRUE,
+  parallelize = FALSE, cores = 2)
+
+print(result)
+}
 
 }
 \references{

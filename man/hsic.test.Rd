@@ -112,6 +112,7 @@ Zhang, K., Peters, J., Janzing, D., & Scholkopf, B. (2011).
   Kernel-based conditional independence test and application in
   causal discovery. In \emph{Proceedings of the Twenty-Seventh
   Conference on Uncertainty in Artificial Intelligence (UAI 2011)}
+  (pp. 804-813).
 }
 \seealso{
 \code{\link{hsic}}, \code{\link{median_bandwidth}}
