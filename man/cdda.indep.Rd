@@ -186,12 +186,23 @@ m <- lm(y ~ x * z, data = d)
 result <- cdda.indep(m,
   pred = "x", mod = "z", modval = c(-1, 1), data = d,
   hetero = TRUE, diff = TRUE, parallelize = FALSE, cores = 2,
-  nlfun = 2, B = 50)
-# Note: Use larger B in practice; B = 50 reduces computation time here.
+  nlfun = 2, B = 10)
 
 print(result)
 plot(result, stat = "dcor.diff")
 summary(result, hetero = FALSE)
+
+\dontrun{
+# --- Larger bootstrap example
+result <- cdda.indep(m,
+  pred = "x", mod = "z", modval = c(-1, 1), data = d,
+  hetero = TRUE, diff = TRUE, parallelize = FALSE, cores = 2,
+  nlfun = 2, B = 2000)
+
+print(result)
+plot(result, stat = "dcor.diff")
+summary(result, hetero = FALSE)
+}
 
 }
 \references{
