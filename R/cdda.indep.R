@@ -127,7 +127,7 @@
 #' result <- cdda.indep(m,
 #'   pred = "x", mod = "z", modval = c(-1, 1), data = d,
 #'   hetero = TRUE, diff = TRUE, parallelize = FALSE, cores = 2,
-#'   nlfun = 2, B = 10)
+#'   nlfun = 2, B = 2)
 #'
 #' print(result)
 #' plot(result, stat = "dcor.diff")
