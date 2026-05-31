@@ -127,8 +127,9 @@ y <- c(y1, y2); x <- c(x1, x2)
 d <- data.frame(x, y, z)
 m <- lm(y ~ x * z, data = d)
 
-result <- cdda.vardist(m, pred = "x", mod = "z", B = 10,
-  modval = c(-1, 1), data = d)
+result <- cdda.vardist(m, pred = "x", mod = "z", B = 100,
+                       boot.type = "perc", modval = c(-1, 1),
+                       data = d)
 
 print(result)
 plot(result, stat = "rtanh", ylim = c(-0.05, 0.05))

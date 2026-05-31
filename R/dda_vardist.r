@@ -41,7 +41,8 @@
 #' y <- 0.5 * x + e
 #' d <- data.frame(x, y)
 #'
-#' result <- dda.vardist(y ~ x, pred = "x", data = d, B = 10)
+#' result <- dda.vardist(y ~ x, pred = "x", data = d,
+#'                       boot.type = "perc", B = 100)
 #'
 #' print(result)
 #'

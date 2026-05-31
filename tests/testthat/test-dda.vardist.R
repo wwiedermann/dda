@@ -55,7 +55,7 @@ test_that("cdda.vardist works (conditional)", {
       mod = "z",
       modval = c(0, 1),
       data = dat,
-      B = 50
+      B = 200
     )
   ))
   expect_true(is.list(out))
@@ -69,7 +69,7 @@ test_that("cdda.vardist print works (conditional)", {
       mod = "z",
       modval = c(0, 1),
       data = dat,
-      B = 40
+      B = 200
     )
   ))
   expect_true(is.list(out))
@@ -82,7 +82,7 @@ test_that("cdda.vardist print works (conditional)", {
 
 test_that("dda.vardist basic run returns a list-like object (unconditional)", {
   out <- safe_run(quote(
-    dda.vardist(formula = y ~ x, pred = "x", data = data.frame(x = x, y = y), B = 50)
+    dda.vardist(formula = y ~ x, pred = "x", data = data.frame(x = x, y = y), B = 200)
   ))
   expect_true(is.list(out))
   expect_true(all(c("agostino", "anscombe") %in% names(out)))

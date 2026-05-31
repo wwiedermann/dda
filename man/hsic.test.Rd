@@ -74,7 +74,7 @@ An object of class \code{"htest"} with components:
     \item{\code{"permutation"}}{Permutes the row index of X to
       simulate the null distribution entirely in C++.}
     \item{\code{"eigenvalue"}}{Derives the null distribution from the
-      eigenvalue spectrum of the centered kernel matrices (Zhang, 2011)
+      eigenvalue spectrum of the centered kernel matrices (Zhang, 2011).
      More accurate in small samples; uses \code{B} Monte
       Carlo draws. Reports \eqn{n \times \widehat{\mathrm{HSIC}}} with
       p-value from the spectral null.}
