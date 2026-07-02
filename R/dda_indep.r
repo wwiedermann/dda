@@ -118,7 +118,9 @@ dda.indep <- function(
       rx     <- dat[,3] # purified predictor
       err.yx <- dat[,4] # errors of target model
 
-      diff.hsic <- hsic.test(err.xy, ry, method = "gamma")$statistic - dda::hsic.test(err.yx, rx, method = "gamma")$statistic
+      # Difference statistic always uses the analytic (gamma) n*HSIC so the
+      # bootstrap CI does not depend on the user's chosen hsic.method.
+      diff.hsic <- hsic.test(err.xy, ry, method = "gamma")$statistic - hsic.test(err.yx, rx, method = "gamma")$statistic
       diff.dcor <- energy::dcor.test(err.xy, ry)$statistic - energy::dcor.test(err.yx, rx)$statistic
       diff.mi <- (max.entropy(ry) + max.entropy(err.xy)) - (max.entropy(rx) + max.entropy(err.yx))
       c(diff.hsic, diff.dcor, diff.mi)
@@ -193,9 +195,8 @@ dda.indep <- function(
 	if(conf.level < 0 || conf.level > 1) stop("'conf.level' must be between 0 and 1")
 	if( !boot.type %in% c("bca", "perc") ) stop( "Unknown argument in boot.type." )
 
-	if( !is.null(hsic.method)){
-	    if (!hsic.method %in% c(NULL, "gamma", "bootstrap", "permutation", "eigenvalue")) stop( "Unknown argument in hsic.method.")
-	}
+	if( is.null(hsic.method) || !hsic.method %in% c("gamma", "bootstrap", "permutation", "eigenvalue") )
+	    stop( "Unknown argument in hsic.method." )
 
 	### --- prepare outcome, predictor, and model matrix for covariates
 
@@ -238,7 +239,7 @@ dda.indep <- function(
 
 	### --- Separate HSIC Tests
 
-	if(hsic.method %in% c("gamma", "eigenvalue")){
+	if(hsic.method == "gamma"){
 
   	  hsic.yx <- hsic.test(rx, err.yx, method = hsic.method)
   	  hsic.xy <- hsic.test(ry, err.xy, method = hsic.method)
@@ -248,7 +249,8 @@ dda.indep <- function(
 	}
 
 
-	if(hsic.method %in% c("bootstrap", "permutation")){
+	# eigenvalue, bootstrap, and permutation all use B (MC draws / resamples)
+	if(hsic.method %in% c("eigenvalue", "bootstrap", "permutation")){
 
 	    hsic.yx <- hsic.test(rx, err.yx, method = hsic.method, B = B)
 	    hsic.xy <- hsic.test(ry, err.xy, method = hsic.method, B = B)

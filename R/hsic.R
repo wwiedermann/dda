@@ -5,8 +5,7 @@
 # C++-backed implementation for the R package. The heavy kernel work runs in
 # compiled code; wall-clock timing versus dHSIC still depends on n.
 #
-# Gaussian kernel only. The laplace, linear, and polynomial options (and their
-# degree / coef0 arguments) are commented out below; uncomment to re-enable.
+# Gaussian kernel only.
 #
 # References:
 #   Gretton, A., Fukumizu, K., Teo, C. H., Song, L., Scholkopf, B., &
@@ -114,9 +113,6 @@ median_bandwidth <- function(x) {
 #'
 #' @param x           A numeric vector of length n or matrix (n x p).
 #' @param y           A numeric vector of length n or matrix (n x q).
-# #' @param kernel_x    Kernel for X. One of \code{c("gaussian",
-# #'   "laplace", "linear", "polynomial")}. Default is \code{"gaussian"}.
-# #' @param kernel_y    Kernel for Y. Defaults to \code{kernel_x}.
 #' @param bandwidth_x Bandwidth for the X kernel. The median heuristic
 #'   (\code{\link{median_bandwidth}}) is always the default and is
 #'   applied when \code{bandwidth_x = NULL} (default) or
@@ -125,8 +121,6 @@ median_bandwidth <- function(x) {
 #'   kernel \eqn{K(x,y) = \exp(-\|x-y\|^2 / (2\sigma^2))}.
 #' @param bandwidth_y Bandwidth for the Y kernel. Same options as
 #'   \code{bandwidth_x}; the median heuristic is the default.
-# #' @param degree      Integer degree for the polynomial kernel. Default 2.
-# #' @param coef0       Constant term for the polynomial kernel. Default 1.
 #'
 #' @details
 #' The Gaussian kernel uses \eqn{K(x,y) = \exp(-\|x-y\|^2 / (2\sigma^2))}
@@ -151,12 +145,8 @@ median_bandwidth <- function(x) {
 hsic <- function(
   x,
   y,
-  # kernel_x    = "gaussian",   # gaussian only; other kernels disabled
-  # kernel_y    = kernel_x,
   bandwidth_x = NULL,
   bandwidth_y = NULL
-  # degree      = 2L,           # polynomial-only argument, disabled
-  # coef0       = 1
 ) {
   x <- as.matrix(x); y <- as.matrix(y)
   n <- nrow(x)
@@ -215,17 +205,12 @@ hsic <- function(
 #' @param method      Inference method for the null distribution. One of
 #'   \code{c("gamma", "permutation", "eigenvalue", "bootstrap")}.
 #'   Default is \code{"gamma"}.
-# #' @param kernel_x    Kernel for X. One of \code{c("gaussian",
-# #'   "laplace", "linear", "polynomial")}. Default is \code{"gaussian"}.
-# #' @param kernel_y    Kernel for Y. Defaults to \code{kernel_x}.
 #' @param bandwidth_x Bandwidth (\eqn{\sigma^2}) for the X kernel. The
 #'   median heuristic is always the default and is applied when
 #'   \code{bandwidth_x = NULL}. A strictly positive numeric value is
 #'   used directly.
 #' @param bandwidth_y Bandwidth for the Y kernel. Same options as
 #'   \code{bandwidth_x}; the median heuristic is the default.
-# #' @param degree      Integer degree for the polynomial kernel. Default 2.
-# #' @param coef0       Constant term for the polynomial kernel. Default 1.
 #' @param B           Number of permutation or bootstrap replicates, or
 #'   Monte Carlo draws for \code{method = "eigenvalue"}. Ignored for
 #'   \code{method = "gamma"}. Default is \code{1000}.
@@ -260,12 +245,8 @@ hsic.test <- function(
   x,
   y,
   method      = c("gamma", "permutation", "eigenvalue", "bootstrap"),
-  # kernel_x    = "gaussian",   # gaussian only; other kernels disabled
-  # kernel_y    = kernel_x,
   bandwidth_x = NULL,
   bandwidth_y = NULL,
-  # degree      = 2L,           # polynomial-only argument, disabled
-  # coef0       = 1,
   B           = 1000L
 ) {
   # Capture the argument names before as.matrix() rebinds x and y,
