@@ -2,20 +2,21 @@
 # hsic.R
 #
 # Hilbert-Schmidt Independence Criterion (HSIC)
-# C++-Accelerated Implementation for R Package
+# C++-backed implementation for the R package. The heavy kernel work runs in
+# compiled code; wall-clock timing versus dHSIC still depends on n.
+#
+# Gaussian kernel only. The laplace, linear, and polynomial options (and their
+# degree / coef0 arguments) are commented out below; uncomment to re-enable.
 #
 # References:
-#   Gretton, A., Fukumizu, K., Teo, C. H., Song, L., Schölkopf, B., &
+#   Gretton, A., Fukumizu, K., Teo, C. H., Song, L., Scholkopf, B., &
 #     Smola, A. J. (2008). A kernel statistical test of independence.
 #     Advances in Neural Information Processing Systems, 20.
-#
 #   Peters, J., Pfister, N., & Mooij, J. M. (2022). dHSIC: Independence
 #     Testing via Hilbert Schmidt Independence Criterion. R package version
 #     2.1. https://CRAN.R-project.org/package=dHSIC
-#
 #   Suzuki, T. (2025). Statistical Learning Theory: Kernel Methods,
-#     Sparsity, and Related Topics. Springer. Section 4.2,
-#     Propositions 11-16.
+#     Sparsity, and Related Topics. Springer. Section 4.2, Propositions 11-16.
 #   Zhang, K. (eigenvalue-based asymptotic null; cited in Suzuki, 2025,
 #     Proposition 16 and Section 4.2).
 #
@@ -23,9 +24,9 @@
 # ==============================================================================
 
 
-# ==============================================================================
-# INTERNAL HELPERS
-# ==============================================================================
+# ------------------------------------------------------------------------------
+# Internal helpers
+# ------------------------------------------------------------------------------
 
 #' Bandwidth to a Positive Scalar
 #'
@@ -49,9 +50,9 @@
 }
 
 
-# ==============================================================================
+# ------------------------------------------------------------------------------
 # median_bandwidth
-# ==============================================================================
+# ------------------------------------------------------------------------------
 
 #' @title Median Heuristic Bandwidth
 #'
@@ -96,9 +97,9 @@ median_bandwidth <- function(x) {
 }
 
 
-# ==============================================================================
+# ------------------------------------------------------------------------------
 # hsic
-# ==============================================================================
+# ------------------------------------------------------------------------------
 
 #' @title Compute the Empirical HSIC
 #'
@@ -107,15 +108,15 @@ median_bandwidth <- function(x) {
 #'   biased V-statistic
 #'   \eqn{(1/n^2) \, \mathrm{tr}(\tilde{K}_X \tilde{K}_Y)}.
 #'   All kernel and centering computations are performed in C++.
+#'   The Gaussian kernel is used for both X and Y.
 #'
 #' @name hsic
 #'
 #' @param x           A numeric vector of length n or matrix (n x p).
 #' @param y           A numeric vector of length n or matrix (n x q).
-#' @param kernel_x    Kernel for X. One of \code{c("gaussian",
-#'   "laplace", "linear", "polynomial")}. Default is
-#'   \code{"gaussian"}.
-#' @param kernel_y    Kernel for Y. Defaults to \code{kernel_x}.
+# #' @param kernel_x    Kernel for X. One of \code{c("gaussian",
+# #'   "laplace", "linear", "polynomial")}. Default is \code{"gaussian"}.
+# #' @param kernel_y    Kernel for Y. Defaults to \code{kernel_x}.
 #' @param bandwidth_x Bandwidth for the X kernel. The median heuristic
 #'   (\code{\link{median_bandwidth}}) is always the default and is
 #'   applied when \code{bandwidth_x = NULL} (default) or
@@ -124,10 +125,8 @@ median_bandwidth <- function(x) {
 #'   kernel \eqn{K(x,y) = \exp(-\|x-y\|^2 / (2\sigma^2))}.
 #' @param bandwidth_y Bandwidth for the Y kernel. Same options as
 #'   \code{bandwidth_x}; the median heuristic is the default.
-#' @param degree      Integer degree for the polynomial kernel. Default
-#'   \code{2}.
-#' @param coef0       Constant term for the polynomial kernel. Default
-#'   \code{1}.
+# #' @param degree      Integer degree for the polynomial kernel. Default 2.
+# #' @param coef0       Constant term for the polynomial kernel. Default 1.
 #'
 #' @details
 #' The Gaussian kernel uses \eqn{K(x,y) = \exp(-\|x-y\|^2 / (2\sigma^2))}
@@ -138,16 +137,6 @@ median_bandwidth <- function(x) {
 #' @return A single non-negative numeric value: the raw HSIC estimate
 #'   \eqn{(1/n^2) \, \mathrm{tr}(\tilde{K}_X \tilde{K}_Y)}. A value of
 #'   zero (with a characteristic kernel) implies independence.
-#'
-#' @references
-#' Gretton, A., Fukumizu, K., Teo, C. H., Song, L., Scholkopf, B., &
-#'   Smola, A. J. (2008). A kernel statistical test of independence.
-#'   \emph{Advances in Neural Information Processing Systems}, 20.
-#'
-#' Peters, J., Pfister, N., & Mooij, J. M. (2022). \emph{dHSIC:
-#'   Independence Testing via Hilbert Schmidt Independence Criterion}.
-#'   R package version 2.1.
-#'   \url{https://CRAN.R-project.org/package=dHSIC}
 #'
 #' @seealso \code{\link{hsic.test}}, \code{\link{median_bandwidth}}
 #'
@@ -162,12 +151,12 @@ median_bandwidth <- function(x) {
 hsic <- function(
   x,
   y,
-  kernel_x    = "gaussian",
-  kernel_y    = kernel_x,
+  # kernel_x    = "gaussian",   # gaussian only; other kernels disabled
+  # kernel_y    = kernel_x,
   bandwidth_x = NULL,
-  bandwidth_y = NULL,
-  degree      = 2L,
-  coef0       = 1
+  bandwidth_y = NULL
+  # degree      = 2L,           # polynomial-only argument, disabled
+  # coef0       = 1
 ) {
   x <- as.matrix(x); y <- as.matrix(y)
   n <- nrow(x)
@@ -177,8 +166,9 @@ hsic <- function(
   bwx <- .get_bandwidth(x, bandwidth_x)
   bwy <- .get_bandwidth(y, bandwidth_y)
 
-  Kx <- build_kernel_matrix_cpp(x, kernel_x, bwx, degree, coef0)
-  Ky <- build_kernel_matrix_cpp(y, kernel_y, bwy, degree, coef0)
+  # Gaussian kernel fixed; the trailing 2L, 1 are inert degree/coef0 slots.
+  Kx <- build_kernel_matrix_cpp(x, "gaussian", bwx, 2L, 1)
+  Ky <- build_kernel_matrix_cpp(y, "gaussian", bwy, 2L, 1)
 
   Kx_c <- center_kernel_cpp(Kx)
   Ky_c <- center_kernel_cpp(Ky)
@@ -187,16 +177,17 @@ hsic <- function(
 }
 
 
-# ==============================================================================
+# ------------------------------------------------------------------------------
 # hsic.test
-# ==============================================================================
+# ------------------------------------------------------------------------------
 
 #' @title HSIC Independence Test
 #'
 #' @description \code{hsic.test} tests whether X and Y are independent
 #'   using the Hilbert-Schmidt Independence Criterion. The test statistic
 #'   is \eqn{n \times \widehat{\mathrm{HSIC}}}, labelled \code{"HSIC"},
-#'   and is consistent across all four inference methods.
+#'   and is consistent across all four inference methods. The Gaussian
+#'   kernel is used for both X and Y.
 #'
 #'   Available null-distribution methods:
 #'   \describe{
@@ -210,9 +201,11 @@ hsic <- function(
 #'      More accurate in small samples; uses \code{B} Monte
 #'       Carlo draws. Reports \eqn{n \times \widehat{\mathrm{HSIC}}} with
 #'       p-value from the spectral null.}
-#'     \item{\code{"bootstrap"}}{Independently resamples rows of the
-#'       kernel matrices with replacement in C++ (Peters, Pfister &
-#'       Mooij, 2022).}
+#'     \item{\code{"bootstrap"}}{Resamples the row index of Y with
+#'       replacement and applies it to both dimensions of the Y kernel
+#'       matrix, holding the X kernel fixed. This breaks the X-Y
+#'       alignment to build the independence null, matching the bootstrap
+#'       scheme in \pkg{dHSIC} (Peters, Pfister & Mooij, 2022).}
 #'   }
 #'
 #' @name hsic.test
@@ -222,20 +215,17 @@ hsic <- function(
 #' @param method      Inference method for the null distribution. One of
 #'   \code{c("gamma", "permutation", "eigenvalue", "bootstrap")}.
 #'   Default is \code{"gamma"}.
-#' @param kernel_x    Kernel for X. One of \code{c("gaussian",
-#'   "laplace", "linear", "polynomial")}. Default is
-#'   \code{"gaussian"}.
-#' @param kernel_y    Kernel for Y. Defaults to \code{kernel_x}.
+# #' @param kernel_x    Kernel for X. One of \code{c("gaussian",
+# #'   "laplace", "linear", "polynomial")}. Default is \code{"gaussian"}.
+# #' @param kernel_y    Kernel for Y. Defaults to \code{kernel_x}.
 #' @param bandwidth_x Bandwidth (\eqn{\sigma^2}) for the X kernel. The
 #'   median heuristic is always the default and is applied when
 #'   \code{bandwidth_x = NULL}. A strictly positive numeric value is
 #'   used directly.
 #' @param bandwidth_y Bandwidth for the Y kernel. Same options as
 #'   \code{bandwidth_x}; the median heuristic is the default.
-#' @param degree      Integer degree for the polynomial kernel. Default
-#'   \code{2}.
-#' @param coef0       Constant term for the polynomial kernel. Default
-#'   \code{1}.
+# #' @param degree      Integer degree for the polynomial kernel. Default 2.
+# #' @param coef0       Constant term for the polynomial kernel. Default 1.
 #' @param B           Number of permutation or bootstrap replicates, or
 #'   Monte Carlo draws for \code{method = "eigenvalue"}. Ignored for
 #'   \code{method = "gamma"}. Default is \code{1000}.
@@ -255,22 +245,6 @@ hsic <- function(
 #'     \item{\code{bandwidths}}{Resolved bandwidths \code{c(x, y)}.}
 #'   }
 #'
-#' @references
-#' Gretton, A., Fukumizu, K., Teo, C. H., Song, L., Scholkopf, B., &
-#'   Smola, A. J. (2008). A kernel statistical test of independence.
-#'   \emph{Advances in Neural Information Processing Systems}, 20.
-#'
-#' Peters, J., Pfister, N., & Mooij, J. M. (2022). \emph{dHSIC:
-#'   Independence Testing via Hilbert Schmidt Independence Criterion}.
-#'   R package version 2.1.
-#'   \url{https://CRAN.R-project.org/package=dHSIC}
-#'
-#' Zhang, K., Peters, J., Janzing, D., & Scholkopf, B. (2011).
-#'   Kernel-based conditional independence test and application in
-#'   causal discovery. In \emph{Proceedings of the Twenty-Seventh
-#'   Conference on Uncertainty in Artificial Intelligence (UAI 2011)}
-#'   (pp. 804-813).
-#'
 #' @seealso \code{\link{hsic}}, \code{\link{median_bandwidth}}
 #'
 #' @examples
@@ -286,14 +260,18 @@ hsic.test <- function(
   x,
   y,
   method      = c("gamma", "permutation", "eigenvalue", "bootstrap"),
-  kernel_x    = "gaussian",
-  kernel_y    = kernel_x,
+  # kernel_x    = "gaussian",   # gaussian only; other kernels disabled
+  # kernel_y    = kernel_x,
   bandwidth_x = NULL,
   bandwidth_y = NULL,
-  degree      = 2L,
-  coef0       = 1,
+  # degree      = 2L,           # polynomial-only argument, disabled
+  # coef0       = 1,
   B           = 1000L
 ) {
+  # Capture the argument names before as.matrix() rebinds x and y,
+  # otherwise substitute(x) returns the whole evaluated matrix.
+  dname <- paste(deparse(substitute(x)), "and", deparse(substitute(y)))
+
   method <- match.arg(method)
   x <- as.matrix(x); y <- as.matrix(y)
   n <- nrow(x)
@@ -305,8 +283,9 @@ hsic.test <- function(
   bwx <- .get_bandwidth(x, bandwidth_x)
   bwy <- .get_bandwidth(y, bandwidth_y)
 
-  Kx <- build_kernel_matrix_cpp(x, kernel_x, bwx, degree, coef0)
-  Ky <- build_kernel_matrix_cpp(y, kernel_y, bwy, degree, coef0)
+  # Gaussian kernel fixed; the trailing 2L, 1 are inert degree/coef0 slots.
+  Kx <- build_kernel_matrix_cpp(x, "gaussian", bwx, 2L, 1)
+  Ky <- build_kernel_matrix_cpp(y, "gaussian", bwy, 2L, 1)
 
   Kx_c <- center_kernel_cpp(Kx)
   Ky_c <- center_kernel_cpp(Ky)
@@ -314,7 +293,7 @@ hsic.test <- function(
   T_obs   <- hsic_trace_cpp(Kx_c, Ky_c)
   T_obs_n <- T_obs * n
 
-  # ---- Gamma approximation (Peters & Mooij, 2022)
+  # Gamma approximation (Peters & Mooij, 2022)
   if (method == "gamma") {
     ea <- c(sum(Kx) / n^2, sum(Ky) / n^2)
     eb <- c(sum(Kx^2) / n^2, sum(Ky^2) / n^2)
@@ -340,19 +319,19 @@ hsic.test <- function(
     pval    <- stats::pgamma(T_obs_n, shape = alpha_g, scale = beta_g, lower.tail = FALSE)
 
     stat <- T_obs_n; names(stat) <- "HSIC"
-    meth <- sprintf("HSIC gamma test (%s kernel; Peters & Mooij 22)", kernel_x)
+    meth <- "HSIC gamma test (gaussian kernel; Peters & Mooij 22)"
   }
 
-  # ---- Permutation test
+  # Permutation test
   if (method == "permutation") {
     T_null <- permute_hsic_cpp(Kx_c, Ky_c, B)
     pval   <- (sum(T_null >= T_obs) + 1L) / (B + 1L)
 
     stat <- T_obs_n; names(stat) <- "HSIC"
-    meth <- sprintf("HSIC permutation test (B = %d, %s kernel)", B, kernel_x)
+    meth <- sprintf("HSIC permutation test (B = %d, gaussian kernel)", B)
   }
 
-  # ---- Eigenvalue / spectral (Zhang; reports n*HSIC, p-value from eigenvalue null)
+  # Eigenvalue / spectral (Zhang; reports n*HSIC, p-value from eigenvalue null)
   if (method == "eigenvalue") {
     stat_sc <- T_obs * n^3
 
@@ -364,24 +343,32 @@ hsic.test <- function(
     pval   <- mean(T_null >= stat_sc)
 
     stat <- T_obs_n; names(stat) <- "HSIC"
-    meth <- sprintf("HSIC eigenvalue test (B = %d MC draws, %s kernel; Zhang method)",
-                    B, kernel_x)
+    meth <- sprintf("HSIC eigenvalue test (B = %d MC draws, gaussian kernel; Zhang method)", B)
   }
 
-  # ---- Bootstrap test
+  # Bootstrap test
+  # Matches dHSIC: a single index drawn with replacement is applied to Ky
+  # on both dimensions (Ky[boot, boot]); Kx is held fixed. This builds the
+  # independence null by breaking the X-Y alignment, mirroring dHSIC's
+  # dhsic_boot_fun (K[[2]][boot, boot] against a fixed K[[1]]).
   if (method == "bootstrap") {
-    T_null <- bootstrap_hsic_cpp(Kx, Ky, B)
-    pval   <- (sum(T_null >= T_obs) + 1L) / (B + 1L)
+    T_null <- numeric(B)
+    for (b in seq_len(B)) {
+      boot   <- sample.int(n, n, replace = TRUE)
+      Ky_b_c <- center_kernel_cpp(Ky[boot, boot, drop = FALSE])
+      T_null[b] <- hsic_trace_cpp(Kx_c, Ky_b_c)
+    }
+    pval <- (sum(T_null >= T_obs) + 1L) / (B + 1L)
 
     stat <- T_obs_n; names(stat) <- "HSIC"
-    meth <- sprintf("HSIC bootstrap test (B = %d, %s kernel)", B, kernel_x)
+    meth <- sprintf("HSIC bootstrap test (B = %d, gaussian kernel)", B)
   }
 
   structure(list(
     statistic = stat,
     p.value   = pval,
     method    = meth,
-    data.name = paste(deparse(substitute(x)), "and", deparse(substitute(y))),
+    data.name = dname,
     bandwidths = c(bandwidth_x = bwx, bandwidth_y = bwy)
   ), class = "htest")
 }
