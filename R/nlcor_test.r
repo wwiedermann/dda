@@ -21,7 +21,7 @@
 #' @noRd
 #'
 
-nlcor.test <- function(x, y, fun)
+nlcor.test <- function(x, y, fun, fname = NULL)
   {
   varnames <- c(deparse(substitute(x)), deparse(substitute(y)))
 
@@ -32,7 +32,7 @@ nlcor.test <- function(x, y, fun)
   y <- as.vector(scale(y))
 
   if (is.numeric(fun)) {
-    func <- as.character(fun)
+    func <- if (!is.null(fname)) fname else as.character(fun)
     r1 <- cor(x^fun, y)
     r2 <- cor(x, y^fun)
     r3 <- cor(x^fun, y^fun)
@@ -46,7 +46,7 @@ nlcor.test <- function(x, y, fun)
       r3 <- cor(x^fun, y^fun)
     }
   } else {
-    func <- paste(substitute(fun))
+    func <- if (!is.null(fname)) fname else paste(substitute(fun))
     test.run <- suppressWarnings(c(fun(x), fun(y)))
 
     if (any(is.na(test.run)) || any(is.nan(test.run))) {

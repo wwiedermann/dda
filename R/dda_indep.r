@@ -110,65 +110,8 @@ dda.indep <- function(
     }
 
 
-   ### --- non-linear correlation test function
-
-   nlcor.test <- function(x, y, fun, fname=NULL){
-
-      varnames <- c(deparse(substitute(x)), deparse(substitute(y)))
-
-      if (length(x) != length(y)) stop("Variables must have same length")
-
-      n <- length(x)
-      x <- as.vector(scale(x))
-      y <- as.vector(scale(y))
-
-      if (is.numeric(fun)){
-        func <- as.character(fun)
-	      r1 <- cor(x^fun, y)
-	      r2 <- cor(x, y^fun)
-	      r3 <- cor(x^fun, y^fun)
-
-   	      if( any(is.na( c(r1, r2, r3) ) ) || any( is.nan( c(r1, r2, r3) ) ) ){
-
-	          x <- x + abs( min(x) ) + 0.1
-	          y <- y + abs( min(y) ) + 0.1
-
-            r1 <- cor(x^fun, y)
-	          r2 <- cor(x, y^fun)
-	          r3 <- cor(x^fun, y^fun)
-	        }
-        } # end if
-     else {
-
-         func <- paste(substitute(fun))
-
-	       test.run <- suppressWarnings( c(fun(x), fun(y) ) )
-
-	        if( any(is.na( test.run ) ) || any( is.nan( test.run ) ) ){
-                x <- x + abs( min(x) ) + 0.1
-                y <- y + abs( min(y) ) + 0.1
-               } # end if
-
-         r1 <- cor(fun(x), y)
-	       r2 <- cor(x, fun(y))
-	       r3 <- cor(fun(x), fun(y))
-
-        } # end else = not is.numeric(fun)
-
-     tval1 <- r1 * sqrt( ( n - 2)/(1 - r1^2))
-     tval2 <- r2 * sqrt( ( n - 2)/(1 - r2^2))
-     tval3 <- r3 * sqrt( ( n - 2)/(1 - r3^2))
-
-     pval1 <- pt(abs(tval1), df = n - 2, lower.tail=FALSE) * 2
-     pval2 <- pt(abs(tval2), df = n - 2, lower.tail=FALSE) * 2
-     pval3 <- pt(abs(tval3), df = n - 2, lower.tail=FALSE) * 2
-
-     output <- list(t1 = c(r1, tval1, n - 2, pval1),
-                    t2 = c(r2, tval2, n - 2, pval2),
-                    t3 = c(r3, tval3, n - 2, pval3),
-	                  func = fname,
-        		        varnames = varnames)
-    }
+   ### --- non-linear correlation tests use the package-level nlcor.test()
+   ### --- (defined in nlcor_test.r); no local redefinition needed.
 
 
    ### --- start checking validity of input
@@ -178,9 +121,8 @@ dda.indep <- function(
 	if(conf.level < 0 || conf.level > 1) stop("'conf.level' must be between 0 and 1")
 	if( !boot.type %in% c("bca", "perc") ) stop( "Unknown argument in boot.type." )
 
-	if( !is.null(hsic.method)){
-	    if (!hsic.method %in% c(NULL, "gamma", "bootstrap", "permutation", "eigenvalue")) stop( "Unknown argument in hsic.method.")
-	}
+	if( is.null(hsic.method) || !hsic.method %in% c("gamma", "bootstrap", "permutation", "eigenvalue") )
+	    stop( "Unknown argument in hsic.method." )
 
 	### --- prepare outcome, predictor, and model matrix for covariates
 
@@ -236,7 +178,7 @@ dda.indep <- function(
 
 	### --- Separate HSIC Tests
 
-	if(hsic.method %in% c("gamma", "eigenvalue")){
+	if(hsic.method == "gamma"){
 
 	  hsic.yx <- hsic_test(rx, err.yx, method = hsic.method)
 	  hsic.xy <- hsic_test(ry, err.xy, method = hsic.method)
@@ -246,7 +188,8 @@ dda.indep <- function(
 	}
 
 
-	if(hsic.method %in% c("bootstrap", "permutation")){
+	# eigenvalue, bootstrap, and permutation all use B (MC draws / resamples)
+	if(hsic.method %in% c("eigenvalue", "bootstrap", "permutation")){
 
 	  hsic.yx <- hsic_test(rx, err.yx, method = hsic.method, B = B)
 	  hsic.xy <- hsic_test(ry, err.xy, method = hsic.method, B = B)

@@ -25,8 +25,9 @@ Check results
 - Tested on the current CRAN release platform(s) and on Windows via the win-builder service. 
 
 Package details for CRAN reviewers
-- The package contains only R code (no compiled code or use of src/).  
-- No special SystemRequirements (no external software required).
+- The package contains compiled C++ code in `src/` (HSIC kernel and
+  null-distribution routines), interfaced via Rcpp. `NeedsCompilation: yes`.
+- No special SystemRequirements beyond a C++ compiler (standard for Rcpp packages).
 - Examples, tests, and vignettes should not require internet access or non-standard hardware.
 - All user-facing (exported) functions are documented; internal helper functions are marked internal.
 
