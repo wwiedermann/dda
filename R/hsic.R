@@ -142,7 +142,7 @@ median_bandwidth <- function(x) {
 #'   also matching \pkg{dHSIC}.
 #' }
 #'
-#' @seealso \code{\link{hsic_test}}, \code{\link{median_bandwidth}}
+#' @seealso \code{\link{hsic.test}}, \code{\link{median_bandwidth}}
 #'
 #' @references
 #' Gretton, A., Fukumizu, K., Teo, C. H., Song, L., Scholkopf, B., &
@@ -192,7 +192,7 @@ hsic <- function(x, y,
 
 
 # ------------------------------------------------------------------------------
-# hsic_test
+# hsic.test
 # ------------------------------------------------------------------------------
 
 #' HSIC Independence Test
@@ -240,10 +240,10 @@ hsic <- function(x, y,
 #'
 #' @return An object of class \code{"htest"}:
 #'   \describe{
-#'     \item{\code{statistic}}{For \code{"gamma"}, \code{"permutation"},
-#'       and \code{"bootstrap"}: \eqn{n \times \widehat{\mathrm{HSIC}}},
-#'       matching \code{dHSIC::dhsic.test()$statistic}.
-#'       For \code{"eigenvalue"}: \eqn{n^3 \times \widehat{\mathrm{HSIC}}}.}
+#'     \item{\code{statistic}}{\eqn{n \times \widehat{\mathrm{HSIC}}}
+#'       (labelled \code{"HSIC"}) for all four methods, matching
+#'       \code{dHSIC::dhsic.test()$statistic = dHSIC * len}. The eigenvalue
+#'       method applies the \eqn{n^3} scaling internally for its spectral null only.}
 #'     \item{\code{p.value}}{For \code{"permutation"} and \code{"bootstrap"}:
 #'       \eqn{(\#\{T_b \geq T_{\mathrm{obs}}\} + 1)/(B + 1)}, the Laplace
 #'       correction used in \code{dHSIC::dhsic.test()}.}
@@ -269,12 +269,12 @@ hsic <- function(x, y,
 #'
 #' @examples
 #' set.seed(7); n <- 80; x <- rnorm(n)
-#' hsic_test(x, rnorm(n), method = "gamma")
-#' hsic_test(x, rnorm(n), method = "permutation", B = 499)
-#' hsic_test(x, x + rnorm(n), method = "permutation", B = 499)
+#' hsic.test(x, rnorm(n), method = "gamma")
+#' hsic.test(x, rnorm(n), method = "permutation", B = 499)
+#' hsic.test(x, x + rnorm(n), method = "permutation", B = 499)
 #'
 #' @export
-hsic_test <- function(x, y,
+hsic.test <- function(x, y,
                       method      = c("gamma", "permutation", "eigenvalue", "bootstrap"),
                       kernel_x    = "gaussian",
                       kernel_y    = kernel_x,
@@ -358,7 +358,7 @@ hsic_test <- function(x, y,
     pval    <- stats::pgamma(T_obs_n, shape = alpha_g, scale = beta_g,
                              lower.tail = FALSE)
 
-    stat <- T_obs_n; names(stat) <- "n * HSIC"
+    stat <- T_obs_n; names(stat) <- "HSIC"
     meth <- sprintf("HSIC gamma test (%s kernel; dHSIC formula, Peters et al., 2022)",
                     kernel_x)
   }
@@ -369,7 +369,7 @@ hsic_test <- function(x, y,
     # Laplace p-value correction matching dHSIC: (sum >= obs + 1) / (B + 1)
     pval   <- (sum(T_null >= T_obs) + 1L) / (B + 1L)
 
-    stat <- T_obs_n; names(stat) <- "n * HSIC"
+    stat <- T_obs_n; names(stat) <- "HSIC"
     meth <- sprintf("HSIC permutation test (B = %d, %s kernel)", B, kernel_x)
   }
 
@@ -384,7 +384,7 @@ hsic_test <- function(x, y,
     T_null <- replicate(B, sum(lam_xy * stats::rchisq(length(lam_xy), df = 1)))
     pval   <- mean(T_null >= stat_sc)
 
-    stat <- stat_sc; names(stat) <- "n^3 * HSIC"
+    stat <- T_obs_n; names(stat) <- "HSIC"  # report n*HSIC; n^3 used only for the null above
     meth <- sprintf(
       "HSIC eigenvalue test — Zhang/Suzuki Prop. 16 (B = %d MC draws, %s kernel)",
       B, kernel_x)
@@ -396,7 +396,7 @@ hsic_test <- function(x, y,
     # Laplace p-value correction matching dHSIC
     pval   <- (sum(T_null >= T_obs) + 1L) / (B + 1L)
 
-    stat <- T_obs_n; names(stat) <- "n * HSIC"
+    stat <- T_obs_n; names(stat) <- "HSIC"
     meth <- sprintf("HSIC bootstrap test (B = %d, %s kernel)", B, kernel_x)
   }
 
@@ -425,7 +425,7 @@ hsic_test <- function(x, y,
 #'   The null distribution is estimated via the pairs-bootstrap of the
 #'   \pkg{dHSIC} source (Peters et al., 2022).  The test statistic is
 #'   \eqn{n \times \widehat{\mathrm{HSIC}}}, consistent with
-#'   \code{\link{hsic_test}}.
+#'   \code{\link{hsic.test}}.
 #'
 #' @param model A fitted model (typically \code{\link[stats]{lm}}) with
 #'   working \code{model.matrix}, \code{coef}, \code{nobs}, \code{resid}.
@@ -447,7 +447,7 @@ hsic_test <- function(x, y,
 #'   Laplace-corrected bootstrap \eqn{(\#\{T_b \geq T_{\mathrm{obs}}\}+1)/(B+1)},
 #'   and \code{bandwidths}.
 #'
-#' @seealso \code{\link{hsic}}, \code{\link{hsic_test}}
+#' @seealso \code{\link{hsic}}, \code{\link{hsic.test}}
 #'
 #' @references
 #' Peters, J., Pfister, N., & Mooij, J. M. (2022). \emph{dHSIC}. R package
@@ -517,9 +517,9 @@ hsic_resid_test <- function(model,
     )
   })
 
-  # Laplace-corrected p-value and n*HSIC statistic (consistent with hsic_test)
+  # Laplace-corrected p-value and n*HSIC statistic (consistent with hsic.test)
   pval <- (sum(T_null >= T_obs) + 1L) / (B + 1L)
-  stat <- T_obs * n; names(stat) <- "n * HSIC"
+  stat <- T_obs * n; names(stat) <- "HSIC"
 
   structure(
     list(

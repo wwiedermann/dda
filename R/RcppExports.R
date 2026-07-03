@@ -24,3 +24,4 @@ permute_hsic_cpp <- function(Kx_c, Ky_c, B) {
 bootstrap_hsic_cpp <- function(Kx, Ky, B) {
     .Call(`_dda_bootstrap_hsic_cpp`, Kx, Ky, B)
 }
+

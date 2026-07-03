@@ -8,21 +8,26 @@ dda.bagging(
   dda_result,
   iter = 100,
   progress = TRUE,
-  save.file = NULL,
+  save_file = NULL,
   alpha = 0.05,
   data = NULL,
-  agg.stat = c("mean", "median", "trimmed", "winsorized", "midhinge", "tukey"),
-  trim.prob = 0.1,
-  win.prob = 0.1
+  agg_stat = c("mean", "median", "trimmed", "winsorized", "midhinge", "tukey"),
+  trim_prob = 0.1,
+  win_prob = 0.1,
+  inner_B = NULL
 )
 }
 \arguments{
+\item{dda_result}{An output object from any base DDA function (e.g.,
+\code{dda.indep}, \code{dda.vardist}, or \code{dda.resdist}).}
+
+\item{iter}{Number of bootstrap samples (default: 100).}
+
 \item{progress}{Logical. Whether to display a progress bar during
 resampling (default: \code{TRUE}).}
 
-\item{save.file}{Character. Optional file path to save the resulting
-object as an R binary file (\code{.rds}) using \code{saveRDS()}
-(e.g., \code{"results.rds"}).}
+\item{save_file}{Character. Optional file path to save the resulting
+object (e.g., \code{"results.rds"}).}
 
 \item{alpha}{Numeric. Significance level used for causal model selection
 (default: 0.05).}
@@ -30,73 +35,54 @@ object as an R binary file (\code{.rds}) using \code{saveRDS()}
 \item{data}{A \code{data.frame} containing ALL raw variables used in the
 original DDA model (outcome, predictor, and any covariates).}
 
-\item{agg.stat}{Character. Specifies the method used for aggregating test
+\item{agg_stat}{Character. Specifies the method used for aggregating test
 statistics and coefficients across bootstrap samples. Must be one of the
 following specifications \code{c("mean", "median", "trimmed",
 "winsorized", "midhinge", "tukey")}.}
 
-\item{trim.prob}{Numeric. Proportion of observations to be trimmed on each
-side of the sampling distribution when \code{agg.stat = "trimmed"}
+\item{trim_prob}{Numeric. Proportion of observations to be trimmed from
+each side of the sampling distribution when \code{agg_stat = "trimmed"}
 (default: 0.10).}
 
-\item{win.prob}{Numeric. Proportion of observations to be winsorized on
+\item{win_prob}{Numeric. Proportion of observations to be winsorized from
 each side of the sampling distribution when
-\code{agg.stat = "winsorized"} (default: 0.10).}
+\code{agg_stat = "winsorized"} (default: 0.10).}
 
-\item{dda.result}{An output object from any base DDA function (e.g.,
-\code{dda.indep}, \code{dda.vardist}, or \code{dda.resdist}).}
-
-\item{B}{Number of bootstrap samples (default: 100).}
+\item{inner_B}{Optional positive integer. Caps the number of inner
+bootstrap resamples (\code{B}) passed to each per-iteration DDA call.
+\code{NULL} (default) keeps whatever \code{B} was used in the original
+DDA call. Setting a smaller value (e.g., \code{inner_B = 50}) reduces
+run time substantially for \code{dda.resdist} and \code{dda.vardist},
+which run their own internal bootstrap on every outer iteration, without
+changing how the outer bagging loop aggregates results.}
 }
 \value{
-An object of class \code{dda.bagging} (with subclasses
+An object of class \code{dda_bagging} (with subclasses
   \code{dda_bagging_indep}, \code{dda_bagging_vardist}, or
   \code{dda_bagging_resdist}), which contains aggregated and raw results
   from tests matching the initial DDA function (\code{dda.indep},
   \code{dda.vardist}, or \code{dda.resdist}).
 }
 \description{
-\code{dda.bagging} performs bootstrap aggregation on an
-existing Direction Dependence Analysis (DDA) object to test the stability
-and robustness of direction dependence decisions.
+\code{dda.bagging} performs bootstrap aggregation (bagging) on an existing
+Direction Dependence Analysis (DDA) object to test the stability and
+robustness of direction dependence decisions.
 }
 \details{
-\code{dda.bagging} uses a fitted DDA output object (obtained from
+This function uses a fitted DDA output object (obtained from
 \code{dda.indep}, \code{dda.vardist}, or \code{dda.resdist}) and performs
 bootstrap aggregation of DDA test statistics. The function computes DDA
-statistics across \code{B} bootstrap samples and aggregates the results to
-evaluate the stability and robustness of DDA model selection. p-values
+statistics across \code{iter} bootstrap samples and aggregates the results
+to evaluate the stability and robustness of DDA model selection. p-values
 obtained from significance tests are aggregated using the harmonic mean
 p-value approach (Wilson, 2019).
 }
-\examples{
-\dontrun{
-
-
-# 1. Fit a base DDA independence model
-base_model <- dda.indep(y ~ x, data = my_data)
-
-# 2. Perform bootstrap aggregation on the base model
-bagged <- dda.bagging(
-  dda.result = base_model,
-  data = my_data,
-  B = 200,
-  agg.stat = "trimmed",
-  trim.prob = 0.05
-)
-
-# 3. View the aggregated results and decision summaries
-print(bagged)
-summary(bagged, show = c("hsic", "dcor", "bp"))
-}
-
-}
 \references{
-Wiedermann, W., & von Eye, A. (2025). \emph{Direction
-  Dependence Analysis: Foundations and Statistical Methods}. Cambridge, UK:
-  Cambridge University Press.
+Wiedermann, W., & von Eye, A. (2025). \emph{Direction Dependence Analysis:
+Foundations and Statistical Methods}. Cambridge, UK: Cambridge University
+Press.
 
-  Wilson, D. J. (2019). The harmonic mean p-value for combining dependent
-  tests. \emph{Proceedings of the National Academy of Sciences},
-  \emph{116}(4), 1195-1200.
+Wilson, D. J. (2019). The harmonic mean p-value for combining dependent
+tests. \emph{Proceedings of the National Academy of Sciences}, \emph{116}(4),
+1195--1200.
 }

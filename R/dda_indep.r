@@ -103,7 +103,7 @@ dda.indep <- function(
       rx     <- dat[,3] # purified predictor
       err.yx <- dat[,4] # errors of target model
 
-      diff.hsic <- hsic_test(err.xy, ry, method = "gamma")$statistic - hsic_test(err.yx, rx, method = "gamma")$statistic
+      diff.hsic <- hsic.test(err.xy, ry, method = "gamma")$statistic - hsic.test(err.yx, rx, method = "gamma")$statistic
       diff.dcor <- dccpp::dcor(err.xy, ry) - dccpp::dcor(err.yx, rx)
       diff.mi <- (max.entropy(ry) + max.entropy(err.xy)) - (max.entropy(rx) + max.entropy(err.yx))
       c(diff.hsic, diff.dcor, diff.mi)
@@ -180,8 +180,8 @@ dda.indep <- function(
 
 	if(hsic.method == "gamma"){
 
-	  hsic.yx <- hsic_test(rx, err.yx, method = hsic.method)
-	  hsic.xy <- hsic_test(ry, err.xy, method = hsic.method)
+	  hsic.yx <- hsic.test(rx, err.yx, method = hsic.method)
+	  hsic.xy <- hsic.test(ry, err.xy, method = hsic.method)
 
 	   output <- list(hsic.yx = hsic.yx, hsic.xy = hsic.xy, hsic.method = hsic.method)
 
@@ -191,8 +191,8 @@ dda.indep <- function(
 	# eigenvalue, bootstrap, and permutation all use B (MC draws / resamples)
 	if(hsic.method %in% c("eigenvalue", "bootstrap", "permutation")){
 
-	  hsic.yx <- hsic_test(rx, err.yx, method = hsic.method, B = B)
-	  hsic.xy <- hsic_test(ry, err.xy, method = hsic.method, B = B)
+	  hsic.yx <- hsic.test(rx, err.yx, method = hsic.method, B = B)
+	  hsic.xy <- hsic.test(ry, err.xy, method = hsic.method, B = B)
 
 	  output <- list(hsic.yx = hsic.yx, hsic.xy = hsic.xy, hsic.method = c(hsic.method, as.character(B)) )
 

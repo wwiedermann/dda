@@ -35,7 +35,7 @@ each side of the sampling distribution when
 \code{agg.stat = "winsorized"} (default: 0.10).}
 }
 \description{
-\code{ols_summary} prints aggregated ordinary least
+\code{ols.summary} prints aggregated ordinary least
 squares (OLS) regression summaries from a bootstrap aggregated DDA object.
 Regression coefficients and standard errors are aggregated across bootstrap
 samples using the method specified in \code{dda.bagging()} or overridden
