@@ -201,7 +201,14 @@ dda.resdist <- function(formula,
 
   # --- Prepare outcome, predictor, and model matrix for covariates ---
   if (!inherits(formula, "formula")) {
-    stop("Please supply a formula, e.g. y ~ xx")
+    # accept a fitted lm object (mirrors dda.indep)
+    X <- if (is.matrix(formula$x)) formula$x else model.matrix(terms(formula), model.frame(formula))
+    y <- if (is.vector(formula$y)) formula$y else model.response(model.frame(formula))
+    delete.pred <- which(colnames(X) == pred)
+    if (length(delete.pred) == 0) stop("Specified predictor not found in the target model.")
+    x <- X[, delete.pred]
+    X <- X[, -delete.pred, drop = FALSE]
+    if (!is.matrix(X)) X <- as.matrix(X)
   } else {
     mf <- model.frame(formula, data = data)
     y <- model.response(mf)
@@ -370,7 +377,7 @@ dda.resdist <- function(formula,
     }
   }
 
-  response.name <- all.vars(formula)[1]
+  response.name <- all.vars(formula(formula))[1]
   output <- c(output, list(var.names = c(response.name, pred), probtrans = prob.trans))
 
   # --- CRITICAL FIX: Add call_info so dda_bagging can find data ---

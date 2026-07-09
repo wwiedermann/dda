@@ -5,7 +5,7 @@
 # R interface; kernel and null-distribution routines compiled from src/hsic.cpp.
 #
 # References:
-#   Gretton, A., Fukumizu, K., Teo, C. H., Song, L., Schölkopf, B., &
+#   Gretton, A., Fukumizu, K., Teo, C. H., Song, L., Scholkopf, B., &
 #     Smola, A. J. (2008). A kernel statistical test of independence.
 #     Advances in Neural Information Processing Systems, 20.
 #
@@ -24,7 +24,7 @@
 
 
 # ==============================================================================
-# C++ BACKEND
+# C++ backend
 #
 # All kernel and null-distribution routines (median_bandwidth_cpp,
 # build_kernel_matrix_cpp, center_kernel_cpp, hsic_trace_cpp, permute_hsic_cpp,
@@ -35,7 +35,7 @@
 
 
 # ==============================================================================
-# INTERNAL HELPERS
+# Internal helpers
 # ==============================================================================
 
 #' Bandwidth to a Positive Scalar
@@ -386,7 +386,7 @@ hsic.test <- function(x, y,
 
     stat <- T_obs_n; names(stat) <- "HSIC"  # report n*HSIC; n^3 used only for the null above
     meth <- sprintf(
-      "HSIC eigenvalue test — Zhang/Suzuki Prop. 16 (B = %d MC draws, %s kernel)",
+      "HSIC eigenvalue test - Zhang/Suzuki Prop. 16 (B = %d MC draws, %s kernel)",
       B, kernel_x)
   }
 
@@ -526,7 +526,7 @@ hsic_resid_test <- function(model,
       statistic  = stat,
       p.value    = pval,
       method     = sprintf(
-        "HSIC regression residual test — dHSIC bootstrap (B = %d, %s kernel)",
+        "HSIC regression residual test - dHSIC bootstrap (B = %d, %s kernel)",
         B, kernel_x),
       data.name  = deparse(stats::formula(model)),
       bandwidths = c(x = bw_x, y = bw_y)

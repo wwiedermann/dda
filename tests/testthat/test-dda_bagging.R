@@ -1,6 +1,6 @@
 ## ============================================================================
 ## testthat file: test-dda_bagging.R
-## Tests for dda_bagging()
+## Tests for dda.bagging()
 ## ============================================================================
 
 # --- Shared setup -----------------------------------------------------------
@@ -42,21 +42,21 @@ base_indep_cov    <- dda.indep(y ~ x + z, pred = "x", data = d_cov, B = 10)
 
 test_that("dda_bagging errors on wrong input class", {
   expect_error(
-    dda_bagging(list(a = 1), data = d, iter = 5),
+    dda.bagging(list(a = 1), data = d, iter = 5),
     regexp = "Unsupported DDA object"
   )
 })
 
 test_that("dda_bagging errors when data is NULL", {
   expect_error(
-    dda_bagging(base_indep, data = NULL, iter = 5),
+    dda.bagging(base_indep, data = NULL, iter = 5),
     regexp = "Please provide"
   )
 })
 
 test_that("dda_bagging errors with invalid agg_stat", {
   expect_error(
-    dda_bagging(base_indep, data = d, iter = 5, agg_stat = "geometric"),
+    dda.bagging(base_indep, data = d, iter = 5, agg_stat = "geometric"),
     regexp = "should be one of"
   )
 })
@@ -66,7 +66,7 @@ test_that("dda_bagging errors with invalid agg_stat", {
 ## ============================================================================
 
 run_bag <- function(base, dat, iter = 10, ...) {
-  dda_bagging(base, data = dat, iter = iter, progress = FALSE, ...)
+  dda.bagging(base, data = dat, iter = iter, progress = FALSE, ...)
 }
 
 test_that("dda_bagging returns correct class for dda.indep input", {
@@ -216,7 +216,9 @@ test_that("decision levels are Target / Alternative / Undecided", {
 ## ============================================================================
 
 test_that("trimmed aggregation with trim_prob = 0 equals mean", {
+  set.seed(101)
   res_mean    <- run_bag(base_indep, d, agg_stat = "mean")
+  set.seed(101)
   res_trimmed <- run_bag(base_indep, d, agg_stat = "trimmed", trim_prob = 0)
   # Both use the same raw stats seeded the same way; HSIC stat should be equal
   expect_equal(res_mean$aggregated_stats$hsic_yx_stat,
@@ -225,7 +227,9 @@ test_that("trimmed aggregation with trim_prob = 0 equals mean", {
 })
 
 test_that("winsorized aggregation with win_prob = 0 equals mean", {
+  set.seed(101)
   res_mean <- run_bag(base_indep, d, agg_stat = "mean")
+  set.seed(101)
   res_win  <- run_bag(base_indep, d, agg_stat = "winsorized", win_prob = 0)
   expect_equal(res_mean$aggregated_stats$hsic_yx_stat,
                res_win$aggregated_stats$hsic_yx_stat,

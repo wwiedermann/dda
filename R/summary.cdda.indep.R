@@ -153,17 +153,18 @@ summary.cdda.indep <- function(object,
     ### HSIC ### ------------------------------------------------------------
     if(is.null(cdda.output[[1]][[1]]$hsic.yx)) stop("Difference tests not found, set 'diff = TRUE'.")
 
-    hsictests <- matrix(NA, length(mod_names), 6)
+    hsictests <- matrix(NA, length(mod_names), 4)
 
     for (i in 1:length(mod_names)) {
 
-      tar.hsic <- unlist(cdda.output[[1]][[i]]$hsic.yx[1:3])
-      alt.hsic <- unlist(cdda.output[[2]][[i]]$hsic.yx[1:3])
+      # htest stores statistic and p.value (no separate critical value)
+      tar.hsic <- c(cdda.output[[1]][[i]]$hsic.yx$statistic, cdda.output[[1]][[i]]$hsic.yx$p.value)
+      alt.hsic <- c(cdda.output[[2]][[i]]$hsic.yx$statistic, cdda.output[[2]][[i]]$hsic.yx$p.value)
       hsictests[i, ] <- c(tar.hsic, alt.hsic)
     }
 
     rownames(hsictests) <- mod_names
-    colnames(hsictests) <- rep(c("HSIC", "crit value", "p-value"), 2)
+    colnames(hsictests) <- rep(c("HSIC", "p-value"), 2)
     hsictests <- round(hsictests, 3)
 
     cat(paste("Hilbert-Schmidt Independence Criterion", "\n"))

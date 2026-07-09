@@ -118,15 +118,16 @@ reaggregate_bagging <- function(object, agg_stat = NULL, trim_prob = 0.10, win_p
 #'
 #' @param x An object of class \code{dda_bagging_indep},
 #'   \code{dda_bagging_resdist}, or \code{dda_bagging_vardist}.
-#' @param agg.stat Character. Specifies the method used for aggregating test
+#' @param object Aggregated bagging output, used by \code{print_ols_summary}.
+#' @param agg_stat Character. Specifies the method used for aggregating test
 #'   statistics and coefficients across bootstrap samples. Must be one of the
 #'   following specifications \code{c("mean", "median", "trimmed",
 #'   "winsorized", "midhinge", "tukey")}. If \code{NULL}, the method
 #'   established in \code{dda.bagging()} is used.
-#' @param trim.prob Numeric. Proportion of observations to be trimmed on each
+#' @param trim_prob Numeric. Proportion of observations to be trimmed on each
 #'   side of the sampling distribution when \code{agg.stat = "trimmed"}
 #'   (default: 0.10).
-#' @param win.prob Numeric. Proportion of observations to be winsorized on
+#' @param win_prob Numeric. Proportion of observations to be winsorized on
 #'   each side of the sampling distribution when
 #'   \code{agg.stat = "winsorized"} (default: 0.10).
 #' @param digits Integer. Number of digits used for rounding (default: 4).
@@ -147,7 +148,7 @@ reaggregate_bagging <- function(object, agg_stat = NULL, trim_prob = 0.10, win_p
 #'
 #' base_model <- dda.indep(y ~ x, pred = "x", data = d, B = 50,
 #'                          hetero = TRUE, nlfun = 2, diff = TRUE)
-#' bagged <- dda_bagging(base_model, data = d, iter = 10,
+#' bagged <- dda.bagging(base_model, data = d, iter = 10,
 #'                        agg_stat = "mean", progress = FALSE)
 #'
 #' # Default print
@@ -170,7 +171,7 @@ print.dda_bagging_indep <- function(x,
                                     digits = 4,
                                     alpha = 0.05,
                                     ...) {
-  # Rename internal variable to match standard 'x' for print generics while preserving your logic
+  # Rename internal variable to 'x' for the print generic
   object <- reaggregate_bagging(x, agg_stat, trim_prob, win_prob)
   stats <- object$aggregated_stats
 
@@ -186,7 +187,7 @@ print.dda_bagging_indep <- function(x,
   cat("Number of Bootstrap Samples:", object$n_valid_iterations, "\n")
   cat("Aggregation method:", object$agg_stat_used, "\n\n")
 
-  # Helper to check if a value should be printed (not null, not na, not nan)
+  # Skip values that are NULL, NA, or NaN
   should_print <- function(val) {
     !is.null(val) && !is.na(val) && !is.nan(val)
   }
@@ -356,7 +357,7 @@ print.dda_bagging_indep <- function(x,
 #' d <- data.frame(x, y)
 #'
 #' base_rd <- dda.resdist(y ~ x, pred = "x", data = d, B = 50)
-#' bagged_rd <- dda_bagging(base_rd, data = d, iter = 10, progress = FALSE)
+#' bagged_rd <- dda.bagging(base_rd, data = d, iter = 10, progress = FALSE)
 #' print(bagged_rd)
 #' print(bagged_rd, agg_stat = "median")
 #' }
@@ -437,7 +438,7 @@ print.dda_bagging_resdist <- function(x, agg_stat = NULL, trim_prob = 0.10, win_
 #' d <- data.frame(x, y)
 #'
 #' base_vd <- dda.vardist(y ~ x, pred = "x", data = d, B = 50)
-#' bagged_vd <- dda_bagging(base_vd, data = d, iter = 10, progress = FALSE)
+#' bagged_vd <- dda.bagging(base_vd, data = d, iter = 10, progress = FALSE)
 #' print(bagged_vd)
 #' print(bagged_vd, agg_stat = "winsorized", win_prob = 0.10)
 #' }

@@ -12,3 +12,5 @@
 ^revdep$
 ^\.positai$
 ^\.claude$
+^\.RDataTmp$
+^\.github$

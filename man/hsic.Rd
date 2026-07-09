@@ -85,5 +85,5 @@ Peters, J., Pfister, N., & Mooij, J. M. (2022). \emph{dHSIC: Independence
   2.1.
 }
 \seealso{
-\code{\link{hsic_test}}, \code{\link{median_bandwidth}}
+\code{\link{hsic.test}}, \code{\link{median_bandwidth}}
 }

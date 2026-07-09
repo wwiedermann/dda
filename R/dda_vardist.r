@@ -18,11 +18,6 @@
 #'   intervals. Must be one of the two specifications
 #'   \code{c("perc", "bca")}. \code{boot.type = "perc"} is the default.
 #' @param conf.level Confidence level for bootstrap confidence intervals.
-#' @param robust A logical value indicating whether Siegel's (1982) repeated
-#'   median estimator should be used for model estimation. If
-#'   \code{robust = TRUE} repeated median estimation is applied for the
-#'   causally competing models, otherwise ordinary least squares (OLS)
-#'   estimation is used.
 #'
 #' @return An object of class \code{dda.vardist} containing the results of
 #'   direction dependence tests of variable distributions.

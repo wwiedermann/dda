@@ -55,7 +55,7 @@ Tests \eqn{H_0: X \perp\!\!\!\perp \hat{e}} where
   The null distribution is estimated via the pairs-bootstrap of the
   \pkg{dHSIC} source (Peters et al., 2022).  The test statistic is
   \eqn{n \times \widehat{\mathrm{HSIC}}}, consistent with
-  \code{\link{hsic_test}}.
+  \code{\link{hsic.test}}.
 }
 \examples{
 \dontrun{
@@ -70,6 +70,6 @@ Peters, J., Pfister, N., & Mooij, J. M. (2022). \emph{dHSIC}. R package
   version 2.1.
 }
 \seealso{
-\code{\link{hsic}}, \code{\link{hsic_test}}
+\code{\link{hsic}}, \code{\link{hsic.test}}
 }
 \keyword{internal}

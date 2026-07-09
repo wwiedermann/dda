@@ -14,20 +14,20 @@ generate_test_data <- function(n = 200, seed = 42) {
 
 d <- generate_test_data()
 
-bag_indep <- dda_bagging(
+bag_indep <- dda.bagging(
   dda.indep(y ~ x, pred = "x", data = d, B = 10),
   data = d, iter = 10, progress = FALSE
 )
-bag_indep_full <- dda_bagging(
+bag_indep_full <- dda.bagging(
   dda.indep(y ~ x, pred = "x", data = d, B = 10,
             hetero = TRUE, nlfun = 2, diff = TRUE),
   data = d, iter = 10, progress = FALSE
 )
-bag_resdist <- dda_bagging(
+bag_resdist <- dda.bagging(
   dda.resdist(y ~ x, pred = "x", data = d, B = 10),
   data = d, iter = 10, progress = FALSE
 )
-bag_vardist <- dda_bagging(
+bag_vardist <- dda.bagging(
   dda.vardist(y ~ x, pred = "x", data = d, B = 10),
   data = d, iter = 10, progress = FALSE
 )

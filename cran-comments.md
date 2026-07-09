@@ -1,4 +1,4 @@
-# cran-comments.md for dda (0.1.1)
+# cran-comments.md for dda (1.1.1)
 
 ### R CMD check results
 
@@ -13,7 +13,7 @@ We saw 3 new problems:
 Both maintainers were notified on Oct 29 (~2 weeks ago) and supplied with patches.
 
 Package: dda
-Version: 0.1.1
+Version: 1.1.1
 Date: 2025-11-07
 
 Summary of changes

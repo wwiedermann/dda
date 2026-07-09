@@ -38,12 +38,6 @@ intervals. Must be one of the two specifications
 \item{x}{An object of class \code{dda.vardist} when using \code{print}.}
 
 \item{...}{Additional arguments to be passed to the function.}
-
-\item{robust}{A logical value indicating whether Siegel's (1982) repeated
-median estimator should be used for model estimation. If
-\code{robust = TRUE} repeated median estimation is applied for the
-causally competing models, otherwise ordinary least squares (OLS)
-estimation is used.}
 }
 \value{
 An object of class \code{dda.vardist} containing the results of

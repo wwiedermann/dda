@@ -16,23 +16,23 @@ summary_ols(
 \arguments{
 \item{object}{Output from \code{dda.bagging()}.}
 
-\item{digits}{Integer. Number of digits used for rounding.}
-
-\item{...}{Additional arguments passed to \code{print}.}
-
-\item{agg.stat}{Character. Specifies the method used for aggregating test
+\item{agg_stat}{Character. Specifies the method used for aggregating test
 statistics and coefficients across bootstrap samples. Must be one of the
 following specifications \code{c("mean", "median", "trimmed",
 "winsorized", "midhinge", "tukey")}. If \code{NULL}, the function
 uses the method applied with \code{dda.bagging()}.}
 
-\item{trim.prob}{Numeric. Proportion of observations to be trimmed on each
+\item{trim_prob}{Numeric. Proportion of observations to be trimmed on each
 side of the sampling distribution when \code{agg.stat = "trimmed"}
 (default: 0.10).}
 
-\item{win.prob}{Numeric. Proportion of observations to be winsorized on
+\item{win_prob}{Numeric. Proportion of observations to be winsorized on
 each side of the sampling distribution when
 \code{agg.stat = "winsorized"} (default: 0.10).}
+
+\item{digits}{Integer. Number of digits used for rounding.}
+
+\item{...}{Additional arguments passed to \code{print}.}
 }
 \description{
 \code{ols.summary} prints aggregated ordinary least
@@ -51,7 +51,7 @@ y <- 0.5 * x + e
 d <- data.frame(x, y)
 
 base_model <- dda.indep(y ~ x, pred = "x", data = d, B = 50)
-bagged <- dda_bagging(base_model, data = d, iter = 10, progress = FALSE)
+bagged <- dda.bagging(base_model, data = d, iter = 10, progress = FALSE)
 
 # Print aggregated OLS coefficients for target and alternative models
 summary_ols(bagged)

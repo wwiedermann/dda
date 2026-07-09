@@ -83,7 +83,7 @@ dda.bagging <- function(
     stop("Unsupported DDA object. Must be dda.indep, dda.resdist, or dda.vardist.")
   }
   if (!is.data.frame(data) || nrow(data) == 0) {
-    stop("Valid 'data' data.frame must be provided.")
+    stop("Please provide a valid 'data' data.frame.")
   }
   stopifnot(
     is.numeric(iter)     && iter > 0,
@@ -336,7 +336,7 @@ dda.bagging <- function(
   }
 
   # ============================================================================
-  # INDEP Block
+  # indep block
   # ============================================================================
   if (obj_type == "dda.indep") {
     agg$var.names <- var_names
@@ -458,7 +458,7 @@ dda.bagging <- function(
   }
 
   # ============================================================================
-  # RESDIST Block
+  # resdist block
   # ============================================================================
   if (obj_type == "dda.resdist") {
     agg$var.names <- var_names
@@ -600,7 +600,7 @@ dda.bagging <- function(
   }
 
   # ============================================================================
-  # VARDIST Block
+  # vardist block
   # ============================================================================
   if (obj_type == "dda.vardist") {
     agg$var.names <- var_names
