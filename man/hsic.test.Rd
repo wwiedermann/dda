@@ -18,81 +18,72 @@ hsic.test(
 )
 }
 \arguments{
-\item{x}{A numeric vector of length n or matrix (n x p).}
+\item{x}{A numeric vector or matrix (\eqn{n \times p}).}
 
-\item{y}{A numeric vector of length n or matrix (n x q).}
+\item{y}{A numeric vector or matrix (\eqn{n \times q}).}
 
-\item{method}{Inference method for the null distribution. One of
-\code{c("gamma", "permutation", "eigenvalue", "bootstrap")}.
-Default is \code{"gamma"}.}
+\item{method}{One of \code{"gamma"} (default), \code{"permutation"},
+\code{"eigenvalue"}, \code{"bootstrap"}.}
 
-\item{kernel_x}{Kernel for X. One of \code{c("gaussian",
-"laplace", "linear", "polynomial")}. Default is
-\code{"gaussian"}.}
+\item{kernel_x}{Kernel for \eqn{X}: \code{"gaussian"} (default),
+\code{"laplace"}, \code{"linear"}, \code{"polynomial"}.}
 
-\item{kernel_y}{Kernel for Y. Defaults to \code{kernel_x}.}
+\item{kernel_y}{Kernel for \eqn{Y}.  Defaults to \code{kernel_x}.}
 
-\item{bandwidth_x}{Bandwidth (\eqn{\sigma^2}) for the X kernel. The
-median heuristic is always the default and is applied when
-\code{bandwidth_x = NULL}. A strictly positive numeric value is
-used directly.}
+\item{bandwidth_x}{Bandwidth (\eqn{\sigma^2}) for the \eqn{X} kernel.
+\code{NULL} (default) uses the median heuristic.  See \code{\link{hsic}}.}
 
-\item{bandwidth_y}{Bandwidth for the Y kernel. Same options as
-\code{bandwidth_x}; the median heuristic is the default.}
+\item{bandwidth_y}{Bandwidth for the \eqn{Y} kernel.}
 
-\item{degree}{Integer degree for the polynomial kernel. Default
-\code{2}.}
+\item{degree}{Polynomial degree.  Default \code{2}.}
 
-\item{coef0}{Constant term for the polynomial kernel. Default
-\code{1}.}
+\item{coef0}{Polynomial constant.  Default \code{1}.}
 
-\item{B}{Number of permutation or bootstrap replicates, or
-Monte Carlo draws for \code{method = "eigenvalue"}. Ignored for
-\code{method = "gamma"}. Default is \code{1000}.}
+\item{B}{Permutation / bootstrap replications, or MC draws for
+\code{"eigenvalue"}.  Ignored for \code{"gamma"}.  Default \code{1000}.}
 }
 \value{
-An object of class \code{"htest"} with components:
+An object of class \code{"htest"}:
   \describe{
-    \item{\code{statistic}}{The test statistic
-      \eqn{n \times \widehat{\mathrm{HSIC}}}, labelled
-      \code{"HSIC"}.}
-    \item{\code{p.value}}{P-value for the test of independence.}
-    \item{\code{bandwidths}}{Resolved bandwidths \code{c(x, y)}.}
+    \item{\code{statistic}}{\eqn{n \times \widehat{\mathrm{HSIC}}}
+      (labelled \code{"HSIC"}) for all four methods, matching
+      \code{dHSIC::dhsic.test()$statistic = dHSIC * len}. The eigenvalue
+      method applies the \eqn{n^3} scaling internally for its spectral null only.}
+    \item{\code{p.value}}{For \code{"permutation"} and \code{"bootstrap"}:
+      \eqn{(\#\{T_b \geq T_{\mathrm{obs}}\} + 1)/(B + 1)}, the Laplace
+      correction used in \code{dHSIC::dhsic.test()}.}
+    \item{\code{bandwidths}}{Resolved \code{c(x, y)} bandwidths.}
   }
 }
 \description{
-\code{hsic.test} tests whether X and Y are independent
-  using the Hilbert-Schmidt Independence Criterion. The test statistic
-  is \eqn{n \times \widehat{\mathrm{HSIC}}}, labelled \code{"HSIC"},
-  and is consistent across all four inference methods.
+Tests whether \eqn{X \perp\!\!\!\perp Y} using HSIC.
+  The test statistic is \eqn{n \times \widehat{\mathrm{HSIC}}}, matching
+  the \code{dHSIC::dhsic.test()} convention (\code{stat = dHSIC * len}),
+  so printed statistics are directly comparable.
 
-  Available null-distribution methods:
+  Four null-distribution methods are available:
   \describe{
-    \item{\code{"gamma"}}{Fits a Gamma distribution to the first two
-      null moments of HSIC analytically (Peters, Pfister & Mooij,
-      2022). No resampling required.}
-    \item{\code{"permutation"}}{Permutes the row index of X to
-      simulate the null distribution entirely in C++.}
-    \item{\code{"eigenvalue"}}{Derives the null distribution from the
-      eigenvalue spectrum of the centered kernel matrices (Zhang, 2011).
-     More accurate in small samples; uses \code{B} Monte
-      Carlo draws. Reports \eqn{n \times \widehat{\mathrm{HSIC}}} with
-      p-value from the spectral null.}
-    \item{\code{"bootstrap"}}{Independently resamples rows of the
-      kernel matrices with replacement in C++ (Peters, Pfister &
-      Mooij, 2022).}
+    \item{\code{"gamma"}}{Exact Gamma approximation matching the
+      \pkg{dHSIC} source moment formula (Peters et al., 2022).  Fits a
+      \eqn{\Gamma(\alpha, \beta)} to the first two moments of the \eqn{n \times
+      \widehat{\mathrm{HSIC}}} null distribution, computed from the
+      \emph{uncentered} Gram matrices via sufficient statistics
+      \eqn{\hat{a}_j = n^{-2}\sum K_j},
+      \eqn{\hat{b}_j = n^{-2}\sum K_j^2},
+      \eqn{\hat{c}_j = n^{-3}\sum_i (\sum_k K_j(i,k))^2}.
+      Instantaneous; no replications required.}
+    \item{\code{"permutation"}}{Permutes indices of \eqn{x} in C++ (no R
+      loop).  Exact conditional level (Suzuki, 2025, Section 4.2).}
+    \item{\code{"eigenvalue"}}{asymptotic spectral mixture: under
+      \eqn{H_0}, \eqn{n^3\,\widehat{\mathrm{HSIC}} \xrightarrow{d}
+      \sum_{i,j}\lambda_{X,i}\lambda_{Y,j}\chi^2_1} (Zhang; Suzuki, 2025,
+      Proposition 16).  \code{B} Monte Carlo draws estimate the p-value.}
+    \item{\code{"bootstrap"}}{Independently resamples rows of \eqn{K_X}
+      and \eqn{K_Y} with replacement in C++ (Peters et al., 2022).}
   }
 }
-\details{
-All four methods report \eqn{n \times \widehat{\mathrm{HSIC}}} as
-the test statistic. Permutation and bootstrap p-values use the
-Laplace correction
-\eqn{(\#\{T_b \geq T_{\mathrm{obs}}\} + 1) / (B + 1)}.
-}
 \examples{
-set.seed(7)
-n <- 80
-x <- rnorm(n)
+set.seed(7); n <- 80; x <- rnorm(n)
 hsic.test(x, rnorm(n), method = "gamma")
 hsic.test(x, rnorm(n), method = "permutation", B = 499)
 hsic.test(x, x + rnorm(n), method = "permutation", B = 499)
@@ -100,20 +91,19 @@ hsic.test(x, x + rnorm(n), method = "permutation", B = 499)
 }
 \references{
 Gretton, A., Fukumizu, K., Teo, C. H., Song, L., Scholkopf, B., &
-  Smola, A. J. (2008). A kernel statistical test of independence.
+  Smola, A. J. (2007/2008). A kernel statistical test of independence.
   \emph{Advances in Neural Information Processing Systems}, 20.
 
-Peters, J., Pfister, N., & Mooij, J. M. (2022). \emph{dHSIC:
-  Independence Testing via Hilbert Schmidt Independence Criterion}.
-  R package version 2.1.
-  \url{https://CRAN.R-project.org/package=dHSIC}
+Suzuki, T. (2025). \emph{Statistical Learning Theory}. Springer.
+  Section 4.2, Propositions 12, 13, 16.
 
-Zhang, K., Peters, J., Janzing, D., & Scholkopf, B. (2011).
-  Kernel-based conditional independence test and application in
-  causal discovery. In \emph{Proceedings of the Twenty-Seventh
-  Conference on Uncertainty in Artificial Intelligence (UAI 2011)}
-  (pp. 804-813).
+Zhang, K. (eigenvalue-based asymptotic null; cited in Suzuki, 2025,
+  Proposition 16).
+
+Peters, J., Pfister, N., & Mooij, J. M. (2022). \emph{dHSIC}. R package
+  version 2.1.
 }
 \seealso{
-\code{\link{hsic}}, \code{\link{median_bandwidth}}
+\code{\link{hsic}}, \code{\link{hsic_resid_test}},
+  \code{\link{median_bandwidth}}
 }

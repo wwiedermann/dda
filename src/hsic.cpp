@@ -1,3 +1,4 @@
+
 #include <Rcpp.h>
 #include <cmath>
 #include <vector>
@@ -82,9 +83,8 @@ NumericMatrix build_kernel_matrix_cpp(NumericMatrix x,
     NumericMatrix K(n, n);
 
     bool is_gauss  = (kernel == "gaussian");
-    bool is_lap    = (kernel == "laplace");
     bool is_linear = (kernel == "linear");
-    bool is_poly   = (kernel == "polynomial");
+    bool is_poly   = (kernel == "polynomial");  // laplace is the remaining else-branch
 
     for (int i = 0; i < n; i++) {
         for (int j = i; j < n; j++) {

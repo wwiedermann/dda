@@ -16,56 +16,60 @@ hsic(
 )
 }
 \arguments{
-\item{x}{A numeric vector of length n or matrix (n x p).}
+\item{x}{A numeric vector (length \eqn{n}) or matrix (\eqn{n \times p}).}
 
-\item{y}{A numeric vector of length n or matrix (n x q).}
+\item{y}{A numeric vector (length \eqn{n}) or matrix (\eqn{n \times q}).}
 
-\item{kernel_x}{Kernel for X. One of \code{c("gaussian",
-"laplace", "linear", "polynomial")}. Default is
-\code{"gaussian"}.}
+\item{kernel_x}{Kernel for \eqn{X}: \code{"gaussian"} (default),
+\code{"laplace"}, \code{"linear"}, or \code{"polynomial"}.}
 
-\item{kernel_y}{Kernel for Y. Defaults to \code{kernel_x}.}
+\item{kernel_y}{Kernel for \eqn{Y}.  Defaults to \code{kernel_x}.}
 
-\item{bandwidth_x}{Bandwidth for the X kernel. The median heuristic
-(\code{\link{median_bandwidth}}) is always the default and is
-applied when \code{bandwidth_x = NULL} (default) or
-\code{bandwidth_x = "median"}. Alternatively, a strictly positive
-numeric value is used directly as \eqn{\sigma^2} for the Gaussian
-kernel \eqn{K(x,y) = \exp(-\|x-y\|^2 / (2\sigma^2))}.}
+\item{bandwidth_x}{Bandwidth for the \eqn{X} kernel.  \code{NULL} (default)
+or \code{"median"} uses the median heuristic (\code{\link{median_bandwidth}}).
+A strictly positive numeric is used directly as \eqn{\sigma^2} for the
+Gaussian kernel \eqn{K(x,y) = \exp(-\|x-y\|^2 / (2\sigma^2))}, matching
+the \pkg{dHSIC} parameterisation (Peters et al., 2022).}
 
-\item{bandwidth_y}{Bandwidth for the Y kernel. Same options as
-\code{bandwidth_x}; the median heuristic is the default.}
+\item{bandwidth_y}{Bandwidth for the \eqn{Y} kernel.  Same options as
+\code{bandwidth_x}.}
 
-\item{degree}{Integer degree for the polynomial kernel. Default
-\code{2}.}
+\item{degree}{Integer degree for the polynomial kernel.  Default \code{2}.}
 
-\item{coef0}{Constant term for the polynomial kernel. Default
-\code{1}.}
+\item{coef0}{Constant for the polynomial kernel.  Default \code{1}.}
 }
 \value{
-A single non-negative numeric value: the raw HSIC estimate
-  \eqn{(1/n^2) \, \mathrm{tr}(\tilde{K}_X \tilde{K}_Y)}. A value of
-  zero (with a characteristic kernel) implies independence.
+A single non-negative numeric: raw HSIC \eqn{= (1/n^2)\,\mathrm{tr}(\widetilde{K}_X \widetilde{K}_Y)}.
+  Zero (with a characteristic kernel) implies independence (Suzuki, 2025,
+  Proposition 12).
 }
 \description{
-\code{hsic} computes the empirical Hilbert-Schmidt
-  Independence Criterion between two variables X and Y using the
-  biased V-statistic
-  \eqn{(1/n^2) \, \mathrm{tr}(\tilde{K}_X \tilde{K}_Y)}.
-  All kernel and centering computations are performed in C++.
+Computes the empirical Hilbert-Schmidt Independence Criterion
+  (HSIC) between two random variables \eqn{X} and \eqn{Y} using the
+  biased V-statistic estimator (Gretton et al., 2008):
+  \deqn{
+    \widehat{\mathrm{HSIC}}(X, Y)
+    = \frac{1}{n^2}\operatorname{tr}(\widetilde{K}_X \widetilde{K}_Y).
+  }
+  This is algebraically identical to the \code{dHSIC} three-term formula
+  (Peters et al., 2022).  All kernel and centering work is done in C++.
 }
 \details{
-The Gaussian kernel uses \eqn{K(x,y) = \exp(-\|x-y\|^2 / (2\sigma^2))}
-where \code{bandwidth} = \eqn{\sigma^2}. The median heuristic sets
-\eqn{\sigma^2} to the median of all strictly positive squared pairwise
-distances, matching the convention in the \pkg{dHSIC} package.
+\subsection{Kernel and bandwidth convention}{
+  The Gaussian kernel uses \eqn{K(x,y) = \exp(-\|x-y\|^2 / (2\sigma^2))}
+  where \code{bandwidth} = \eqn{\sigma^2}.  This matches the
+  \pkg{dHSIC} source (Peters et al., 2022).  With \code{bandwidth = 1}
+  both functions compute \eqn{\exp(-d^2/2)}.  The median heuristic sets
+  \eqn{\sigma^2 = \mathrm{median}\{\|x_i - x_j\|^2 : i \neq j\}},
+  also matching \pkg{dHSIC}.
+}
 }
 \examples{
 set.seed(12)
 x <- rnorm(100)
-hsic(x, rnorm(100))
-hsic(x, x + rnorm(100, sd = 0.5))
-hsic(x, rnorm(100), bandwidth_x = 1, bandwidth_y = 1)
+hsic(x, rnorm(100))             # near zero (independent)
+hsic(x, x + rnorm(100, sd=0.5)) # positive (dependent)
+hsic(x, rnorm(100), bandwidth_x = 1, bandwidth_y = 1)  # fixed bw, matches dHSIC
 
 }
 \references{
@@ -73,10 +77,12 @@ Gretton, A., Fukumizu, K., Teo, C. H., Song, L., Scholkopf, B., &
   Smola, A. J. (2008). A kernel statistical test of independence.
   \emph{Advances in Neural Information Processing Systems}, 20.
 
-Peters, J., Pfister, N., & Mooij, J. M. (2022). \emph{dHSIC:
-  Independence Testing via Hilbert Schmidt Independence Criterion}.
-  R package version 2.1.
-  \url{https://CRAN.R-project.org/package=dHSIC}
+Suzuki, T. (2025). \emph{Statistical Learning Theory}. Springer.
+  Propositions 12, 13, 15.
+
+Peters, J., Pfister, N., & Mooij, J. M. (2022). \emph{dHSIC: Independence
+  Testing via Hilbert Schmidt Independence Criterion}. R package version
+  2.1.
 }
 \seealso{
 \code{\link{hsic.test}}, \code{\link{median_bandwidth}}

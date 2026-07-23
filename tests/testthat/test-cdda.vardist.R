@@ -60,7 +60,7 @@ test_that("cdda.vardist runs for lm object and returns a list-like value", {
       mod = "z",
       modval = c(0, 1),
       data = dat,
-      B = 200,
+      B = 100,
       boot.type = "perc",
       conf.level = 0.95
     )
@@ -71,8 +71,7 @@ test_that("cdda.vardist runs for lm object and returns a list-like value", {
 
 test_that("print.cdda.vardist produces output", {
   out <- safe_cdda_vardist(quote(
-    cdda.vardist(formula = m, pred = "x", mod = "z", modval = c(0,1),
-                 data = dat, B = 200)
+    cdda.vardist(formula = m, pred = "x", mod = "z", modval = c(0,1), data = dat, B = 50)
   ))
   expect_true(is.list(out))
   expect_output(print(out))
@@ -109,7 +108,7 @@ test_that("cdda.vardist errors when moderator not found", {
 
 test_that("cdda.vardist accepts numeric modval (pick-a-point) and returns results", {
   out_num <- safe_cdda_vardist(quote(
-    cdda.vardist(formula = m, pred = "x", mod = "z", modval = c(-1, 1), data = dat, B = 200)
+    cdda.vardist(formula = m, pred = "x", mod = "z", modval = c(-1, 1), data = dat, B = 50)
   ))
   expect_true(is.list(out_num))
 })
@@ -125,7 +124,7 @@ test_that("cdda.vardist supports factor moderators (levels branch)", {
   dat2$zf <- factor(dat2$z > 0, labels = c("neg", "pos"))
   m_fac <- lm(y ~ x * zf, data = dat2)
   out_fac <- safe_cdda_vardist(quote(
-    cdda.vardist(formula = m_fac, pred = "x", mod = "zf", data = dat2, B = 200)
+    cdda.vardist(formula = m_fac, pred = "x", mod = "zf", data = dat2, B = 50)
   ))
   expect_true(is.list(out_fac))
   # names for moderator levels should be present
@@ -137,7 +136,7 @@ test_that("cdda.vardist handles modval = 'JN' when interactions::johnson_neyman 
     skip("interactions package not installed; skipping Johnson-Neyman test")
   }
   res <- safe_cdda_vardist(quote(
-    cdda.vardist(formula = m, pred = "x", mod = "z", modval = "JN", data = dat, B = 200)
+    cdda.vardist(formula = m, pred = "x", mod = "z", modval = "JN", data = dat, B = 50)
   ), accept_patterns = c("johnson_neyman", "Invalid or no moderator value specified"))
   # Accept either successful output or an accepted known error from interactions
   if (is_accepted_error(res)) {
@@ -153,8 +152,7 @@ test_that("cdda.vardist handles modval = 'JN' when interactions::johnson_neyman 
 
 test_that("cdda.vardist uses boot.type argument and returns without crashing for perc", {
   out <- safe_cdda_vardist(quote(
-    cdda.vardist(formula = m, pred = "x", mod = "z", modval = c(0,1),
-                 data = dat, B = 200, boot.type = "perc")
+    cdda.vardist(formula = m, pred = "x", mod = "z", modval = c(0,1), data = dat, B = 50, boot.type = "perc")
   ))
   expect_true(is.list(out))
 })
@@ -162,7 +160,6 @@ test_that("cdda.vardist uses boot.type argument and returns without crashing for
 test_that("cdda.vardist returns an error for clearly invalid boot.type", {
   # downstream functions may error; we just assert an error is raised
   expect_error(
-    cdda.vardist(formula = m, pred = "x", mod = "z", modval = c(0,1),
-                 data = dat, B = 200, boot.type = "invalid")
+    cdda.vardist(formula = m, pred = "x", mod = "z", modval = c(0,1), data = dat, B = 50, boot.type = "invalid")
   )
 })

@@ -1,34 +1,29 @@
 #' @title Direction Dependence Analysis: Variable Distributions
 #'
 #' @description \code{dda.vardist} evaluates patterns of asymmetry of
-#'   variable distributions for causally competing models (\code{y ~ x}
-#'   vs. \code{x ~ y}). \code{print} returns DDA test statistics
-#'   associated with \code{dda.vardist} objects.
+#' variable distributions for causally competing models
+#' (\code{y ~ x} vs. \code{x ~ y}).
+#' \code{print} returns DDA test statistics associated with
+#' \code{dda.vardist} objects.
 #'
-#' @name dda.vardist
-#'
-#' @param formula    Symbolic formula of the model to be tested or an
+#' @param formula Symbolic formula of the model to be tested or a
 #'   \code{lm} object.
-#' @param pred       Variable name of the predictor which serves as the
-#'   outcome in the alternative model.
-#' @param data       An optional data frame containing the variables in
-#'   the model (by default variables are taken from the environment which
+#' @param pred Variable name of the predictor which serves as the outcome in
+#'   the alternative model.
+#' @param data An optional data frame containing the variables in the model
+#'   (by default variables are taken from the environment which
 #'   \code{dda.vardist} is called from).
-#' @param B          Number of bootstrap samples.
-#' @param boot.type  A character indicating the type of bootstrap
-#'   confidence intervals. Must be one of \code{c("perc", "bca")}.
-#'   \code{boot.type = "perc"} is the default.
+#' @param B Number of bootstrap samples.
+#' @param boot.type A character indicating the type of bootstrap confidence
+#'   intervals. Must be one of the two specifications
+#'   \code{c("perc", "bca")}. \code{boot.type = "perc"} is the default.
 #' @param conf.level Confidence level for bootstrap confidence intervals.
-#' @param x          An object of class \code{dda.vardist} when using
-#'   \code{print}.
-#' @param ...        Additional arguments to be passed to the function.
 #'
-#' @return An object of class \code{dda.vardist} containing the results
-#'   of direction dependence tests of variable distributions.
+#' @return An object of class \code{dda.vardist} containing the results of
+#'   direction dependence tests of variable distributions.
 #'
-#' @references
-#' Wiedermann, W., & von Eye, A. (2025). \emph{Direction Dependence
-#'   Analysis: Foundations and Statistical Methods}. Cambridge, UK:
+#' @references Wiedermann, W., & von Eye, A. (2025). \emph{Direction
+#'   Dependence Analysis: Foundations and Statistical Methods}. Cambridge, UK:
 #'   Cambridge University Press.
 #'
 #' @seealso \code{\link{cdda.vardist}} for a conditional version.
@@ -41,17 +36,7 @@
 #' y <- 0.5 * x + e
 #' d <- data.frame(x, y)
 #'
-#' result <- dda.vardist(y ~ x, pred = "x", data = d,
-#'                       boot.type = "perc", B = 100)
-#'
-#' print(result)
-#'
-#' \dontrun{
-#' # --- Larger bootstrap example
-#' result <- dda.vardist(y ~ x, pred = "x", data = d, B = 2000)
-#'
-#' print(result)
-#' }
+#' result <- dda.vardist(y ~ x, pred = "x", data = d, B = 50)
 #'
 #' @export
 #' @rdname dda.vardist
@@ -136,25 +121,29 @@ dda.vardist <- function(formula,
 		   if (!is.matrix(X)) X <- as.matrix(X)
 	}
 
+
   ry <- lm.fit(X, y)$residuals
 	rx <- lm.fit(X, x)$residuals
 
 	ry <- as.vector(scale(ry))
 	rx <- as.vector(scale(rx))
 
-	dat <- data.frame(predictor = rx, outcome = ry)
+
+
+
+    dat <- data.frame(predictor = rx, outcome = ry)
 
 	### --- run separate normality tests
 
 	agostino.out <- apply(dat, 2, moments::agostino.test)
 	agostino.out <- lapply(agostino.out, unclass)
 	agostino.out$predictor[3:5] <- NULL
-    agostino.out$outcome[3:5] <- NULL
+  agostino.out$outcome[3:5] <- NULL
 
 	anscombe.out <- apply(dat, 2, moments::anscombe.test)
 	anscombe.out <- lapply(anscombe.out, unclass)
 	anscombe.out$predictor[3:5] <- NULL
-    anscombe.out$outcome[3:5] <- NULL
+  anscombe.out$outcome[3:5] <- NULL
 
 	output <- list(agostino.out, anscombe.out)
 	names(output) <- c("agostino", "anscombe")
@@ -206,12 +195,32 @@ dda.vardist <- function(formula,
 	response.name <- all.vars(formula(formula))[1]  # get name of response variable
 	output <- c(output, list(var.names = c(response.name, pred)))
 
+	call_info <- list(
+	  "function_call" = match.call(),
+	  "function_name" = "dda.vardist",  # or deparse(substitute(sys.function()))
+	  "all_args" = as.list(match.call())[-1],
+	  "formula" = formula,
+	  "data_name" = deparse(substitute(data))#, RM original_data from all ddas
+	 # "original_data" = if(missing(data) || is.null(data)) NULL else data
+	)
+
+	output <- c(output,
+	            list(call_info = call_info)
+	           )
+
 	class(output) <- "dda.vardist"
 	return(output)
 
 }
 
-
+#' @title Print Method for \code{dda.vardist} Objects
+#'
+#' @param x An object of class \code{dda.vardist} when using \code{print}.
+#' @param ... Additional arguments to be passed to the function.
+#'
+#' @examples
+#' print(result)
+#'
 #' @export
 #' @rdname dda.vardist
 #' @method print dda.vardist

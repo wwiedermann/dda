@@ -1,6 +1,32 @@
+#' @title Summary of \code{cdda.vardist} Class Objects
+#'
+#' @description \code{summary} returns test statistics from the
+#' \code{cdda.vardist} class object.
+#'
+#' @name summary.cdda.vardist
+#'
+#' @param object An object of class \code{cdda.vardist} when using
+#'   \code{summary}.
+#' @param skew A logical value indicating whether skewness differences and
+#'   separate D'Agostino skewness tests should be returned when using
+#'   \code{summary}, default is \code{TRUE}.
+#' @param coskew A logical value indicating whether co-skewness differences
+#'   should be returned when using \code{summary}, default is \code{FALSE}.
+#' @param kurt A logical value indicating whether excess kurtosis differences
+#'   and Anscombe-Glynn kurtosis tests should be returned when using
+#'   \code{summary}, default is \code{TRUE}.
+#' @param cokurt A logical value indicating whether co-kurtosis differences
+#'   should be returned when using \code{summary}, default is \code{FALSE}.
+#' @param ... Additional arguments to be passed to the function.
+#'
+#' @examples
+#' summary(result, skew = FALSE, kurt = FALSE, coskew = TRUE)
+#'
 #' @export
 #' @rdname cdda.vardist
 #' @method summary cdda.vardist
+
+
 summary.cdda.vardist <- function(object,
                                  skew = TRUE,
                                  coskew = FALSE,
@@ -74,7 +100,7 @@ summary.cdda.vardist <- function(object,
     if(is.null(cdda.output[[1]][[1]]$cor12diff)) { stop("Co-Skewness differences not found. Specify coskew = TRUE.") }
     hoctests.skew <-  matrix(NA, length(mod_names), 6)
 
-    for(i in 1:length(mod_names)){
+    for(i in seq_along(mod_names)){
       hoctests.skew[i, ] <- c(cdda.output[[1]][[i]]$cor12diff,
                               cdda.output[[2]][[i]]$cor12diff)
       hoctests.skew[i, ] <- round(hoctests.skew[i, ], 3)
@@ -98,7 +124,7 @@ summary.cdda.vardist <- function(object,
     ### Hyvarinen-Smith (co-skewness) ### --------------------------------------
     rhs <- matrix(NA, length(mod_names), 6)
 
-    for (i in 1:length(mod_names)) {
+    for (i in seq_along(mod_names)) {
       rhs[i, ] <- c(cdda.output[[1]][[i]]$RHS, cdda.output[[2]][[i]]$RHS)
       rhs[i, ] <- round(rhs[i, ], 3)
     }
@@ -170,7 +196,7 @@ summary.cdda.vardist <- function(object,
 
     hoctests.kurt <-  matrix(NA, length(mod_names), 6)
 
-    for(i in 1:length(mod_names)){
+    for(i in seq_along(mod_names)){
       hoctests.kurt[i, ] <- c(cdda.output[[1]][[i]]$cor13diff, cdda.output[[2]][[i]]$cor13diff)
       hoctests.kurt[i, ] <- round(hoctests.kurt[i, ], 3)
     }
@@ -195,7 +221,7 @@ summary.cdda.vardist <- function(object,
 
     rcc <- matrix(NA, length(mod_names), 6)
 
-    for (i in 1:length(mod_names)) {
+    for (i in seq_along(mod_names)) {
       rcc[i, ] <- c(cdda.output[[1]][[i]]$RCC, cdda.output[[2]][[i]]$RCC)
       rcc[i, ] <- round(rcc[i, ], 3)
     }
@@ -217,7 +243,7 @@ summary.cdda.vardist <- function(object,
 
     rtanh <- matrix(NA, length(mod_names), 6)
 
-    for (i in 1:length(mod_names)) {
+    for (i in seq_along(mod_names)) {
 
       rtanh[i, ] <- c(cdda.output[[1]][[i]]$Rtanh, cdda.output[[2]][[i]]$Rtanh)
       rtanh[i, ] <- round(rtanh[i, ], 3)

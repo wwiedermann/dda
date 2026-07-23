@@ -1,44 +1,45 @@
-# cran-comments.md for dda (0.1.2)
+## Submission - dda 0.2.0
+
+This is a feature update to the CRAN package 'dda' (current CRAN version 0.1.1).
+All changes are backward-compatible.
+
+## Summary of changes
+
+* New C++ (Rcpp) backend for the Hilbert-Schmidt Independence Criterion
+  (src/hsic.cpp), replacing the previous pure-R implementation. New exported
+  functions hsic() and hsic.test(), with inference methods "gamma",
+  "permutation", "eigenvalue", and "bootstrap".
+* New dda.bagging(): bootstrap-aggregated Direction Dependence Analysis for
+  assessing the stability and robustness of direction-of-dependence decisions,
+  with accompanying print() and summary() methods.
+* New 'robust' argument for dda.indep() and dda.resdist(): Siegel (1982)
+  repeated-median regression, with a companion robust Breusch-Pagan test.
+* See NEWS.md for the full changelog.
+
+## Note on compiled code
+
+Unlike the previous release (0.1.1, pure R), this version contains compiled
+C++ code in src/, interfaced via Rcpp (NeedsCompilation: yes). This is the main
+change reviewers may wish to note.
 
 ## R CMD check results
 
 0 errors | 0 warnings | 0 notes
 
-## Issues addressed
-
-Two main changes occur in this release:
-
-- The primary author (Wiedermann) was notified on 30 April 2026
-of the potential `dHSIC` CRAN package archival. This patch release provides
-a local `hsic` function to replace the dependency on `dHSIC`.
-
-- **dda.indep** now utilizes the local `hsic` function which computes the
-Hilbert-Schmidt Independence Criterion (HSIC) for two variables. 
-
-- **hsic** contains options for different kernel types and 
-methods for estimating the null distribution.
-
-
 ## Test environments
 
-- Local: Windows 11, R release
-- Local: macOS Ventura, R release
-- win-builder: R release and R devel
+* Local: Windows 11, R 4.5.2 -- 0 errors | 0 warnings | 0 notes
+* TODO before submitting -- confirm on:
+    - win-builder (R-devel and R-release): devtools::check_win_devel() / check_win_release()
+    - macOS (R-release): devtools::check_mac_release()
+    - R-hub (Linux; gcc + clang, and a sanitizer flavour for the new C++):
+      rhub::rhub_check()
 
-## Package details
+## Reverse dependencies
 
-- Contains only R code; no compiled code and no `src/` directory.
-- No external `SystemRequirements`.
-- All examples, tests, and vignettes run without internet access or
-  non-standard hardware.
-- All exported functions are documented; internal helpers are marked
-  with `@keywords internal`.
+There are no reverse dependencies on CRAN.
+(Confirm with revdepcheck::revdep_check(); state result here.)
 
-## Changes in this version
+## Maintainer
 
-See `NEWS.md` for the changelog.
-
-## Contact
-
-Maintainer: Wolfgang Wiedermann <wiedermannw@missouri.edu>
-Additional test logs or platform details are available on request.
+Wolfgang Wiedermann <wiedermannw@missouri.edu>

@@ -1,5 +1,9 @@
 ## Overview
 
+<!-- badges: start -->
+[![Codecov test coverage](https://codecov.io/gh/wwiedermann/dda/graph/badge.svg)](https://app.codecov.io/gh/wwiedermann/dda)
+<!-- badges: end -->
+
 Direction Dependence Analysis (Package: \code{dda}) provides framework for analyzing competing linear models. A target model \code{y ~ x} is compared to an alternate (causally reversed) model \code{x ~ y} through a series of diagnostic tests. DDA framework supports causal model exploration and potential confounding detection through diagnostics with higher-order moments.
 
 * `cdda.indep()` conditional (moderation) independence property tests, including non‐linear correlation tests, Breusch–Pagan homoscedasticity tests, and the HSIC test 
@@ -7,7 +11,6 @@ Direction Dependence Analysis (Package: \code{dda}) provides framework for analy
 * `dda.indep()` independence property tests, including non‐linear correlation tests, Breusch–Pagan homoscedasticity tests, and the HSIC test 
 * `dda.resdist()` residual distribution tests, including D'Agostino and Anscombe–Glynn tests and bootstrap CIs on higher moment differences
 * `dda.vardist()` variable distribution‐based tests, including D'Agostino and Anscombe–Glynn tests and bootstrap CIs on higher moment differences
-* `hsic()`, `hsic.test()`, `median_bandwidth()` — Hilbert-Schmidt Independence Criterion tests with flexible kernel bandwidth selection supporting analyses
 
 If you are new to Direction Dependence Analysis (DDA) concepts, the best place to start is the [Direction Dependence in Statistical Modeling: Methods of Analysis](https://www.cambridge.org/us/universitypress/subjects/psychology/psychology-research-methods-and-statistics/direction-dependence-analysis-foundations-and-statistical-methods) text.
 

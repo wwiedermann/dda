@@ -17,38 +17,38 @@ dda.vardist(
 \method{print}{dda.vardist}(x, ...)
 }
 \arguments{
-\item{formula}{Symbolic formula of the model to be tested or an
+\item{formula}{Symbolic formula of the model to be tested or a
 \code{lm} object.}
 
-\item{pred}{Variable name of the predictor which serves as the
-outcome in the alternative model.}
+\item{pred}{Variable name of the predictor which serves as the outcome in
+the alternative model.}
 
-\item{data}{An optional data frame containing the variables in
-the model (by default variables are taken from the environment which
+\item{data}{An optional data frame containing the variables in the model
+(by default variables are taken from the environment which
 \code{dda.vardist} is called from).}
 
 \item{B}{Number of bootstrap samples.}
 
-\item{boot.type}{A character indicating the type of bootstrap
-confidence intervals. Must be one of \code{c("perc", "bca")}.
-\code{boot.type = "perc"} is the default.}
+\item{boot.type}{A character indicating the type of bootstrap confidence
+intervals. Must be one of the two specifications
+\code{c("perc", "bca")}. \code{boot.type = "perc"} is the default.}
 
 \item{conf.level}{Confidence level for bootstrap confidence intervals.}
 
-\item{x}{An object of class \code{dda.vardist} when using
-\code{print}.}
+\item{x}{An object of class \code{dda.vardist} when using \code{print}.}
 
 \item{...}{Additional arguments to be passed to the function.}
 }
 \value{
-An object of class \code{dda.vardist} containing the results
-  of direction dependence tests of variable distributions.
+An object of class \code{dda.vardist} containing the results of
+  direction dependence tests of variable distributions.
 }
 \description{
 \code{dda.vardist} evaluates patterns of asymmetry of
-  variable distributions for causally competing models (\code{y ~ x}
-  vs. \code{x ~ y}). \code{print} returns DDA test statistics
-  associated with \code{dda.vardist} objects.
+variable distributions for causally competing models
+(\code{y ~ x} vs. \code{x ~ y}).
+\code{print} returns DDA test statistics associated with
+\code{dda.vardist} objects.
 }
 \examples{
 set.seed(123)
@@ -58,22 +58,14 @@ e <- rchisq(n, df = 3) - 3
 y <- 0.5 * x + e
 d <- data.frame(x, y)
 
-result <- dda.vardist(y ~ x, pred = "x", data = d,
-                      boot.type = "perc", B = 100)
+result <- dda.vardist(y ~ x, pred = "x", data = d, B = 50)
 
 print(result)
-
-\dontrun{
-# --- Larger bootstrap example
-result <- dda.vardist(y ~ x, pred = "x", data = d, B = 2000)
-
-print(result)
-}
 
 }
 \references{
-Wiedermann, W., & von Eye, A. (2025). \emph{Direction Dependence
-  Analysis: Foundations and Statistical Methods}. Cambridge, UK:
+Wiedermann, W., & von Eye, A. (2025). \emph{Direction
+  Dependence Analysis: Foundations and Statistical Methods}. Cambridge, UK:
   Cambridge University Press.
 }
 \seealso{

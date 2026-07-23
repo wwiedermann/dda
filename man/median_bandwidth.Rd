@@ -7,35 +7,28 @@
 median_bandwidth(x)
 }
 \arguments{
-\item{x}{A numeric vector or matrix of observations (n rows).}
+\item{x}{A numeric vector or matrix of observations (\eqn{n} rows).}
 }
 \value{
-A single strictly positive numeric: the bandwidth
-  \eqn{\sigma^2}, ready to pass as \code{bandwidth_x} or
-  \code{bandwidth_y}. Returns 1 when all pairwise distances are zero.
+A single strictly positive numeric: the bandwidth \eqn{\sigma^2},
+  ready to pass as \code{bandwidth_x} or \code{bandwidth_y}.
+  Returns \code{1} (with a warning) when all pairwise distances are zero.
 }
 \description{
-Returns the median of all strictly positive squared
-  pairwise Euclidean distances, interpreted as the variance
-  parameter \eqn{\sigma^2} for the Gaussian kernel
-  \eqn{K(x,y) = \exp(-\|x-y\|^2 / (2\sigma^2))}. This is the same
-  convention used in the \code{dHSIC} source code (Peters et al.,
-  2022).
-}
-\examples{
-x <- rnorm(80)
-median_bandwidth(x)
-
+Returns the median of all strictly positive squared pairwise
+  Euclidean distances, interpreted as the variance parameter
+  \eqn{\sigma^2} for the Gaussian kernel
+  \eqn{K(x,y) = \exp(-\|x-y\|^2 / (2\sigma^2))}.
+  This is the same convention used in the \pkg{dHSIC} source code
+  (Peters et al., 2022).
 }
 \references{
 Gretton, A., Fukumizu, K., Teo, C. H., Song, L., Scholkopf, B., &
   Smola, A. J. (2008). A kernel statistical test of independence.
   \emph{Advances in Neural Information Processing Systems}, 20.
 
-Peters, J., Pfister, N., & Mooij, J. M. (2022). \emph{dHSIC:
-  Independence Testing via Hilbert Schmidt Independence Criterion}.
-  R package version 2.1.
+Peters, J., Pfister, N., & Mooij, J. M. (2022). \emph{dHSIC: Independence
+  Testing via Hilbert Schmidt Independence Criterion}. R package version
+  2.1.
 }
-\seealso{
-\code{\link{hsic.test}}
-}
+\keyword{internal}
