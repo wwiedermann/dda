@@ -1,4 +1,4 @@
-# dda 1.1.1
+# dda 0.2.0
 
 ---
 
@@ -6,7 +6,7 @@
 
 - Native C++ (Rcpp) backend for the Hilbert-Schmidt Independence Criterion in
   `src/hsic.cpp`, replacing the previous pure-R implementation. Exposes
-  `hsic()`, `hsic_test()` (methods `"gamma"`, `"permutation"`, `"eigenvalue"`,
+  `hsic()`, `hsic.test()` (methods `"gamma"`, `"permutation"`, `"eigenvalue"`,
   `"bootstrap"`), and `hsic_resid_test()`.
 - `dda.bagging()`: bootstrap-aggregated DDA to assess the stability and
   robustness of direction-of-dependence decisions, with `print`/`summary`

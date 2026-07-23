@@ -7,10 +7,12 @@
 ^doc$
 ^Meta$
 ^vignettes/articles$
-^Rplots.pdf
+^Rplots\.pdf$
 ^cran-comments\.md$
 ^revdep$
 ^\.positai$
 ^\.claude$
 ^\.RDataTmp$
 ^\.github$
+^\.RData$
+^\.Rhistory$

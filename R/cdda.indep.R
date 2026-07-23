@@ -45,7 +45,7 @@
 #'
 #' @examples
 #' set.seed(321)
-#' n <- 700
+#' n <- 300
 #'
 #' ## --- generate moderator
 #'
@@ -79,7 +79,7 @@
 #'                      data = d,
 #'                      hetero = TRUE,
 #'                      diff = TRUE,
-#'                      parallelize = TRUE,
+#'                      parallelize = FALSE,
 #'                      cores = 2,
 #'                      nlfun = 2,
 #'                      B = 2)

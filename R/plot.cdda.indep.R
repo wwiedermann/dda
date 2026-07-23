@@ -46,7 +46,7 @@ plot.cdda.indep <- function(x = NULL,
     plot.axis <- mod.levels
   }
   else {x.range <- c(1, length(mod.levels))
-  plot.axis <- 1:length(mod.levels)
+  plot.axis <- seq_along(mod.levels)
   }
 
   out <- matrix(NA, length(plot.axis), 6)
@@ -57,7 +57,7 @@ plot.cdda.indep <- function(x = NULL,
     }
     y.title <- paste0("HSIC Differences (", ci.level, "% CI)")
 
-    for (i in 1:length(plot.axis)) {
+    for (i in seq_along(plot.axis)) {
       out[i, ] <- c(obj[[1]][[i]]$out.diff[1, ],
                     obj[[2]][[i]]$out.diff[1, ])
     }
@@ -69,7 +69,7 @@ plot.cdda.indep <- function(x = NULL,
     }
 
     y.title <- paste0("dCor Differences (", ci.level, "% CI)")
-    for (i in 1:length(plot.axis)) {
+    for (i in seq_along(plot.axis)) {
       out[i, ] <- c(obj[[1]][[i]]$out.diff[2, ],
                     obj[[2]][[i]]$out.diff[2, ])
     }
@@ -82,7 +82,7 @@ plot.cdda.indep <- function(x = NULL,
 
     y.title <- paste0("Mutual Information Differences (", ci.level, "% CI)")
 
-    for (i in 1:length(plot.axis)) {
+    for (i in seq_along(plot.axis)) {
       out[i, ] <- c(obj[[1]][[i]]$out.diff[3, ],
                     obj[[2]][[i]]$out.diff[3, ])
     }
@@ -109,7 +109,7 @@ plot.cdda.indep <- function(x = NULL,
   plot(plot.axis, out.tar$out.mean, type = "n",
        ylim = y.range, xlim = x.range, xaxt = "n",
        xlab = "Moderator Values", ylab = y.title, main = "Target Model")
-  axis(1, at = 1:length(out.tar$condition), labels = x.axis.labels)
+  axis(1, at = seq_along(out.tar$condition), labels = x.axis.labels)
   polygon(x = c(out.tar$condition, rev(out.tar$condition)),
           y = c(out.tar$out.low, rev(out.tar$out.upp)),
           border = FALSE, col = "lightgrey")
@@ -119,7 +119,7 @@ plot.cdda.indep <- function(x = NULL,
   plot(plot.axis, out.alt$out.mean, type = "n",
        ylim = y.range, xlim = x.range, xaxt = "n",
        xlab = "Moderator Values", ylab = y.title, main = "Alternative Model")
-  axis(1, at = 1:length(out.tar$condition), labels = x.axis.labels)
+  axis(1, at = seq_along(out.tar$condition), labels = x.axis.labels)
   polygon(x = c(out.alt$condition, rev(out.alt$condition)),
           y = c(out.alt$out.low, rev(out.alt$out.upp)),
           border = FALSE, col = "lightgrey")

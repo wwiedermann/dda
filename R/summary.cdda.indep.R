@@ -72,7 +72,7 @@ summary.cdda.indep <- function(object,
     ### BP ### ------------------------------------------------------------
     bptests <- matrix(NA, length(mod_names), 6)
 
-    for (i in 1:length(mod_names)) {
+    for (i in seq_along(mod_names)) {
 
       tar.bp <- unlist(cdda.output[[1]][[i]]$breusch_pagan[[1]][c(1,2,4)])
       alt.bp <- unlist(cdda.output[[2]][[i]]$breusch_pagan[[1]][c(1,2,4)])
@@ -93,7 +93,7 @@ summary.cdda.indep <- function(object,
     ### Robust BP ### --------------------------------------------------------
     rbptests <- matrix(NA, length(mod_names), 6)
 
-    for (i in 1:length(mod_names)) {
+    for (i in seq_along(mod_names)) {
 
       tar.rbp <- unlist(cdda.output[[1]][[i]]$breusch_pagan[[2]][c(1,2,4)])
       alt.rbp <- unlist(cdda.output[[2]][[i]]$breusch_pagan[[2]][c(1,2,4)])
@@ -120,7 +120,7 @@ summary.cdda.indep <- function(object,
 
     nlsigtests <- matrix(NA, length(mod_names), 8)
 
-    for (i in 1:length(mod_names)) {
+    for (i in seq_along(mod_names)) {
 
       tar.nl <- rbind(cdda.output[[1]][[i]]$nlcor.yx$t1,
                       cdda.output[[1]][[i]]$nlcor.yx$t2,
@@ -155,7 +155,7 @@ summary.cdda.indep <- function(object,
 
     hsictests <- matrix(NA, length(mod_names), 4)
 
-    for (i in 1:length(mod_names)) {
+    for (i in seq_along(mod_names)) {
 
       # htest stores statistic and p.value (no separate critical value)
       tar.hsic <- c(cdda.output[[1]][[i]]$hsic.yx$statistic, cdda.output[[1]][[i]]$hsic.yx$p.value)
@@ -182,7 +182,7 @@ summary.cdda.indep <- function(object,
 
     hsicdiff <- matrix(NA, length(mod_names), 6)
 
-    for (i in 1:length(mod_names)) {
+    for (i in seq_along(mod_names)) {
 
       tar.hsicd <- unlist(cdda.output[[1]][[i]]$out.diff[1, ])
       alt.hsicd <- unlist(cdda.output[[2]][[i]]$out.diff[1, ])
@@ -210,7 +210,7 @@ summary.cdda.indep <- function(object,
 
     dcor <- matrix(NA, length(mod_names), 4)
 
-    for (i in 1:length(mod_names)) {
+    for (i in seq_along(mod_names)) {
       tar.dcor <- unlist(c(cdda.output[[1]][[i]]$distance_cor.dcor_yx$statistic,
                            cdda.output[[1]][[i]]$distance_cor.dcor_yx$p.value))
       alt.dcor <- unlist(c(cdda.output[[2]][[i]]$distance_cor.dcor_yx$statistic,
@@ -240,7 +240,7 @@ summary.cdda.indep <- function(object,
 
     dcortests <- matrix(NA, length(mod_names), 6)
 
-    for (i in 1:length(mod_names)) {
+    for (i in seq_along(mod_names)) {
       tar.dcor.diff <- unlist(cdda.output[[1]][[i]]$out.diff[2, ])
       alt.dcor.diff <- unlist(cdda.output[[2]][[i]]$out.diff[2, ])
       dcortests[i, ] <- c(tar.dcor.diff, alt.dcor.diff)
@@ -267,7 +267,7 @@ summary.cdda.indep <- function(object,
 
     mitests <- matrix(NA, length(mod_names), 6)
 
-    for (i in 1:length(mod_names)) {
+    for (i in seq_along(mod_names)) {
       tar.mi <- unlist(cdda.output[[1]][[i]]$out.diff[3, ])
       alt.mi <- unlist(cdda.output[[2]][[i]]$out.diff[3, ])
       mitests[i, ] <- c(tar.mi, alt.mi)

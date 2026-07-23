@@ -58,8 +58,8 @@
 #' y <- 0.5 * x + e
 #' d <- data.frame(x, y)
 #'
-#' result <- dda.indep(y ~ x, pred = "x", data = d, parallelize = TRUE,
-#'   cores = 2, nlfun = 2, B = 50, hetero = TRUE, diff = TRUE)
+#' result <- dda.indep(y ~ x, pred = "x", data = d, parallelize = FALSE,
+#'   nlfun = 2, B = 10, hetero = TRUE, diff = TRUE)
 #'
 #' @export
 #' @rdname dda.indep

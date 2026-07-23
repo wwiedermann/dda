@@ -45,7 +45,7 @@ plot.cdda.vardist <- function(x,
     plot.axis <- mod.levels
   }
   else {x.range <- c(1, length(mod.levels))
-  plot.axis <- 1:length(mod.levels)
+  plot.axis <- seq_along(mod.levels)
   }
 
   out <- matrix(NA, length(plot.axis), 6)
@@ -57,7 +57,7 @@ plot.cdda.vardist <- function(x,
       y.title <- "RHS"
     }
 
-    for (i in 1:length(plot.axis)) {
+    for (i in seq_along(plot.axis)) {
       out[i, ] <- c(obj[[1]][[i]]$RHS, obj[[2]][[i]]$RHS)
     }
   }
@@ -70,7 +70,7 @@ plot.cdda.vardist <- function(x,
       y.title <- "Co-Kurtosis"
     }
 
-    for(i in 1:length(plot.axis)){
+    for(i in seq_along(plot.axis)){
       out[i, ] <- c(obj[[1]][[i]]$cor13diff, obj[[2]][[i]]$cor13diff)
     }
   }
@@ -85,7 +85,7 @@ plot.cdda.vardist <- function(x,
       }
     hoctests.skew <-  matrix(NA, length(mod.levels), 6)
 
-    for(i in 1:length(plot.axis)){
+    for(i in seq_along(plot.axis)){
       out[i, ] <- c(obj[[1]][[i]]$cor12diff, obj[[2]][[i]]$cor12diff)
     }
   }
@@ -96,7 +96,7 @@ plot.cdda.vardist <- function(x,
       stop( "Chen-Chan Co-Kurtosis Differences not found. Specify cokurt = TRUE." )
     }
 
-    for (i in 1:length(plot.axis)) {
+    for (i in seq_along(plot.axis)) {
       out[i, ] <- c(obj[[1]][[i]]$RCC, obj[[2]][[i]]$RCC)
     }
   }
@@ -107,7 +107,7 @@ plot.cdda.vardist <- function(x,
       stop( "Hyperbolic Tangent Differences not found. Specify cokurt = TRUE." )
     }
 
-    for (i in 1:length(plot.axis)) {
+    for (i in seq_along(plot.axis)) {
       out[i, ] <- c(obj[[1]][[i]]$Rtanh, obj[[2]][[i]]$Rtanh)
     }
   }
@@ -134,7 +134,7 @@ plot.cdda.vardist <- function(x,
   plot(plot.axis, out.tar$out.mean, type = "n",
        ylim = y.range, xlim = x.range, xaxt = "n",
        xlab = "Moderator Values", ylab = y.title, main = "Target Model")
-  axis(1, at = 1:length(out.tar$condition), labels = x.axis.labels)
+  axis(1, at = seq_along(out.tar$condition), labels = x.axis.labels)
   polygon(x = c(out.tar$condition, rev(out.tar$condition)),
           y = c(out.tar$out.low, rev(out.tar$out.upp)),
           border = FALSE, col = "lightgrey")
@@ -145,7 +145,7 @@ plot.cdda.vardist <- function(x,
   plot(plot.axis, out.alt$out.mean, type = "n",
        ylim = y.range, xlim = x.range, xaxt = "n",
        xlab = "Moderator Values", ylab = y.title, main = "Alternative Model")
-  axis(1, at = 1:length(out.tar$condition), labels = x.axis.labels)
+  axis(1, at = seq_along(out.tar$condition), labels = x.axis.labels)
   polygon(x = c(out.alt$condition, rev(out.alt$condition)),
           y = c(out.alt$out.low, rev(out.alt$out.upp)),
           border = FALSE, col = "lightgrey")
