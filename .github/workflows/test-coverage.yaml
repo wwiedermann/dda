@@ -37,13 +37,9 @@ jobs:
           covr::to_cobertura(cov)
         shell: Rscript {0}
 
-      - uses: codecov/codecov-action@v4
-        with:
-          fail_ci_if_error: ${{ github.event_name != 'pull_request' }}
-          file: ./cobertura.xml
-          plugins: noop
-          disable_search: true
-          token: ${{ secrets.CODECOV_TOKEN }}
+      # Codecov upload disabled for now -- needs a CODECOV_TOKEN repo secret
+      # that hasn't been set up. Re-add the codecov/codecov-action@v4 step
+      # here (see git history) once that's configured.
 
       - name: Show testthat output
         if: always()
