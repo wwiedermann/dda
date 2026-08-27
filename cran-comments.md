@@ -37,8 +37,9 @@ change reviewers may wish to note.
 
 ## Reverse dependencies
 
-There are no reverse dependencies on CRAN.
-(Confirm with revdepcheck::revdep_check(); state result here.)
+There are no reverse dependencies on CRAN. Confirmed with
+revdepcheck::revdep_check() on 2026-08-27: 0 reverse dependencies
+checked, 0 new problems.
 
 ## Maintainer
 
