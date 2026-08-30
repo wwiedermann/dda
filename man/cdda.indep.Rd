@@ -81,9 +81,9 @@ depending on the function used:
     output. Default is \code{FALSE}.
 }}
 
-\item{hsic.method}{A character indicating the inference method for the Hilbert-Schmidt Independence Criterion. Must be one of the four specifications \code{c("gamma", "eigenvalue", "boot", "permutation")}. \code{hsic.method = "gamma"} is the default.}
+\item{hsic.method}{A character indicating the inference method for the Hilbert-Schmidt Independence Criterion. Must be one of the four specifications \code{c("gamma", "eigenvalue", "bootstrap", "permutation")}. \code{hsic.method = "gamma"} is the default.}
 
-\item{B}{Number of permutations for separate dCor tests and number of resamples when \code{hsic.method = c("boot", "permutation")} or \code{diff = TRUE}.}
+\item{B}{Number of permutations for separate dCor tests and number of resamples when \code{hsic.method = c("bootstrap", "permutation")} or \code{diff = TRUE}.}
 
 \item{boot.type}{A character indicating the type of bootstrap confidence intervals. Must be one of the two specifications \code{c("perc", "bca")}. \code{boot.type = "perc"} is the default.}
 
@@ -186,6 +186,26 @@ result <- cdda.indep(m,
                      nlfun = 2,
                      B = 2)
 # Note: Only 2 bootstrap samples are created here to lower computation time
+
+\dontrun{
+## --- Realistic settings; run time is substantial
+
+result <- cdda.indep(m,
+                     pred = "x",
+                     mod = "z",
+                     modval = c(-1, 1),
+                     data = d,
+                     hetero = TRUE,
+                     diff = TRUE,
+                     parallelize = TRUE,
+                     cores = 2,
+                     nlfun = 2,
+                     B = 500)
+
+print(result)
+summary(result, hsic.diff = TRUE, dcor.diff = TRUE, mi.diff = TRUE)
+plot(result, stat = "dcor.diff")
+}
 
 
 print(result)

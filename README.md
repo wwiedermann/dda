@@ -11,6 +11,7 @@ Direction Dependence Analysis (Package: \code{dda}) provides framework for analy
 * `dda.indep()` independence property tests, including non‐linear correlation tests, Breusch–Pagan homoscedasticity tests, and the HSIC test 
 * `dda.resdist()` residual distribution tests, including D'Agostino and Anscombe–Glynn tests and bootstrap CIs on higher moment differences
 * `dda.vardist()` variable distribution‐based tests, including D'Agostino and Anscombe–Glynn tests and bootstrap CIs on higher moment differences
+* `dda.bagging()` bootstrap aggregation (bagging) of any of the above, summarizing the stability of direction-of-dependence decisions across resamples
 
 If you are new to Direction Dependence Analysis (DDA) concepts, the best place to start is the [Direction Dependence in Statistical Modeling: Methods of Analysis](https://www.cambridge.org/us/universitypress/subjects/psychology/psychology-research-methods-and-statistics/direction-dependence-analysis-foundations-and-statistical-methods) text.
 
@@ -58,7 +59,7 @@ mean.indep <- cdda.indep(m, pred = "x", mod = "z", data = dat, nlfun = 2,
                           modval = "mean", diff = TRUE, hetero = TRUE)
 
 summary(mean.indep, hsic.diff = TRUE, dcor.diff = TRUE, mi.diff = TRUE)
-plot.cddaindep(mean.indep, stat = "hsic.diff")
+plot(mean.indep, stat = "hsic.diff")
 ```
 
 ```
@@ -66,7 +67,7 @@ point.vardist <- cdda.vardist(m, pred = "x", mod = "z", data = dat,
                           modval = c(-1, 0, 1))
 
 summary(point.vardist, coskew = TRUE, cokurt = TRUE)
-plot(mean.vardist, stat = "rhs", ylim = c(-0.2, 0.3))
+plot(point.vardist, stat = "rhs", ylim = c(-0.2, 0.3))
 ```
 
 ## Getting help

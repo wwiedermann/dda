@@ -94,9 +94,26 @@ e <- rchisq(n, df = 3) - 3
 y <- 0.5 * x + e
 d <- data.frame(x, y)
 
-result <- dda.indep(y ~ x, pred = "x", data = d, parallelize = TRUE,
-  cores = 2, nlfun = 2, B = 50, hetero = TRUE, diff = TRUE)
+result <- dda.indep(y ~ x, pred = "x", data = d, parallelize = FALSE,
+  nlfun = 2, B = 10, hetero = TRUE, diff = TRUE)
+# Note: Only 10 bootstrap samples are used here to lower computation time
 
+\dontrun{
+## --- Realistic settings; run time is substantial
+
+result <- dda.indep(y ~ x, pred = "x", data = d, parallelize = TRUE,
+  cores = 2, nlfun = 2, B = 500, hetero = TRUE, diff = TRUE)
+
+print(result)
+
+## --- Permutation-based HSIC inference
+
+dda.indep(y ~ x, pred = "x", data = d, hsic.method = "permutation", B = 500)
+
+## --- Siegel (1982) repeated median estimation
+
+dda.indep(y ~ x, pred = "x", data = d, robust = TRUE, hetero = TRUE, B = 500)
+}
 print(result)
 
 }

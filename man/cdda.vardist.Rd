@@ -126,6 +126,18 @@ m <- lm(y ~ x * z, data = d)
 
 result <- cdda.vardist(m, pred = "x", mod = "z", B = 50,
                       modval = c(-1, 1), data = d)
+# Note: Only 50 bootstrap samples are created here to lower computation time
+
+\dontrun{
+## --- Realistic settings; run time is substantial
+
+result <- cdda.vardist(m, pred = "x", mod = "z", B = 500,
+                       modval = c(-1, 1), data = d)
+
+print(result)
+plot(result, stat = "rtanh", ylim = c(-0.05, 0.05))
+summary(result, skew = FALSE, kurt = FALSE, coskew = TRUE)
+}
 
 print(result)
 

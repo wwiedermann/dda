@@ -17,11 +17,11 @@ Useful links:
 
 }
 \author{
-\strong{Maintainer}: Wolfgang Wiedermann \email{wiedermannw@missouri.edu}
+\strong{Maintainer}: Wolfgang Wiedermann \email{mj.hirni@missouri.edu}
 
 Authors:
 \itemize{
-  \item Megan Hirni \email{mjhirni@outlook.com}
+  \item Megan Hirni \email{mj.hirni@missouri.edu}
 }
 
 }

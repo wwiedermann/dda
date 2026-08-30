@@ -58,6 +58,46 @@
 #'   from tests matching the initial DDA function (\code{dda.indep},
 #'   \code{dda.vardist}, or \code{dda.resdist}).
 #'
+#' @seealso \code{\link{dda.indep}}, \code{\link{dda.vardist}},
+#'   \code{\link{dda.resdist}}
+#'
+#' @examples
+#' set.seed(123)
+#' n <- 500
+#' x <- rchisq(n, df = 4) - 4
+#' e <- rchisq(n, df = 3) - 3
+#' y <- 0.5 * x + e
+#' d <- data.frame(x, y)
+#'
+#' ## --- Fit a base DDA independence model
+#'
+#' base_model <- dda.indep(y ~ x, pred = "x", data = d, B = 10,
+#'   hetero = TRUE, nlfun = 2, diff = TRUE)
+#'
+#' ## --- Bootstrap aggregation of the base model
+#'
+#' bagged <- dda.bagging(base_model, data = d, iter = 5, agg_stat = "mean",
+#'   progress = FALSE)
+#' # Note: Only 10 inner and 5 outer resamples are used here to lower
+#' # computation time
+#'
+#' print(bagged)
+#' summary(bagged, show = c("hsic", "dcor"))
+#'
+#' \dontrun{
+#' ## --- Realistic settings; run time is substantial
+#'
+#' base_model <- dda.indep(y ~ x, pred = "x", data = d, B = 500,
+#'   hetero = TRUE, nlfun = 2, diff = TRUE)
+#'
+#' bagged <- dda.bagging(base_model, data = d, iter = 200,
+#'   agg_stat = "trimmed", trim_prob = 0.05, progress = TRUE)
+#'
+#' print(bagged)
+#' summary(bagged, show = c("hsic", "dcor", "bp"))
+#' print_ols_summary(bagged)
+#' }
+#'
 #' @export
 dda.bagging <- function(
     dda_result,

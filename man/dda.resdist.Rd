@@ -71,6 +71,20 @@ d <- data.frame(x, y)
 
 result <- dda.resdist(y ~ x, pred = "x", data = d,
   B = 50, conf.level = 0.90, prob.trans = TRUE)
+# Note: Only 50 bootstrap samples are used here to lower computation time
+
+\dontrun{
+## --- Realistic settings; run time is substantial
+
+result <- dda.resdist(y ~ x, pred = "x", data = d, B = 500,
+  boot.type = "bca", conf.level = 0.95, prob.trans = TRUE)
+
+print(result)
+
+## --- Siegel (1982) repeated median estimation
+
+dda.resdist(y ~ x, pred = "x", data = d, B = 500, robust = TRUE)
+}
 
 \dontrun{
 print(result)

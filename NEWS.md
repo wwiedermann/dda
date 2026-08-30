@@ -4,23 +4,34 @@
 
 ### New features
 
-- Native C++ (Rcpp) backend for the Hilbert-Schmidt Independence Criterion in
-  `src/hsic.cpp`, replacing the previous pure-R implementation. Exposes
-  `hsic()`, `hsic.test()` (methods `"gamma"`, `"permutation"`, `"eigenvalue"`,
-  `"bootstrap"`), and `hsic_resid_test()`.
 - `dda.bagging()`: bootstrap-aggregated DDA to assess the stability and
-  robustness of direction-of-dependence decisions, with `print`/`summary`
-  methods.
-- `robust` argument for `dda.indep()` and `dda.resdist()`: Siegel (1982)
-  repeated-median estimation for the competing models, with a companion robust
-  Breusch-Pagan test (`bptestrobust`).
+  robustness of direction-of-dependence decisions across resamples, with
+  `print`/`summary` methods and aggregated OLS summaries
+  (`print_ols_summary()`, `summary_ols()`). p-values are combined using the
+  harmonic mean p-value approach (Wilson, 2019). Aggregation statistics
+  include `"mean"`, `"median"`, `"trimmed"`, `"winsorized"`, `"midhinge"`,
+  and `"tukey"`; `inner_B` caps the inner resampling budget of each
+  per-iteration DDA call.
+- `robust` argument for `dda.indep()`, `cdda.indep()`, and `dda.resdist()`:
+  Siegel (1982) repeated-median estimation for the causally competing
+  models, with a companion robust Breusch-Pagan test (`bptestrobust`).
+
+### Bug fixes
+
+-	In `dda.indep`, `boot.type = "bca"` no longer aborts when the
+	acceleration constant cannot be calculated; the function now warns and
+	falls back to percentile intervals.
+-	Various minor documentation changes and clarifications.
 
 ### Internal
 
-- HSIC C++ routines migrated from an inline `Rcpp::sourceCpp()` call to a
-  compiled `src/` backend registered via `useDynLib`.
+- Distance correlation difference statistics are now computed with
+  `dccpp::dcor()`. HSIC inference continues to be supplied by
+  `dHSIC::dhsic.test()`.
 - Removed the superseded `boot_hsic_test.R`; consolidated the duplicated
   `nlcor.test` into a single definition.
+- Examples with non-trivial run time now pair a fast, low-`B` illustration
+  with a `\dontrun{}` block showing realistic resampling settings.
 
 
 # dda 0.1.1

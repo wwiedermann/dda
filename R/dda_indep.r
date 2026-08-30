@@ -60,6 +60,24 @@
 #'
 #' result <- dda.indep(y ~ x, pred = "x", data = d, parallelize = FALSE,
 #'   nlfun = 2, B = 10, hetero = TRUE, diff = TRUE)
+#' # Note: Only 10 bootstrap samples are used here to lower computation time
+#'
+#' \dontrun{
+#' ## --- Realistic settings; run time is substantial
+#'
+#' result <- dda.indep(y ~ x, pred = "x", data = d, parallelize = TRUE,
+#'   cores = 2, nlfun = 2, B = 500, hetero = TRUE, diff = TRUE)
+#'
+#' print(result)
+#'
+#' ## --- Permutation-based HSIC inference
+#'
+#' dda.indep(y ~ x, pred = "x", data = d, hsic.method = "permutation", B = 500)
+#'
+#' ## --- Siegel (1982) repeated median estimation
+#'
+#' dda.indep(y ~ x, pred = "x", data = d, robust = TRUE, hetero = TRUE, B = 500)
+#' }
 #'
 #' @export
 #' @rdname dda.indep
@@ -103,7 +121,8 @@ dda.indep <- function(
       rx     <- dat[,3] # purified predictor
       err.yx <- dat[,4] # errors of target model
 
-      diff.hsic <- hsic.test(err.xy, ry, method = "gamma")$statistic - hsic.test(err.yx, rx, method = "gamma")$statistic
+      diff.hsic <- dHSIC::dhsic.test(err.xy, ry, method = "gamma", kernel = "gaussian")$statistic -
+                   dHSIC::dhsic.test(err.yx, rx, method = "gamma", kernel = "gaussian")$statistic
       diff.dcor <- dccpp::dcor(err.xy, ry) - dccpp::dcor(err.yx, rx)
       diff.mi <- (max.entropy(ry) + max.entropy(err.xy)) - (max.entropy(rx) + max.entropy(err.yx))
       c(diff.hsic, diff.dcor, diff.mi)
@@ -178,21 +197,21 @@ dda.indep <- function(
 
 	### --- Separate HSIC Tests
 
-	if(hsic.method == "gamma"){
+	if(hsic.method %in% c("gamma", "eigenvalue")){
 
-	  hsic.yx <- hsic.test(rx, err.yx, method = hsic.method)
-	  hsic.xy <- hsic.test(ry, err.xy, method = hsic.method)
+	  hsic.yx <- dHSIC::dhsic.test(rx, err.yx, method = hsic.method, kernel = "gaussian")
+	  hsic.xy <- dHSIC::dhsic.test(ry, err.xy, method = hsic.method, kernel = "gaussian")
 
 	   output <- list(hsic.yx = hsic.yx, hsic.xy = hsic.xy, hsic.method = hsic.method)
 
 	}
 
 
-	# eigenvalue, bootstrap, and permutation all use B (MC draws / resamples)
-	if(hsic.method %in% c("eigenvalue", "bootstrap", "permutation")){
+	# bootstrap and permutation use B resamples
+	if(hsic.method %in% c("bootstrap", "permutation")){
 
-	  hsic.yx <- hsic.test(rx, err.yx, method = hsic.method, B = B)
-	  hsic.xy <- hsic.test(ry, err.xy, method = hsic.method, B = B)
+	  hsic.yx <- dHSIC::dhsic.test(rx, err.yx, method = hsic.method, kernel = "gaussian", B = B)
+	  hsic.xy <- dHSIC::dhsic.test(ry, err.xy, method = hsic.method, kernel = "gaussian", B = B)
 
 	  output <- list(hsic.yx = hsic.yx, hsic.xy = hsic.xy, hsic.method = c(hsic.method, as.character(B)) )
 
