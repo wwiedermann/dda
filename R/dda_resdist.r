@@ -17,7 +17,7 @@
 #'   bootstrap confidence intervals. Must be one of the two values
 #'   \code{c("perc", "bca")}; \code{boot.type = "perc"} is the default.
 #' @param prob.trans A logical value indicating whether a probability integral
-#'   transformation should be performed prior to computation of skewness and
+#'   transformation should be performed prior computation of skewness and
 #'   kurtosis tests.
 #' @param conf.level Confidence level for bootstrap confidence intervals.
 #' @param robust A logical value indicating whether Siegel's (1982) repeated
@@ -43,8 +43,9 @@
 #' d <- data.frame(x, y)
 #'
 #' result <- dda.resdist(y ~ x, pred = "x", data = d,
-#'   B = 50, conf.level = 0.90, prob.trans = TRUE)
-#' # Note: Only 50 bootstrap samples are used here to lower computation time
+#'             B = 50, conf.level = 0.90, prob.trans = TRUE, robust = FALSE)
+#'
+#' print(result)
 #'
 #' \dontrun{
 #' ## --- Realistic settings; run time is substantial

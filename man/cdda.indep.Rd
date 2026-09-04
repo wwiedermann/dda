@@ -147,7 +147,7 @@ An object of class \code{cdda.indep} with competing model coefficients.
 }
 \examples{
 set.seed(321)
-n <- 300
+n <- 700
 
 ## --- generate moderator
 
@@ -181,7 +181,7 @@ result <- cdda.indep(m,
                      data = d,
                      hetero = TRUE,
                      diff = TRUE,
-                     parallelize = FALSE,
+                     parallelize = TRUE,
                      cores = 2,
                      nlfun = 2,
                      B = 2)
