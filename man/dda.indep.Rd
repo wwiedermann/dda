@@ -114,6 +114,7 @@ dda.indep(y ~ x, pred = "x", data = d, hsic.method = "permutation", B = 500)
 
 dda.indep(y ~ x, pred = "x", data = d, robust = TRUE, hetero = TRUE, B = 500)
 }
+
 print(result)
 
 }

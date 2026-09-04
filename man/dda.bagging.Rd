@@ -77,15 +77,6 @@ to evaluate the stability and robustness of DDA model selection. p-values
 obtained from significance tests are aggregated using the harmonic mean
 p-value approach (Wilson, 2019).
 }
-\references{
-Wiedermann, W., & von Eye, A. (2025). \emph{Direction Dependence Analysis:
-Foundations and Statistical Methods}. Cambridge, UK: Cambridge University
-Press.
-
-Wilson, D. J. (2019). The harmonic mean p-value for combining dependent
-tests. \emph{Proceedings of the National Academy of Sciences}, \emph{116}(4),
-1195--1200.
-}
 \examples{
 set.seed(123)
 n <- 500
@@ -123,6 +114,15 @@ summary(bagged, show = c("hsic", "dcor", "bp"))
 print_ols_summary(bagged)
 }
 
+}
+\references{
+Wiedermann, W., & von Eye, A. (2025). \emph{Direction Dependence Analysis:
+Foundations and Statistical Methods}. Cambridge, UK: Cambridge University
+Press.
+
+Wilson, D. J. (2019). The harmonic mean p-value for combining dependent
+tests. \emph{Proceedings of the National Academy of Sciences}, \emph{116}(4),
+1195--1200.
 }
 \seealso{
 \code{\link{dda.indep}}, \code{\link{dda.vardist}},
