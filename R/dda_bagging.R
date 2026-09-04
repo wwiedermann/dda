@@ -1,4 +1,4 @@
-#' @title Bootstrap Aggregated Direction Dependence Analysis
+#' @title Bootstrap Aggregated Direction Dependence Analysis (DDA)
 #'
 #' @description
 #' \code{dda.bagging} performs bootstrap aggregation (bagging) on an existing
@@ -10,8 +10,8 @@
 #' @param iter Number of bootstrap samples (default: 100).
 #' @param progress Logical. Whether to display a progress bar during
 #'   resampling (default: \code{TRUE}).
-#' @param save_file Character. Optional file path to save the resulting
-#'   object (e.g., \code{"results.rds"}).
+#' @param save_file Character. Optional file path used to save the resulting
+#'   object as an R serialized data file (e.g., \code{"results.rds"}).
 #' @param alpha Numeric. Significance level used for causal model selection
 #'   (default: 0.05).
 #' @param data A \code{data.frame} containing ALL raw variables used in the

@@ -20,7 +20,7 @@
 #'                    regions. When a numeric sequence is specified,the
 #'                    pick-a-point approach is used for the selected numeric values.
 #' @param data        A required data frame containing the variables in the model.
-#' @param hetero      A logical value indicating whether separate homoscedasticity tests (i.e., standard and robust Breusch-Pagan tests) should be computed.
+#' @param hetero      A logical value indicating whether separate homoscedasticity tests should be returned when using \code{summary}, default is \code{FALSE}.
 #' @param diff        A logical value indicating whether differences in HSIC, dCor, and MI values should be computed. Bootstrap confidence intervals are computed using B bootstrap samples.
 #' @param nlfun Determines handling of non-linear correlation tests
 #'   depending on the function used:
@@ -45,7 +45,7 @@
 #'
 #' @examples
 #' set.seed(321)
-#' n <- 300
+#' n <- 700
 #'
 #' ## --- generate moderator
 #'
@@ -79,7 +79,7 @@
 #'                      data = d,
 #'                      hetero = TRUE,
 #'                      diff = TRUE,
-#'                      parallelize = FALSE,
+#'                      parallelize = TRUE,
 #'                      cores = 2,
 #'                      nlfun = 2,
 #'                      B = 2)
