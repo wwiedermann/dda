@@ -192,11 +192,12 @@ print_bagging_decisions <- function(object, show = NULL, moment = NULL, type = "
   cat(paste("      Alternative is", varnames[1], "->", varnames[2]), "\n")
 }
 
-#' @title Summary Methods for Bagged DDA Objects
+#' @title Summary Methods for Bootstrap Aggregated DDA Objects
 #'
-#' @description \code{summary} returns the proportion of decisions supporting the target model,
-#' alternative model, or remaining undecided (or confounding) across bootstrap iterations for
-#' bagged Direction Dependence Analysis (DDA) objects.
+#' @description \code{summary} returns the proportion of model selection
+#' decisions (i.e., target model, alternative model, or presence of hidden
+#' confounding) across the bootstrap samples for bootstrap aggregated
+#' Direction Dependence Analysis (DDA) objects.
 #'
 #' @param object An object of class \code{dda_bagging_indep}, \code{dda_bagging_vardist},
 #'   or \code{dda_bagging_resdist}.
