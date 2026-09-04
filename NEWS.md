@@ -4,13 +4,37 @@
 
 ### New features
 
--	`dda.bagging` performs bootstrap aggregation (bagging) of `dda.indep`, `dda.resdist`, and `dda.vardist` objects to evaluate the stability of direction dependence decisions, with accompanying `print` and `summary` methods.
--	`dda.indep`, `cdda.indep`, and `dda.resdist` gain a `robust` argument applying Siegel's (1982) repeated median estimation to the causally competing models.
+- `dda.bagging()`: bootstrap-aggregated DDA to assess the stability and
+  robustness of direction-of-dependence decisions across resamples, with
+  `print`/`summary` methods and aggregated OLS summaries
+  (`print_ols_summary()`, `summary_ols()`). p-values are combined using the
+  harmonic mean p-value approach (Wilson, 2019). Aggregation statistics
+  include `"mean"`, `"median"`, `"trimmed"`, `"winsorized"`, `"midhinge"`,
+  and `"tukey"`; `inner_B` caps the inner resampling budget of each
+  per-iteration DDA call.
+- `robust` argument for `dda.indep()`, `cdda.indep()`, and `dda.resdist()`:
+  Siegel (1982) repeated-median estimation for the causally competing
+  models, with a companion robust Breusch-Pagan test (`bptestrobust`).
 
 ### Bug fixes
 
--	In `dda.indep`, `boot.type = "bca"` now falls back to percentile intervals with a warning when the acceleration constant cannot be calculated (previously, the function stopped).
+-	In `dda.indep`, `boot.type = "bca"` no longer aborts when the
+	acceleration constant cannot be calculated; the function now warns and
+	falls back to percentile intervals.
 -	Various minor documentation changes and clarifications.
+
+### Internal
+
+- Distance correlation difference statistics are now computed with
+  `dccpp::dcor()`. HSIC inference continues to be supplied by
+  `dHSIC::dhsic.test()`.
+- Removed the superseded `boot_hsic_test.R`; consolidated the duplicated
+  `nlcor.test` into a single definition.
+- Dropped the unused `MASS` dependency from `Imports`.
+- `dda.bagging()` no longer rebuilds its model formulas on every outer
+  iteration.
+- Examples with non-trivial run time now pair a fast, low-`B` illustration
+  with a `\dontrun{}` block showing realistic resampling settings.
 
 
 # dda 0.1.1

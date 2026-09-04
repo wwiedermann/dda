@@ -109,12 +109,12 @@ reaggregate_bagging <- function(object, agg_stat = NULL, trim_prob = 0.10, win_p
 
 #' @title Print Methods for Bootstrap Aggregated DDA Objects
 #'
-#' @description \code{print} returns aggregated test statistics and summaries
-#' of bootstrap aggregated Direction Dependence Analysis (DDA) objects. The
-#' function supports independence properties (obtained from
-#' \code{dda.indep}), residual distributions (obtained from
-#' \code{dda.resdist}), variable distributions (obtained from
-#' \code{dda.vardist}), and OLS summaries (\code{print_ols_summary}).
+#' @description \code{print} returns aggregated test statistics of bootstrap
+#' aggregated Direction Dependence Analysis (DDA) objects. The function
+#' supports independence properties (obtained from \code{dda.indep}),
+#' residual distributions (obtained from \code{dda.resdist}), variable
+#' distributions (obtained from \code{dda.vardist}), and OLS summaries
+#' (\code{print_ols_summary}).
 #'
 #' @param x An object of class \code{dda_bagging_indep},
 #'   \code{dda_bagging_resdist}, or \code{dda_bagging_vardist}.

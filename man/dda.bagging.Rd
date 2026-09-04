@@ -2,7 +2,7 @@
 % Please edit documentation in R/dda_bagging.R
 \name{dda.bagging}
 \alias{dda.bagging}
-\title{Bootstrap Aggregated Direction Dependence Analysis (DDA)}
+\title{Bootstrap Aggregated Direction Dependence Analysis}
 \usage{
 dda.bagging(
   dda_result,
@@ -26,8 +26,8 @@ dda.bagging(
 \item{progress}{Logical. Whether to display a progress bar during
 resampling (default: \code{TRUE}).}
 
-\item{save_file}{Character. Optional file path used to save the resulting
-object as an R serialized data file (e.g., \code{"results.rds"}).}
+\item{save_file}{Character. Optional file path to save the resulting
+object (e.g., \code{"results.rds"}).}
 
 \item{alpha}{Numeric. Significance level used for causal model selection
 (default: 0.05).}

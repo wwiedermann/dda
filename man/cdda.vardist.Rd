@@ -49,7 +49,7 @@ pick-a-point approach is used for the selected numeric values.}
 
 \item{B}{Number of bootstrap samples.}
 
-\item{boot.type}{A character indicating the type of bootstrap confidence intervals. Must be one of the two values \code{c("perc", "bca")}. \code{boot.type = "perc"} is the default.}
+\item{boot.type}{A character indicating the type of bootstrap confidence intervals. Must be one of the two values \code{c("perc", "bca")}. \code{boot.type = "bca"} is the default.}
 
 \item{conf.level}{Confidence level for bootstrap confidence intervals.}
 

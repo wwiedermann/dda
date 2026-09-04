@@ -61,12 +61,12 @@ each side of the sampling distribution when
 Returns a summary of the bootstrap aggregated DDA object.
 }
 \description{
-\code{print} returns aggregated test statistics and summaries
-of bootstrap aggregated Direction Dependence Analysis (DDA) objects. The
-function supports independence properties (obtained from
-\code{dda.indep}), residual distributions (obtained from
-\code{dda.resdist}), variable distributions (obtained from
-\code{dda.vardist}), and OLS summaries (\code{print_ols_summary}).
+\code{print} returns aggregated test statistics of bootstrap
+aggregated Direction Dependence Analysis (DDA) objects. The function
+supports independence properties (obtained from \code{dda.indep}),
+residual distributions (obtained from \code{dda.resdist}), variable
+distributions (obtained from \code{dda.vardist}), and OLS summaries
+(\code{print_ols_summary}).
 }
 \examples{
 \donttest{

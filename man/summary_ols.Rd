@@ -2,7 +2,7 @@
 % Please edit documentation in R/print.dda_ols_bagging.R
 \name{summary_ols}
 \alias{summary_ols}
-\title{Print Summary for OLS Models of Bootstrap Aggregated DDA Objects}
+\title{Print OLS Model Summary for Bootstrap Aggregated DDA}
 \usage{
 summary_ols(
   object,
@@ -35,9 +35,8 @@ each side of the sampling distribution when
 \item{...}{Additional arguments passed to \code{print}.}
 }
 \description{
-\code{summary_ols} returns aggregated ordinary least
-squares (OLS) regression summaries for the causally competing target and
-alternative models of a bootstrap aggregated DDA object.
+\code{ols.summary} prints aggregated ordinary least
+squares (OLS) regression summaries from a bootstrap aggregated DDA object.
 Regression coefficients and standard errors are aggregated across bootstrap
 samples using the method specified in \code{dda.bagging()} or overridden
 via \code{agg.stat}.

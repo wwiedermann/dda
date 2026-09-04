@@ -4,7 +4,7 @@
 \alias{summary.dda_bagging_indep}
 \alias{summary.dda_bagging_vardist}
 \alias{summary.dda_bagging_resdist}
-\title{Summary Methods for Bootstrap Aggregated DDA Objects}
+\title{Summary Methods for Bagged DDA Objects}
 \usage{
 \method{summary}{dda_bagging_indep}(object, show = NULL, digits = 2, ...)
 
@@ -33,8 +33,7 @@ shows default statistics based on the object type.}
 Invisibly returns the original object.
 }
 \description{
-\code{summary} returns the proportion of model selection
-decisions (i.e., target model, alternative model, or presence of hidden
-confounding) across the bootstrap samples for bootstrap aggregated
-Direction Dependence Analysis (DDA) objects.
+\code{summary} returns the proportion of decisions supporting the target model,
+alternative model, or remaining undecided (or confounding) across bootstrap iterations for
+bagged Direction Dependence Analysis (DDA) objects.
 }

@@ -22,7 +22,7 @@
 #' @param data        A required data frame containing the variables in the model.
 #' @param conf.level  Confidence level for bootstrap confidence intervals.
 #' @param B           Number of bootstrap samples.
-#' @param boot.type   A character indicating the type of bootstrap confidence intervals. Must be one of the two values \code{c("perc", "bca")}. \code{boot.type = "perc"} is the default.
+#' @param boot.type   A character indicating the type of bootstrap confidence intervals. Must be one of the two values \code{c("perc", "bca")}. \code{boot.type = "bca"} is the default.
 #'
 #' @returns An object of class \code{cdda.vardist} containing the results of
 #'          conditional direction dependence tests of variable distributions.
