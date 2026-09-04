@@ -30,13 +30,14 @@
   `dHSIC::dhsic.test()`.
 - Removed the superseded `boot_hsic_test.R`; consolidated the duplicated
   `nlcor.test` into a single definition.
+- Dropped the unused `MASS` dependency from `Imports`.
+- `dda.bagging()` no longer rebuilds its model formulas on every outer
+  iteration.
 - Examples with non-trivial run time now pair a fast, low-`B` illustration
   with a `\dontrun{}` block showing realistic resampling settings.
 
 
 # dda 0.1.1
-
-## dda 0.1.1
 
 ---
 
@@ -47,7 +48,7 @@
 -	Various minor documentation changes and clarifications.
 
 
-## dda 0.1.0
+# dda 0.1.0
 
 ---
 
@@ -57,7 +58,7 @@
 - Includes five core `dda` functions and S3 generics where applicable (`print`, `summary`, `plot`).
 - Documentation provided for all exported/user-facing functions.
 
-## version 0.0.0.9000
+# dda 0.0.0.9000
 
 ---
 

@@ -29,10 +29,15 @@
 #' @param inner_B Optional positive integer. Caps the number of inner
 #'   bootstrap resamples (\code{B}) passed to each per-iteration DDA call.
 #'   \code{NULL} (default) keeps whatever \code{B} was used in the original
-#'   DDA call. Setting a smaller value (e.g., \code{inner_B = 50}) reduces
-#'   run time substantially for \code{dda.resdist} and \code{dda.vardist},
-#'   which run their own internal bootstrap on every outer iteration, without
-#'   changing how the outer bagging loop aggregates results.
+#'   DDA call. Every base DDA function runs its own resampling on each of the
+#'   \code{iter} outer iterations, so total cost grows as
+#'   \code{iter} \eqn{\times} \code{B}; capping \code{inner_B} is the main
+#'   lever for reducing run time without changing how the outer bagging loop
+#'   aggregates results. The effect is largest for \code{dda.indep} called
+#'   with \code{diff = TRUE}, where each outer iteration runs a full
+#'   difference-statistic bootstrap, and for \code{dda.resdist} and
+#'   \code{dda.vardist}, which bootstrap their confidence intervals
+#'   internally.
 #'
 #' @details
 #' This function uses a fitted DDA output object (obtained from
@@ -42,6 +47,14 @@
 #' to evaluate the stability and robustness of DDA model selection. p-values
 #' obtained from significance tests are aggregated using the harmonic mean
 #' p-value approach (Wilson, 2019).
+#'
+#' Run time scales with \code{iter} multiplied by the resampling budget of the
+#' base DDA call, and the underlying independence statistics are quadratic in
+#' the number of observations. Use \code{inner_B} to cap the inner budget.
+#' Note also that if the original DDA call used \code{parallelize = TRUE},
+#' that setting is inherited by every outer iteration, so a new cluster is
+#' started \code{iter} times; for the small inner bootstraps typical of
+#' bagging this is usually slower than running the inner calls serially.
 #'
 #' @references
 #' Wiedermann, W., & von Eye, A. (2025). \emph{Direction Dependence Analysis:
@@ -63,7 +76,7 @@
 #'
 #' @examples
 #' set.seed(123)
-#' n <- 500
+#' n <- 200
 #' x <- rchisq(n, df = 4) - 4
 #' e <- rchisq(n, df = 3) - 3
 #' y <- 0.5 * x + e
@@ -71,15 +84,14 @@
 #'
 #' ## --- Fit a base DDA independence model
 #'
-#' base_model <- dda.indep(y ~ x, pred = "x", data = d, B = 10,
-#'   hetero = TRUE, nlfun = 2, diff = TRUE)
+#' base_model <- dda.indep(y ~ x, pred = "x", data = d, B = 10, hetero = TRUE)
 #'
 #' ## --- Bootstrap aggregation of the base model
 #'
 #' bagged <- dda.bagging(base_model, data = d, iter = 5, agg_stat = "mean",
-#'   progress = FALSE)
-#' # Note: Only 10 inner and 5 outer resamples are used here to lower
-#' # computation time
+#'   inner_B = 10, progress = FALSE)
+#' # Note: n, B and iter are all kept small here to lower computation time.
+#' # inner_B caps the resampling budget of each outer iteration.
 #'
 #' print(bagged)
 #' summary(bagged, show = c("hsic", "dcor"))
@@ -257,6 +269,15 @@ dda.bagging <- function(
   if (length(boot_args_pre) > 0 && names(boot_args_pre)[1] == "")
     boot_args_pre[[1]] <- NULL
 
+  # Formulas are constant across iterations; build them once. as.formula()
+  # parses and evaluates, so rebuilding them inside the loop costs 3 parses
+  # per iteration for no benefit.
+  inner_formula <- as.formula(paste(y_name, "~", x_name))
+  if (has_covariates) {
+    cov_formula_y <- as.formula(paste(y_name, "~", paste(cov_names, collapse = " + ")))
+    cov_formula_x <- as.formula(paste(x_name, "~", paste(cov_names, collapse = " + ")))
+  }
+
   # --- Bootstrap Execution ---
   bagged_results <- vector("list", iter)
   ols_tar_coefs  <- vector("list", iter)
@@ -293,8 +314,6 @@ dda.bagging <- function(
 
     # Residualize covariates if present, then scale the working variables.
     if (has_covariates) {
-      cov_formula_y <- as.formula(paste(y_name, "~", paste(cov_names, collapse = " + ")))
-      cov_formula_x <- as.formula(paste(x_name, "~", paste(cov_names, collapse = " + ")))
       tryCatch({
         ry <- as.vector(scale(resid(lm(cov_formula_y, data = datboot))))
         rx <- as.vector(scale(resid(lm(cov_formula_x, data = datboot))))
@@ -307,7 +326,7 @@ dda.bagging <- function(
     # Build the argument list for this iteration's DDA call, starting from
     # the pre-evaluated original arguments.
     boot_args         <- boot_args_pre
-    boot_args$formula <- as.formula(paste(y_name, "~", x_name))
+    boot_args$formula <- inner_formula
     boot_args$pred    <- x_name
 
     boot_processed        <- data.frame(rx, ry)
