@@ -14,3 +14,6 @@ src/*.so
 src/*.dll
 .RDataTmp
 Rplots.pdf
+
+# git history bundles (large, local only)
+*.bundle
